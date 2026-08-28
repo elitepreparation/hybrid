@@ -148,7 +148,27 @@ La URL del backend **nunca cambia** entre despliegues, así que el frontend no n
 
 ---
 
-## 9. Prompt para que Gaby le pase a su Claude
+## 9. Primeros pasos en la PC de Gaby (para que siga él solo)
+
+El repo de GitHub y todo el backend (Apps Script + Drive) **ya viven en las cuentas de Gaby** — no hay nada que transferir. Solo hace falta que arme su propio entorno de trabajo:
+
+1. **Instalar Git** (si no lo tiene): https://git-scm.com/downloads
+2. **Tener Claude Code** funcionando en su PC, con su propia cuenta (no la de Lucas).
+3. **Clonar el repo** en una carpeta de su PC (por ejemplo, con Git Bash o la terminal):
+   ```
+   git clone https://github.com/Complex180/hybrid.git
+   ```
+   Como el repo es de su propia cuenta de GitHub, no debería pedir ningún permiso especial. Si pide login, es con la cuenta de GitHub dueña de `Complex180/hybrid`.
+4. **Abrir Claude Code apuntando a esa carpeta** (`cd` a la carpeta clonada y arrancar Claude Code ahí, o abrirla desde el explorador de archivos si usa la app de escritorio).
+5. Pegar el prompt de la sección 10 como primer mensaje.
+
+**Sobre el acceso a Drive/Apps Script:** no hay que configurar nada — ya está todo en su cuenta de Google (`fomiczfitness@gmail.com`). Solo tiene que estar logueado con esa cuenta en el navegador cuando su Claude necesite tocar el editor de Apps Script o el Drive.
+
+**Decisión pendiente para Gaby (no es necesario resolverla ahora):** una vez que se sienta cómodo trabajando solo, puede decidir si deja a Lucas como colaborador del repo de GitHub (para que lo pueda ayudar si hace falta) o si prefiere sacarlo. Eso se cambia desde GitHub → repo `Complex180/hybrid` → Settings → Collaborators, y lo puede hacer solo Gaby (es su repo).
+
+---
+
+## 10. Prompt para que Gaby le pase a su Claude
 
 Gaby necesita clonar o abrir este repo (`Complex180/hybrid`) en una carpeta local, y tener Claude Code (o el asistente que use) trabajando sobre esa carpeta. Después, puede pegar esto como primer mensaje:
 
