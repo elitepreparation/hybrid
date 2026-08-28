@@ -150,32 +150,41 @@ La URL del backend **nunca cambia** entre despliegues, así que el frontend no n
 
 ## 9. Primeros pasos en la PC de Gaby (para que siga él solo)
 
-El repo de GitHub y todo el backend (Apps Script + Drive) **ya viven en las cuentas de Gaby** — no hay nada que transferir. Solo hace falta que arme su propio entorno de trabajo:
+El repo de GitHub y todo el backend (Apps Script + Drive) **ya viven en las cuentas de Gaby** — no hay nada que transferir. Solo hace falta que arme su propio entorno de trabajo. Hay dos formas de hacerlo:
+
+### Opción A (más fácil): que lo arme su propio Claude Code
+
+Gaby abre Claude Code en su PC (en cualquier carpeta, todavía no hace falta tener nada clonado) y le pega este mensaje tal cual:
+
+> Necesito que prepares mi entorno para seguir desarrollando mi web de coaching, Complex 180. Hacé esto en orden:
+>
+> 1. Fijate si tengo Git instalado (`git --version`). Si no lo tengo, decime cómo instalarlo antes de seguir — no lo instales vos solo si necesita que yo confirme algo a mano.
+> 2. Cloná este repositorio en una carpeta llamada `Complex180-Web` dentro de mis Documentos: `https://github.com/Complex180/hybrid.git`
+> 3. Si GitHub pide que inicie sesión en algún paso, avisame para que lo haga yo con mi cuenta.
+> 4. Una vez clonado, entrá a esa carpeta y leé completo el archivo `HANDOFF.md` que está en la raíz — ahí está todo el contexto del proyecto: qué es, cómo funciona, dónde vive cada cosa (Drive, Apps Script, GitHub Pages) y qué queda pendiente.
+> 5. Cuando termines de leerlo, contame en 3-4 líneas qué entendiste del proyecto para confirmar que quedó todo claro, y quedate esperando que te diga qué quiero hacer.
+>
+> El backend (Apps Script) vive en mi cuenta de Google (`fomiczfitness@gmail.com`) — voy a estar logueado con esa cuenta en el navegador cuando haga falta tocarlo.
+
+Con eso, Claude Code se ocupa de chequear/instalar Git, clonar el repo y leer todo el contexto solo — Gaby nada más tiene que estar atento por si le pide loguearse en GitHub o confirmar algo.
+
+### Opción B: hacerlo a mano
 
 1. **Instalar Git** (si no lo tiene): https://git-scm.com/downloads
-2. **Tener Claude Code** funcionando en su PC, con su propia cuenta (no la de Lucas).
-3. **Clonar el repo** en una carpeta de su PC (por ejemplo, con Git Bash o la terminal):
+2. **Clonar el repo** desde una terminal (Git Bash en Windows, o Terminal en Mac):
    ```
    git clone https://github.com/Complex180/hybrid.git
    ```
    Como el repo es de su propia cuenta de GitHub, no debería pedir ningún permiso especial. Si pide login, es con la cuenta de GitHub dueña de `Complex180/hybrid`.
-4. **Abrir Claude Code apuntando a esa carpeta** (`cd` a la carpeta clonada y arrancar Claude Code ahí, o abrirla desde el explorador de archivos si usa la app de escritorio).
-5. Pegar el prompt de la sección 10 como primer mensaje.
+3. **Abrir Claude Code apuntando a esa carpeta** (`cd hybrid` y arrancar Claude Code ahí, o abrirla desde el explorador de archivos si usa la app de escritorio).
+4. Pegar como primer mensaje:
+
+   > Estoy retomando el desarrollo de mi web de coaching, Complex 180 (complex180.github.io/hybrid). Todo el contexto del proyecto — qué es, cómo está armado, dónde vive cada cosa (Drive, Apps Script, GitHub Pages), cómo funcionan los planes y el login de alumnos, y qué falta — está en el archivo `HANDOFF.md` en la raíz de este repo. Leelo completo antes de arrancar.
+   >
+   > El backend (Apps Script) vive en mi cuenta de Google (`fomiczfitness@gmail.com`), tengo que estar logueado con esa cuenta en el navegador para poder editarlo.
+   >
+   > Lo que quiero hacer ahora es: **[acá Gaby describe lo que necesita]**
 
 **Sobre el acceso a Drive/Apps Script:** no hay que configurar nada — ya está todo en su cuenta de Google (`fomiczfitness@gmail.com`). Solo tiene que estar logueado con esa cuenta en el navegador cuando su Claude necesite tocar el editor de Apps Script o el Drive.
 
 **Decisión pendiente para Gaby (no es necesario resolverla ahora):** una vez que se sienta cómodo trabajando solo, puede decidir si deja a Lucas como colaborador del repo de GitHub (para que lo pueda ayudar si hace falta) o si prefiere sacarlo. Eso se cambia desde GitHub → repo `Complex180/hybrid` → Settings → Collaborators, y lo puede hacer solo Gaby (es su repo).
-
----
-
-## 10. Prompt para que Gaby le pase a su Claude
-
-Gaby necesita clonar o abrir este repo (`Complex180/hybrid`) en una carpeta local, y tener Claude Code (o el asistente que use) trabajando sobre esa carpeta. Después, puede pegar esto como primer mensaje:
-
-> Estoy retomando el desarrollo de mi web de coaching, Complex 180 (complex180.github.io/hybrid). Todo el contexto del proyecto — qué es, cómo está armado, dónde vive cada cosa (Drive, Apps Script, GitHub Pages), cómo funcionan los planes y el login de alumnos, y qué falta — está en el archivo `HANDOFF.md` en la raíz de este repo. Leelo completo antes de arrancar.
->
-> El backend (Apps Script) vive en mi cuenta de Google (`fomiczfitness@gmail.com`), tengo que estar logueado con esa cuenta en el navegador para poder editarlo.
->
-> Lo que quiero hacer ahora es: **[acá Gaby describe lo que necesita — por ejemplo: "cargar el plan personalizado de un alumno nuevo", "cambiar el diseño de la landing", "agregar una sección nueva", etc.]**
-
-Con eso, su Claude va a tener el mismo nivel de contexto que tenía yo al terminar esta sesión.
