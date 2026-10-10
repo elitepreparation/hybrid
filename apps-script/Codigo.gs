@@ -160,6 +160,8 @@ function parsePlanificacion(hoja) {
     var s = porSemana[sem];
     if (!s.porDia[dia]) { s.porDia[dia] = { dia: dia, foco: String(r[2] || "").trim(), ejercicios: [] }; s.dias.push(s.porDia[dia]); }
     s.porDia[dia].ejercicios.push({ nombre: nombreEj, series: Number(r[4]) || 0, reps: Number(r[5]) || 0 });
+    var bloque = String(r[6] || "").trim(); // columna G opcional: "Bloque" (ej. Potencia)
+    if (bloque) s.porDia[dia].ejercicios[s.porDia[dia].ejercicios.length - 1].bloque = bloque;
   }
   semanas.forEach(function (s) { delete s.porDia; });
   return semanas;

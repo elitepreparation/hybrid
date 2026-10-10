@@ -8,8 +8,8 @@
   var DIAS_BASE = {
     OPEN: [
       { dia: "Día 1", foco: "Fuerza tren superior", ejercicios: [
-        { nombre: "Press banca", series: 4, reps: 8 }, { nombre: "Remo con barra", series: 4, reps: 8 },
-        { nombre: "Press militar", series: 3, reps: 10 }, { nombre: "Plancha", series: 3, reps: 30 }
+        { nombre: "Press banca", series: 4, reps: 8, bloque: "Potencia" }, { nombre: "Remo con barra", series: 4, reps: 8, bloque: "Potencia" },
+        { nombre: "Press militar", series: 3, reps: 10, bloque: "Fuerza" }, { nombre: "Plancha", series: 3, reps: 30, bloque: "Core" }
       ]},
       { dia: "Día 2", foco: "Resistencia", ejercicios: [
         { nombre: "Bike ritmo moderado", series: 1, reps: 20 }, { nombre: "Circuito funcional", series: 3, reps: 1 }
@@ -370,7 +370,7 @@
 
   function diaDetalleHTML(semana, dia, log) {
     var okCount = 0;
-    var items = dia.ejercicios.map(function (ej) {
+    function fila(ej) {
       var key = exKey(semana, dia.dia, ej.nombre);
       var saved = log[key] || {};
       var ok = saved.ok === "1";
@@ -381,17 +381,29 @@
         '<span class="ex-name">' + ej.nombre +
           (id ? ' <button type="button" class="ex-video" data-play-id="' + id + '" data-play-nombre="' + attr(ej.nombre) + '">▶ Técnica</button>' : '') +
         '</span>' +
-        '<span class="ex-plan" data-label="A hacer">' + ej.series + ' × ' + ej.reps + '</span>' +
+        '<span class="ex-plan" data-label="A hacer"><span><b>' + ej.series + '</b> series</span><span><b>' + ej.reps + '</b> reps</span></span>' +
         '<input type="text" class="ex-did" data-ex-did data-k="' + attr(key) + '" placeholder="ej. ' + ej.series + ' × ' + ej.reps + '" aria-label="Lo que hice en ' + attr(ej.nombre) + '" value="' + attr(saved.hechoTxt || "") + '">' +
         '<label class="ex-check" title="Marcar como hecho"><input type="checkbox" data-ex-ok data-k="' + attr(key) + '"' + (ok ? ' checked' : '') + ' aria-label="Hecho: ' + attr(ej.nombre) + '"><span aria-hidden="true"></span></label>' +
         '</li>';
+    }
+    // bloques (ej. "Potencia") arriba de sus ejercicios; si la planilla no trae columna "Bloque", se usa el foco del día
+    var grupos = [];
+    dia.ejercicios.forEach(function (ej) {
+      var nombre = ej.bloque || dia.foco || "";
+      var ultimo = grupos[grupos.length - 1];
+      if (ultimo && ultimo.nombre === nombre) ultimo.items.push(ej);
+      else grupos.push({ nombre: nombre, items: [ej] });
+    });
+    var bloques = grupos.map(function (g) {
+      return '<section class="blk">' + (g.nombre ? '<p class="blk-title">' + escHtml(g.nombre) + '</p>' : '') +
+        '<ul class="ex-list">' + g.items.map(fila).join("") + '</ul></section>';
     }).join("");
     var hecho = diaHecho(log, semana, dia.dia);
     return '<div class="log-day day-card' + (hecho ? ' is-done' : '') + '">' +
-      '<div class="log-day-head"><h3>' + dia.dia + '</h3><span>' + dia.foco + '</span></div>' +
+      '<div class="log-day-head"><h3>' + dia.dia + '</h3></div>' +
       '<p class="ex-progress" data-ex-progress>' + okCount + ' de ' + dia.ejercicios.length + ' ejercicios hechos</p>' +
       '<div class="ex-head" aria-hidden="true"><span>Ejercicio</span><span>A hacer</span><span>Lo que hice</span><span>✓</span></div>' +
-      '<ul class="ex-list">' + items + '</ul>' +
+      bloques +
       '<button type="button" class="btn ' + (hecho ? 'btn-ghost' : 'btn-primary') + ' day-done" data-toggle-hecho data-semana="' + semana + '" data-dia="' + dia.dia + '">' +
       (hecho ? '✓ Día hecho — deshacer' : 'Marcar día como hecho') + '</button></div>';
   }
