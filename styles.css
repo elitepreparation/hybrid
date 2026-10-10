@@ -311,13 +311,13 @@ ul { list-style: none; }
 .login-gate {
   background: var(--bg);
   min-height: calc(100dvh - 68px);
-  display: flex; align-items: center; justify-content: center;
-  padding: 4rem 1.25rem;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 0.5rem 1.25rem 3rem;
 }
 .login-gate[hidden] { display: none; }
 .login-card { width: 100%; max-width: 400px; text-align: center; }
-.login-logo-wrap { width: 210px; margin: 0 auto 1.75rem; }
-.login-logo-wrap img { width: 100%; animation: login-logo-pulse 2.6s ease-in-out infinite; }
+.login-logo-wrap { width: min(340px, 85vw); margin: -2.5rem auto -1.25rem; }
+.login-logo-wrap img { width: 100%; mix-blend-mode: multiply; animation: login-logo-pulse 2.6s ease-in-out infinite; }
 @keyframes login-logo-pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.06); }
@@ -327,7 +327,7 @@ ul { list-style: none; }
 }
 .login-tagline {
   font-family: var(--mono); font-size: .8rem; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--mute); margin-bottom: 2rem;
+  color: var(--mute); margin-bottom: 1.5rem; position: relative; z-index: 1;
 }
 .login-features { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 2.5rem; text-align: center; padding: 0; }
 .login-features li {
