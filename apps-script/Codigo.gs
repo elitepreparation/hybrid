@@ -712,11 +712,11 @@ function crearCarpetasVideos() {
   return "listo";
 }
 
-// dato público de la página de inicio: cuántos alumnos usan o usaron la plataforma.
+// dato público de la página de inicio: cuántos alumnos están activos (plan vigente: pagaron en los últimos 30 días).
 // Devuelve SOLO el número (sin nombres ni mails) y lo guarda 10 minutos para no leer la planilla en cada visita.
 function getStatsPublicas() {
   var cache = CacheService.getScriptCache();
-  var guardado = cache.get("stats_alumnos");
+  var guardado = cache.get("stats_activos");
   if (guardado) return { ok: true, alumnos: Number(guardado) };
   var alumnosFolder = subFolder(rootFolder(), "Alumnos");
   var archivos = alumnosFolder ? alumnosFolder.getFilesByName("Alumnos - claves") : null;
@@ -724,9 +724,11 @@ function getStatsPublicas() {
   if (archivos && archivos.hasNext()) {
     var values = SpreadsheetApp.open(archivos.next()).getSheets()[0].getDataRange().getValues();
     for (var i = 1; i < values.length; i++) {
-      if (String(values[i][1] || "").trim()) n++;
+      if (!String(values[i][1] || "").trim()) continue;
+      var pago = parseFecha(values[i][4]);
+      if (pago && new Date(pago.getTime() + UN_MES_MS) > new Date()) n++;
     }
   }
-  cache.put("stats_alumnos", String(n), 600);
+  cache.put("stats_activos", String(n), 600);
   return { ok: true, alumnos: n };
 }

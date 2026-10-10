@@ -166,9 +166,9 @@ ul { list-style: none; }
   :root { --logo-w: clamp(225px, calc(17vw - 26px), 325px); }
   .brand-mark img { width: var(--logo-w); }
   .hero { grid-template-columns: 1.2fr .8fr; align-items: start; padding-top: 0; margin-top: calc(var(--logo-w) / 1.405 * -0.72); }
-  /* el texto arranca debajo del logo, así el título puede ser bien grande sin chocar con él */
-  .hero-copy { padding-top: calc(var(--logo-w) / 1.405 * 0.72 + .5rem); }
-  .hero-title { font-size: clamp(3rem, 6.6vw, 7rem); }
+  /* el texto arranca casi a la altura de la foto, al costado del logo: el título se ajusta al espacio que el logo le deja */
+  .hero-copy { padding-top: .75rem; }
+  .hero-title { font-size: clamp(2.6rem, calc(min(50vw - 9.3rem, 37.7rem - var(--logo-w) / 2) / 7.2), 7rem); }
   .hero-figure { justify-self: end; }
 }
 

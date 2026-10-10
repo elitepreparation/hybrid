@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   "use strict";
 
   const data = window.__BRAND__ || {};
@@ -98,7 +98,7 @@
     els.forEach(el => io.observe(el));
   }
 
-  // cantidad de alumnos que usan o usaron la plataforma: viene del servidor (solo el número, sin datos personales);
+  // cantidad de alumnos activos (plan vigente): viene del servidor (solo el número, sin datos personales);
   // si no se puede cargar, el bloque queda oculto en vez de mostrar un valor roto
   function initAlumnosStat() {
     const card = $("[data-stat-alumnos]");
