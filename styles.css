@@ -162,9 +162,9 @@ ul { list-style: none; }
 
 /* Escritorio: logo grande al centro; texto y foto suben a los costados, a la altura del medio del logo */
 @media (min-width: 960px) {
-  :root { --logo-w: clamp(300px, 21vw, 420px); }
+  :root { --logo-w: clamp(250px, 17vw, 350px); }
   .brand-mark img { width: var(--logo-w); }
-  .hero { grid-template-columns: 1.2fr .8fr; align-items: start; padding-top: 0; margin-top: calc(var(--logo-w) / 1.405 * -0.66); }
+  .hero { grid-template-columns: 1.2fr .8fr; align-items: start; padding-top: 0; margin-top: calc(var(--logo-w) / 1.405 * -0.9); }
   .hero-figure { justify-self: end; }
 }
 
