@@ -181,7 +181,7 @@ ul { list-style: none; }
   font-family: var(--mono); color: #fff; font-size: .95rem; letter-spacing: .08em;
   text-transform: uppercase; padding: .9rem 2rem; white-space: nowrap;
 }
-.marquee-item::after { content: "â¢"; margin-left: 2rem; color: var(--accent); }
+.marquee-item::after { content: "\2022"; margin-left: 2rem; color: var(--accent); }
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
 /* =============================================================
@@ -192,7 +192,7 @@ ul { list-style: none; }
 .section-head { max-width: 56ch; margin-bottom: 2.5rem; }
 .section-title { font-size: clamp(1.9rem, 4.5vw, 2.8rem); }
 
-/* MÃ©todo */
+/* Método */
 .metodo-grid { display: grid; gap: 2rem; }
 .metodo-num { font-family: var(--mono); font-size: 4rem; color: var(--accent); font-weight: 700; line-height: 1; }
 .metodo-text { font-size: 1.15rem; color: var(--ink-soft); max-width: 60ch; }
@@ -210,7 +210,7 @@ ul { list-style: none; }
 .nivel-detalle { margin-top: 1.25rem; color: var(--ink-soft); }
 .nivel-items { margin-top: 1.5rem; display: flex; flex-direction: column; gap: .7rem; flex: 1; }
 .nivel-items li { padding-left: 1.4rem; position: relative; font-size: .95rem; }
-.nivel-items li::before { content: "â"; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+.nivel-items li::before { content: "\2192"; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
 .nivel-card .btn { margin-top: 2rem; }
 @media (min-width: 720px) { .niveles-grid { grid-template-columns: 1fr 1fr; } }
 @media (min-width: 1100px) { .niveles-grid { grid-template-columns: repeat(3, 1fr); } }
@@ -225,7 +225,7 @@ ul { list-style: none; }
 @media (min-width: 720px) { .pasos-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 1280px) { .pasos-grid { grid-template-columns: repeat(4, 1fr); } }
 
-/* GalerÃ­a mini */
+/* Galería mini */
 .galeria { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; margin-top: 2.5rem; }
 .galeria img { width: 100%; aspect-ratio: 3/4; object-fit: cover; filter: saturate(1.05); transition: transform .4s var(--ease-out); }
 .galeria a:hover img { transform: scale(1.04); }
@@ -255,7 +255,7 @@ ul { list-style: none; }
 }
 .faq-item summary::-webkit-details-marker { display: none; }
 .faq-item summary::after { content: "+"; font-family: var(--mono); color: var(--accent); font-size: 1.4rem; }
-.faq-item[open] summary::after { content: "â"; }
+.faq-item[open] summary::after { content: "\2013"; }
 .faq-item p { padding-bottom: 1.25rem; color: var(--ink-soft); max-width: 60ch; }
 
 /* Footer */
@@ -266,7 +266,7 @@ ul { list-style: none; }
 .footer-links a:hover { color: var(--accent); }
 
 /* =============================================================
-   9. Modal (Ã¡rea de alumnos â demo)
+   9. Modal (área de alumnos — demo)
    ============================================================= */
 .modal-backdrop {
   position: fixed; inset: 0; background: rgba(14,27,48,.6); z-index: 200;
@@ -280,7 +280,7 @@ ul { list-style: none; }
 .modal-close { position: absolute; top: 1rem; right: 1rem; font-family: var(--mono); font-size: 1rem; }
 
 /* =============================================================
-   9a. Login gate (perfil.html â pantalla de mail + clave)
+   9a. Login gate (perfil.html — pantalla de mail + clave)
    ============================================================= */
 .login-gate {
   background: var(--bg);
@@ -352,7 +352,7 @@ ul { list-style: none; }
 @media (min-width: 720px) { .pf-grid { grid-template-columns: repeat(2, 1fr); } }
 
 /* =============================================================
-   9c. Dashboard (perfil.html â planificaciÃ³n / videos)
+   9c. Dashboard (perfil.html — planificación / videos)
    ============================================================= */
 .dash-toolbar {
   display: flex; align-items: center; justify-content: space-between; gap: 1rem;
@@ -506,7 +506,7 @@ ul { list-style: none; }
 .video-item small { color: var(--mute); font-family: var(--mono); font-size: .75rem; text-transform: uppercase; }
 .video-badge { font-family: var(--mono); font-size: .78rem; color: var(--mute); white-space: nowrap; }
 
-/* Tarjetas de carpeta â pantalla inicial de Videos, una fila por grupo de Drive */
+/* Tarjetas de carpeta — pantalla inicial de Videos, una fila por grupo de Drive */
 .folder-grid { display: flex; flex-direction: column; gap: .75rem; }
 .folder-card {
   border: 2px solid var(--ink); background: #fff; padding: 1.1rem 1.25rem; width: 100%; text-align: left;
@@ -548,11 +548,11 @@ ul { list-style: none; }
 .video-frame-wrap { position: relative; aspect-ratio: 9 / 16; margin-top: 1rem; background: #000; }
 .video-frame-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
-/* PDF de planificaciÃ³n embebido */
+/* PDF de planificación embebido */
 .plan-pdf { margin-top: 1rem; border: 2px solid var(--ink); }
 .plan-pdf iframe { display: block; width: 100%; height: min(75vh, 900px); border: 0; }
 
-/* BotÃ³n flotante de WhatsApp */
+/* Botón flotante de WhatsApp */
 .wa-fab {
   position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 150;
   width: 58px; height: 58px; border-radius: 50%; background: #25d366; color: #fff;
@@ -562,7 +562,7 @@ ul { list-style: none; }
 .wa-fab:hover { transform: scale(1.08); }
 
 /* =============================================================
-   10. Reduced motion â only intrusive
+   10. Reduced motion — only intrusive
    ============================================================= */
 @media (prefers-reduced-motion: reduce) {
   .marquee-track { animation: none; }

@@ -222,3 +222,9 @@ Las planillas de planificación admiten una **columna G opcional, "Bloque"** (ej
 ### Sección Coach (inicio)
 
 `index.html` tiene la sección `#coach` ("Quién soy") antes de las preguntas; el texto y la foto (`assets/img/galeria-3.jpg`) se editan ahí mismo.
+
+### Inicio: alumnos activos, banda y símbolos (11 oct 2026)
+
+- El primer bloque de números del inicio ("alumnos activos") sale de `?action=stats` del backend: cuenta los alumnos de "Alumnos - claves" con plan vigente (pagaron hace menos de 30 días). Devuelve solo el número, sin datos personales, y se guarda 10 minutos en caché. Si da 0 o falla, el bloque se oculta. Backend desplegado: versión 21.
+- La banda que corre dice "Compromiso · Esfuerzo · Progreso · Resultados" (se edita en `index.html`, bloque `.marquee-track`; cada mitad debe seguir siendo más ancha que la pantalla).
+- Los símbolos que se dibujan desde el CSS (`•`, `→`, `–`) están escritos como escapes (`\2022`, `\2192`, `\2013`) para que no se rompan si el archivo se guarda con otra codificación. Antes estaban mal codificados y se veían como "â".
