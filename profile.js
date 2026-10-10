@@ -674,8 +674,15 @@
 
     fetch(API_URL + "?action=videos").then(function (r) { return r.json(); }).then(function (data) {
       if (data.ok && data.videos.length) {
-        videosCache = data.videos;
-        categoriasServidor = data.categorias || [];
+        // las carpetas de Drive pueden terminar en " CX" (ej. "Movilidad CX"): se muestran sin ese sufijo
+        var limpiar = function (n) { return String(n || "").replace(/\s+CX\s*$/i, "").trim(); };
+        videosCache = data.videos.map(function (v) {
+          var c = {}; Object.keys(v).forEach(function (k) { c[k] = v[k]; });
+          c.grupo = limpiar(v.grupo);
+          if (v.categoria) c.categoria = limpiar(v.categoria);
+          return c;
+        });
+        categoriasServidor = (data.categorias || []).map(limpiar);
         var nv = getJSON(KEYS.nivel); if (nv && !$("#view-dashboard").hidden) renderWeekly(nv);
         renderVideoList($("[data-video-search]").value);
         renderQuickVideos();
