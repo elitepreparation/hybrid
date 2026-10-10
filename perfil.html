@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261010j">
+<link rel="stylesheet" href="styles.css?v=20261010k">
 </head>
 <body>
 <a href="#main" class="skip-link">Saltar al contenido</a>
@@ -127,14 +127,41 @@
       <div data-dash-panel="plan" class="plan-layout">
       <div class="plan-main">
         <div class="plan-header">
-          <div>
-            <h1 class="section-title" data-plan-nombre>—</h1>
-            <p style="color:var(--mute); font-family:var(--mono); font-size:.85rem;" data-plan-meta></p>
+          <div class="plan-id">
+            <button type="button" class="avatar" data-avatar aria-label="Cambiar mi foto de perfil" title="Cambiar mi foto de perfil">
+              <img data-avatar-img alt="" hidden>
+              <span data-avatar-ini aria-hidden="true">?</span>
+            </button>
+            <div>
+              <h1 class="section-title" data-plan-nombre>—</h1>
+              <p style="color:var(--mute); font-family:var(--mono); font-size:.85rem;" data-plan-meta></p>
+            </div>
           </div>
           <div class="nivel-toggle">
             <button type="button" class="nivel-btn" data-toggle-nivel="OPEN">OPEN</button>
             <button type="button" class="nivel-btn" data-toggle-nivel="PRO">PRO</button>
           </div>
+        </div>
+
+        <div class="mes-grid">
+          <section class="mes-card" aria-label="Tu mes">
+            <p class="kicker">Tu mes</p>
+            <div class="mes-numeros">
+              <div><b data-mes-dias>0</b><span data-mes-dias-de>días completados</span></div>
+              <div><b data-mes-semana>0</b><span data-mes-semana-de>esta semana</span></div>
+              <div><b data-mes-ej>0</b><span>ejercicios hechos</span></div>
+            </div>
+            <div class="week-progress-bar"><span data-mes-bar style="width:0%"></span></div>
+          </section>
+          <section class="mes-card" aria-label="Mis objetivos">
+            <p class="kicker">Mis objetivos</p>
+            <p class="obj-inicial" data-obj-inicial hidden></p>
+            <ul class="obj-list" data-obj-list></ul>
+            <form class="obj-form" data-obj-form>
+              <input type="text" maxlength="120" placeholder="Sumá un objetivo (ej. correr 5 km sin parar)" aria-label="Nuevo objetivo" data-obj-input>
+              <button type="submit" class="btn btn-ghost">Agregar</button>
+            </form>
+          </section>
         </div>
 
         <div data-plan-archivo class="plan-archivo" hidden></div>
@@ -199,6 +226,6 @@
 </footer>
 
 <script defer src="lib/manifest.js?v=20261009a"></script>
-<script defer src="profile.js?v=20261010j"></script>
+<script defer src="profile.js?v=20261010k"></script>
 </body>
 </html>

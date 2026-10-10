@@ -247,7 +247,7 @@
       });
       // si no se vuelve a subir un archivo, mantiene el link que ya tenía guardado
       var previo = getJSON(KEYS.profile) || {};
-      ["fotoPerfilUrl", "fotoAptoUrl"].forEach(function (k) { if (previo[k]) profile[k] = previo[k]; });
+      ["fotoPerfilUrl", "fotoAptoUrl", "metas"].forEach(function (k) { if (previo[k]) profile[k] = previo[k]; });
 
       var grande = archivos.filter(function (a) { return a.file.size > TAMANIO_MAX_ARCHIVO; })[0];
       if (grande) { alert('El archivo "' + grande.file.name + '" pesa más de 8MB, subí uno más liviano.'); return; }
@@ -398,6 +398,7 @@
 
   function renderWeekly(nivel) {
     var log = getJSON(KEYS.log) || {};
+    renderMes(nivel);
     var semanas = semanasFor(nivel);
     var hoy = semanaActual();
     if (vista.nivel !== nivel) { vista.nivel = nivel; vista.semana = hoy; vista.dia = null; }
@@ -465,6 +466,7 @@
         var hechos = $$("[data-ex-ok]", card).filter(function (c) { return c.checked; }).length;
         $("[data-ex-progress]", card).textContent = hechos + " de " + total + " ejercicios hechos";
       }
+      renderMes(getJSON(KEYS.nivel) || "OPEN");
     });
     panel.addEventListener("click", function (e) {
       var nivel = getJSON(KEYS.nivel) || "OPEN";
@@ -773,12 +775,122 @@
   // ---- Dashboard: cada alumno tiene UN plan (OPEN, PRO o PERSONALIZADO) y solo ve ese ----
   var NIVEL_LABEL = { OPEN: "Nivel OPEN", PRO: "Nivel PRO", PERSONALIZADO: "Plan Personalizado" };
 
+  function escHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  // ---- Foto de perfil (opcional) junto al nombre; se sube desde "Perfil" en el menú Tu Planilla ----
+  function renderAvatar() {
+    var p = getJSON(KEYS.profile) || {};
+    var img = $("[data-avatar-img]"), ini = $("[data-avatar-ini]");
+    if (!img || !ini) return;
+    ini.textContent = String(p.nombre || "?").trim().charAt(0).toUpperCase() || "?";
+    var id = driveId(p.fotoPerfilUrl);
+    if (id) {
+      img.onerror = function () { img.hidden = true; ini.hidden = false; };
+      img.src = "https://drive.google.com/thumbnail?id=" + id + "&sz=w256";
+      img.hidden = false; ini.hidden = true;
+    } else {
+      img.hidden = true; ini.hidden = false;
+    }
+  }
+
+  // ---- "Tu mes": días completados del mes, de la semana y ejercicios hechos ----
+  function renderMes(nivel) {
+    if (!$("[data-mes-dias]")) return;
+    var log = getJSON(KEYS.log) || {};
+    var hoy = semanaActual();
+    var totalPlan = semanasFor(nivel).reduce(function (a, s) { return a + s.dias.length; }, 0);
+    var diasSemana = diasDeSemana(nivel, hoy).length;
+    var hechos = 0, hechosSemana = 0, ejercicios = 0;
+    Object.keys(log).forEach(function (k) {
+      if (k.charAt(0) === "_") return;
+      var v = log[k] || {};
+      if (k.indexOf("hecho|") === 0) {
+        if (v.hecho === "1") { hechos++; if (k.split("|")[1] === String(hoy)) hechosSemana++; }
+      } else if (v.ok === "1") ejercicios++;
+    });
+    $("[data-mes-dias]").textContent = hechos;
+    $("[data-mes-dias-de]").textContent = totalPlan ? "de " + totalPlan + " días del mes" : "días completados";
+    $("[data-mes-semana]").textContent = hechosSemana;
+    $("[data-mes-semana-de]").textContent = diasSemana ? "de " + diasSemana + " esta semana" : "esta semana";
+    $("[data-mes-ej]").textContent = ejercicios;
+    $("[data-mes-bar]").style.width = (totalPlan ? Math.min(100, Math.round(hechos / totalPlan * 100)) : 0) + "%";
+  }
+
+  // ---- "Mis objetivos": el punto de partida del perfil + metas que el alumno suma y va tildando ----
+  var MAX_METAS = 10;
+
+  function metasDelPerfil() {
+    var p = getJSON(KEYS.profile) || {};
+    return Array.isArray(p.metas) ? p.metas : [];
+  }
+
+  function guardarMetas(metas) {
+    var p = getJSON(KEYS.profile) || {};
+    p.metas = metas;
+    setJSON(KEYS.profile, p);
+    guardarEnServidor({ perfil: p });
+    renderObjetivos();
+  }
+
+  function renderObjetivos() {
+    var list = $("[data-obj-list]");
+    if (!list) return;
+    var p = getJSON(KEYS.profile) || {};
+    var ini = $("[data-obj-inicial]");
+    if (p.objetivos) { ini.hidden = false; ini.innerHTML = "<b>Mi punto de partida:</b> " + escHtml(p.objetivos); }
+    else ini.hidden = true;
+    var metas = metasDelPerfil();
+    list.innerHTML = metas.length ? metas.map(function (m, i) {
+      return '<li class="obj-item' + (m.ok ? ' is-ok' : '') + '">' +
+        '<label class="ex-check" title="Marcar como logrado"><input type="checkbox" data-obj-ok="' + i + '"' + (m.ok ? ' checked' : '') + ' aria-label="Logrado: ' + escHtml(m.t) + '"><span aria-hidden="true"></span></label>' +
+        '<span class="obj-text">' + escHtml(m.t) + '</span>' +
+        '<button type="button" class="obj-del" data-obj-del="' + i + '" aria-label="Quitar objetivo">✕</button></li>';
+    }).join("") : '<li class="obj-vacio">Todavía no sumaste objetivos. Escribí el primero abajo.</li>';
+  }
+
+  function initObjetivos() {
+    var avatar = $("[data-avatar]");
+    if (avatar) avatar.addEventListener("click", function () { irA("perfil"); });
+    var form = $("[data-obj-form]");
+    if (!form) return;
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var input = $("[data-obj-input]");
+      var texto = input.value.trim().slice(0, 120);
+      var metas = metasDelPerfil().slice();
+      if (!texto || metas.length >= MAX_METAS) return;
+      metas.push({ t: texto, ok: false });
+      input.value = "";
+      guardarMetas(metas);
+    });
+    $("[data-obj-list]").addEventListener("change", function (e) {
+      var chk = e.target.closest("[data-obj-ok]");
+      if (!chk) return;
+      var metas = metasDelPerfil().slice();
+      var i = Number(chk.dataset.objOk);
+      if (metas[i]) { metas[i] = { t: metas[i].t, ok: chk.checked }; guardarMetas(metas); }
+    });
+    $("[data-obj-list]").addEventListener("click", function (e) {
+      var del = e.target.closest("[data-obj-del]");
+      if (!del) return;
+      var metas = metasDelPerfil().slice();
+      metas.splice(Number(del.dataset.objDel), 1);
+      guardarMetas(metas);
+    });
+  }
+
   function setNivelActivo(nivel) {
     setJSON(KEYS.nivel, nivel);
     $$("[data-toggle-nivel]").forEach(function (b) { b.classList.toggle("is-active", b.dataset.toggleNivel === nivel); });
     var profile = getJSON(KEYS.profile) || {};
     $("[data-plan-nombre]").textContent = (profile.nombre || "") + " " + (profile.apellido || "");
     $("[data-plan-meta]").textContent = (NIVEL_LABEL[nivel] || nivel) + (profile.ciudad ? " · " + profile.ciudad : "");
+    renderAvatar();
+    renderObjetivos();
     renderWeekly(nivel);
     renderMonthly(nivel);
     $("[data-monthly-view]").hidden = true;
@@ -922,6 +1034,7 @@
     initPlanNav();
     initVideos();
     initQuickVideos();
+    initObjetivos();
 
     var fab = $("[data-whatsapp-fab]");
     var brand = window.__BRAND__ || {};

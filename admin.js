@@ -147,6 +147,10 @@
     if (perfil.fotoPerfilUrl) fotos.push('<a href="' + esc(perfil.fotoPerfilUrl) + '" target="_blank" rel="noopener">Foto de perfil</a>');
     if (perfil.fotoAptoUrl) fotos.push('<a href="' + esc(perfil.fotoAptoUrl) + '" target="_blank" rel="noopener">Apto físico</a>');
 
+    var metas = Array.isArray(perfil.metas) ? perfil.metas : [];
+    var metasHtml = metas.length
+      ? "<ul>" + metas.map(function (m) { return "<li>" + (m.ok ? "✓ " : "○ ") + esc(m.t) + "</li>"; }).join("") + "</ul>"
+      : "<p class=\"admin-muted\">Todavía no sumó objetivos.</p>";
     var hist = a.historial || {};
     var meses = Object.keys(hist).sort().reverse();
     var historial = meses.length
@@ -162,6 +166,7 @@
     return '<div class="admin-detail">' +
       '<div><p class="admin-sub">Días hechos (mes en curso)</p><ul>' + hechos + '</ul></div>' +
       '<div><p class="admin-sub">Datos</p><ul>' + datos + '</ul>' + (fotos.length ? '<p>' + fotos.join(" · ") + '</p>' : '') + '</div>' +
+      '<div class="admin-detail-wide"><p class="admin-sub">Objetivos del alumno</p>' + metasHtml + '</div>' +
       '<div class="admin-detail-wide"><p class="admin-sub">Ejercicios registrados (mes en curso)</p>' + tablaEntradas(av.entradas) + '</div>' +
       '<div class="admin-detail-wide"><p class="admin-sub">Historial de meses anteriores</p>' + historial + '</div>' +
       '<div class="admin-detail-wide admin-danger"><p class="admin-muted">Los registros se guardan hasta que los borres vos.</p>' +
