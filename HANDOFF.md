@@ -1,4 +1,4 @@
-# Complex 180 — Guía de traspaso del proyecto
+# Elite Preparation — Guía de traspaso del proyecto
 
 Este documento es para que Gaby pueda seguir trabajando esta web con su propio Claude, sin depender de Lucas. Explica qué es el proyecto, cómo está armado, dónde vive cada cosa y qué hay pendiente. Está escrito a fecha **15 de agosto de 2026**.
 
@@ -6,7 +6,7 @@ Este documento es para que Gaby pueda seguir trabajando esta web con su propio C
 
 ## 1. Qué es esto
 
-La web de **Complex 180 — Hybrid Training**, el proyecto de coaching de fitness de Gaby. Tiene dos partes:
+La web de **Elite Preparation**, el proyecto de coaching de fitness de Gaby. Tiene dos partes:
 
 - **Landing pública** (`index.html`): presentación, planes, precios, botón de WhatsApp.
 - **Zona de alumnos** (`perfil.html`): login con mail + clave, perfil personal, planificación de entrenamiento (semanal y mensual) y videos explicativos de ejercicios.
@@ -19,8 +19,8 @@ Es un sitio **estático** (HTML/CSS/JS puro, sin frameworks) que vive en GitHub 
 
 | Qué | Dónde |
 |---|---|
-| Sitio público | https://complex180.github.io/hybrid/ (landing) y `/perfil.html` (alumno) |
-| Repositorio de código | GitHub, `Complex180/hybrid` (público) |
+| Sitio público | https://elitepreparation.github.io/hybrid/ (landing) y `/perfil.html` (alumno) |
+| Repositorio de código | GitHub, `elitepreparation/hybrid` (público) |
 | Apps Script (backend) | Proyecto **"Complex180 API"**, en el Drive de Gaby (cuenta `fomiczfitness@gmail.com`) |
 | URL del backend (fija, no cambia al redesplegar) | `https://script.google.com/macros/s/AKfycby9c2jdl19l7tZBwxHG8Dpw6fz_bT_Chhc_WEydQAW1tiFPYtulxbaAk-MmYtMWlexrTw/exec` |
 | Datos reales (videos, planificaciones, alumnos) | Google Drive de Gaby, carpeta raíz **"Complex 180"** |
@@ -94,7 +94,7 @@ Todo el backend busca estas carpetas **por nombre exacto**. Si alguien las renom
 
 ## 6. El código, en dos partes
 
-### Frontend (repo `Complex180/hybrid`)
+### Frontend (repo `elitepreparation/hybrid`)
 - `index.html` / `main.js`: landing pública.
 - `perfil.html` / `profile.js`: zona de alumno — login, formulario de datos, dashboard con planificación y videos.
 - `styles.css`: todo el diseño (estilo "brutalista deportivo", blanco + azul marca).
@@ -156,10 +156,10 @@ El repo de GitHub y todo el backend (Apps Script + Drive) **ya viven en las cuen
 
 Gaby abre Claude Code en su PC (en cualquier carpeta, todavía no hace falta tener nada clonado) y le pega este mensaje tal cual:
 
-> Necesito que prepares mi entorno para seguir desarrollando mi web de coaching, Complex 180. Hacé esto en orden:
+> Necesito que prepares mi entorno para seguir desarrollando mi web de coaching, Elite Preparation. Hacé esto en orden:
 >
 > 1. Fijate si tengo Git instalado (`git --version`). Si no lo tengo, decime cómo instalarlo antes de seguir — no lo instales vos solo si necesita que yo confirme algo a mano.
-> 2. Cloná este repositorio en una carpeta llamada `Complex180-Web` dentro de mis Documentos: `https://github.com/Complex180/hybrid.git`
+> 2. Cloná este repositorio en una carpeta llamada `Complex180-Web` dentro de mis Documentos: `https://github.com/elitepreparation/hybrid.git`
 > 3. Si GitHub pide que inicie sesión en algún paso, avisame para que lo haga yo con mi cuenta.
 > 4. Una vez clonado, entrá a esa carpeta y leé completo el archivo `HANDOFF.md` que está en la raíz — ahí está todo el contexto del proyecto: qué es, cómo funciona, dónde vive cada cosa (Drive, Apps Script, GitHub Pages) y qué queda pendiente.
 > 5. Cuando termines de leerlo, contame en 3-4 líneas qué entendiste del proyecto para confirmar que quedó todo claro, y quedate esperando que te diga qué quiero hacer.
@@ -173,13 +173,13 @@ Con eso, Claude Code se ocupa de chequear/instalar Git, clonar el repo y leer to
 1. **Instalar Git** (si no lo tiene): https://git-scm.com/downloads
 2. **Clonar el repo** desde una terminal (Git Bash en Windows, o Terminal en Mac):
    ```
-   git clone https://github.com/Complex180/hybrid.git
+   git clone https://github.com/elitepreparation/hybrid.git
    ```
-   Como el repo es de su propia cuenta de GitHub, no debería pedir ningún permiso especial. Si pide login, es con la cuenta de GitHub dueña de `Complex180/hybrid`.
+   Como el repo es de su propia cuenta de GitHub, no debería pedir ningún permiso especial. Si pide login, es con la cuenta de GitHub dueña de `elitepreparation/hybrid`.
 3. **Abrir Claude Code apuntando a esa carpeta** (`cd hybrid` y arrancar Claude Code ahí, o abrirla desde el explorador de archivos si usa la app de escritorio).
 4. Pegar como primer mensaje:
 
-   > Estoy retomando el desarrollo de mi web de coaching, Complex 180 (complex180.github.io/hybrid). Todo el contexto del proyecto — qué es, cómo está armado, dónde vive cada cosa (Drive, Apps Script, GitHub Pages), cómo funcionan los planes y el login de alumnos, y qué falta — está en el archivo `HANDOFF.md` en la raíz de este repo. Leelo completo antes de arrancar.
+   > Estoy retomando el desarrollo de mi web de coaching, Elite Preparation (elitepreparation.github.io/hybrid). Todo el contexto del proyecto — qué es, cómo está armado, dónde vive cada cosa (Drive, Apps Script, GitHub Pages), cómo funcionan los planes y el login de alumnos, y qué falta — está en el archivo `HANDOFF.md` en la raíz de este repo. Leelo completo antes de arrancar.
    >
    > El backend (Apps Script) vive en mi cuenta de Google (`fomiczfitness@gmail.com`), tengo que estar logueado con esa cuenta en el navegador para poder editarlo.
    >
@@ -187,4 +187,12 @@ Con eso, Claude Code se ocupa de chequear/instalar Git, clonar el repo y leer to
 
 **Sobre el acceso a Drive/Apps Script:** no hay que configurar nada — ya está todo en su cuenta de Google (`fomiczfitness@gmail.com`). Solo tiene que estar logueado con esa cuenta en el navegador cuando su Claude necesite tocar el editor de Apps Script o el Drive.
 
-**Decisión pendiente para Gaby (no es necesario resolverla ahora):** una vez que se sienta cómodo trabajando solo, puede decidir si deja a Lucas como colaborador del repo de GitHub (para que lo pueda ayudar si hace falta) o si prefiere sacarlo. Eso se cambia desde GitHub → repo `Complex180/hybrid` → Settings → Collaborators, y lo puede hacer solo Gaby (es su repo).
+**Decisión pendiente para Gaby (no es necesario resolverla ahora):** una vez que se sienta cómodo trabajando solo, puede decidir si deja a Lucas como colaborador del repo de GitHub (para que lo pueda ayudar si hace falta) o si prefiere sacarlo. Eso se cambia desde GitHub → repo `elitepreparation/hybrid` → Settings → Collaborators, y lo puede hacer solo Gaby (es su repo).
+
+---
+
+## 10. Cambio de marca (9 oct 2026)
+
+La marca pasó de "Complex 180 — Hybrid Training" a **Elite Preparation**. La cuenta de GitHub se renombró a `elitepreparation`, así que el repo es `elitepreparation/hybrid` y la web está en https://elitepreparation.github.io/hybrid/ (el link viejo `complex180.github.io` ya no existe).
+
+Se dejaron **con el nombre viejo a propósito** (renombrarlos rompería cosas): la carpeta raíz "Complex 180" en Drive (`ROOT_NAME` en `Codigo.gs`), el proyecto de Apps Script "Complex180 API" y las claves de localStorage `complex180_*` (cambiarlas desloguearía a todos los alumnos).
