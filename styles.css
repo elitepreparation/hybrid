@@ -578,7 +578,7 @@ ul { list-style: none; }
 .nav-left { display: flex; align-items: center; gap: 1rem; min-width: 0; }
 .nav-brand--text {
   font-family: var(--display); text-transform: uppercase; letter-spacing: .08em; font-weight: 700;
-  font-size: 1.05rem; color: #fff; white-space: nowrap;
+  font-size: 1.55rem; color: #fff; white-space: nowrap; line-height: 1;
 }
 .planilla { position: relative; }
 .planilla[hidden], .planilla-menu[hidden] { display: none; }
@@ -641,7 +641,7 @@ ul { list-style: none; }
 .planilla-btn { white-space: nowrap; }
 .txt-short { display: none; }
 @media (max-width: 640px) {
-  .nav-brand--text { font-size: .78rem; letter-spacing: .03em; }
+  .nav-brand--text { font-size: .98rem; letter-spacing: .03em; }
   .nav-left { gap: .45rem; }
   .planilla-btn { gap: .4rem; padding: .5rem .55rem; font-size: .66rem; }
   .txt-long { display: none; }
