@@ -116,7 +116,7 @@ ul { list-style: none; }
 
 @media (min-width: 960px) { .nav-links { display: flex; } }
 
-.brand-mark { display: flex; justify-content: center; padding: 1rem 1.25rem 0; }
+.brand-mark { display: flex; justify-content: center; padding: 1rem 1.25rem .75rem; }
 .brand-mark img { width: min(280px, 72vw); height: auto; animation: login-logo-pulse 2.6s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) {
   .brand-mark img { animation: none; }
@@ -131,9 +131,10 @@ ul { list-style: none; }
   max-width: 1280px; margin-inline: auto;
 }
 .hero-copy { display: flex; flex-direction: column; align-items: flex-start; }
-.hero-title { font-size: clamp(2.6rem, 9vw, 5.2rem); max-width: 14ch; }
+.hero-title { font-size: clamp(3rem, 13vw, 6.4rem); max-width: 14ch; line-height: .95; }
 .hero-title em { font-style: normal; color: var(--accent); }
-.hero-sub { margin-top: 1.25rem; max-width: 46ch; color: var(--ink-soft); font-size: 1.05rem; }
+.hero-sub { margin-top: 1.5rem; max-width: 40ch; color: var(--ink-soft); font-size: 1.2rem; line-height: 1.45; }
+.hero-sub strong { color: var(--ink); font-weight: 600; box-shadow: inset 0 -.35em 0 rgba(26,95,224,.18); }
 .hero-actions { display: flex; flex-wrap: wrap; gap: .9rem; margin-top: 2rem; }
 
 .hero-figure { position: relative; justify-self: center; width: 100%; max-width: 420px; }
@@ -165,7 +166,9 @@ ul { list-style: none; }
   :root { --logo-w: clamp(225px, calc(17vw - 26px), 325px); }
   .brand-mark img { width: var(--logo-w); }
   .hero { grid-template-columns: 1.2fr .8fr; align-items: start; padding-top: 0; margin-top: calc(var(--logo-w) / 1.405 * -0.72); }
-  .hero-title { font-size: clamp(2.6rem, 4.8vw, 5.2rem); }
+  /* el texto arranca debajo del logo, así el título puede ser bien grande sin chocar con él */
+  .hero-copy { padding-top: calc(var(--logo-w) / 1.405 * 0.72 + 1.5rem); }
+  .hero-title { font-size: clamp(3rem, 6.6vw, 7rem); }
   .hero-figure { justify-self: end; }
 }
 
