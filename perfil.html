@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261011d">
+<link rel="stylesheet" href="styles.css?v=20261011e">
 </head>
 <body>
 <a href="#main" class="skip-link">Saltar al contenido</a>
@@ -159,10 +159,11 @@
             <p class="kicker">Tu mes</p>
             <div class="mes-numeros">
               <div><b data-mes-dias>0</b><span data-mes-dias-de>días completados</span></div>
-              <div><b data-mes-semana>0</b><span data-mes-semana-de>esta semana</span></div>
-              <div><b data-mes-ej>0</b><span>ejercicios hechos</span></div>
+              <div><b data-mes-adh>0%</b><span>adherencia</span></div>
+              <div><b data-mes-racha>0</b><span data-mes-racha-de>semanas seguidas</span></div>
             </div>
             <div class="week-progress-bar"><span data-mes-bar style="width:0%"></span></div>
+            <div class="mapa-mes" data-mapa-mes aria-label="Constancia del mes: una fila por semana"></div>
           </section>
           <section class="mes-card" aria-label="Mis objetivos">
             <p class="kicker">Mis objetivos</p>
@@ -237,6 +238,6 @@
 </footer>
 
 <script defer src="lib/manifest.js?v=20261009a"></script>
-<script defer src="profile.js?v=20261011a"></script>
+<script defer src="profile.js?v=20261011b"></script>
 </body>
 </html>

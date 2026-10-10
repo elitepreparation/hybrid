@@ -497,7 +497,7 @@
         var log = getJSON(KEYS.log) || {};
         var key = hechoKey(toggle.dataset.semana, toggle.dataset.dia);
         var marcar = !diaHecho(log, toggle.dataset.semana, toggle.dataset.dia);
-        log[key] = { hecho: marcar ? "1" : "0" };
+        log[key] = marcar ? { hecho: "1", f: fechaHoy() } : { hecho: "0" };
         setJSON(KEYS.log, log);
         guardarRegistrosServidor(log);
         renderWeekly(nivel);
@@ -893,27 +893,69 @@
     input.addEventListener("input", guardar);
   }
 
-  // ---- "Tu mes": días completados del mes, de la semana y ejercicios hechos ----
+  // fecha local de hoy como AAAA-MM-DD (para guardar cuándo se completó cada día)
+  function fechaHoy() {
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  // "2026-10-10" -> "10/10"
+  function fechaCorta(f) {
+    var m = /^\d{4}-(\d{2})-(\d{2})$/.exec(String(f || ""));
+    return m ? Number(m[2]) + "/" + Number(m[1]) : "";
+  }
+
+  // ---- "Tu mes": días completados, adherencia, racha y el mapa de constancia semana por semana ----
   function renderMes(nivel) {
     if (!$("[data-mes-dias]")) return;
     var log = getJSON(KEYS.log) || {};
     var hoy = semanaActual();
-    var totalPlan = semanasFor(nivel).reduce(function (a, s) { return a + s.dias.length; }, 0);
-    var diasSemana = diasDeSemana(nivel, hoy).length;
-    var hechos = 0, hechosSemana = 0, ejercicios = 0;
+    var semanas = semanasFor(nivel);
+    var hechosPorSemana = {}, fechas = {};
     Object.keys(log).forEach(function (k) {
-      if (k.charAt(0) === "_") return;
+      if (k.indexOf("hecho|") !== 0) return;
       var v = log[k] || {};
-      if (k.indexOf("hecho|") === 0) {
-        if (v.hecho === "1") { hechos++; if (k.split("|")[1] === String(hoy)) hechosSemana++; }
-      } else if (v.ok === "1") ejercicios++;
+      if (v.hecho !== "1") return;
+      var p = k.split("|");
+      hechosPorSemana[p[1]] = (hechosPorSemana[p[1]] || 0) + 1;
+      fechas[p[1] + "|" + p[2]] = v.f || "";
     });
+
+    var totalPlan = 0, hechos = 0, planHastaHoy = 0, hechosHastaHoy = 0;
+    var completa = {};
+    semanas.forEach(function (s) {
+      var plan = s.dias.length, hecho = hechosPorSemana[String(s.semana)] || 0;
+      totalPlan += plan; hechos += hecho;
+      if (s.semana <= hoy) { planHastaHoy += plan; hechosHastaHoy += Math.min(hecho, plan); }
+      completa[s.semana] = plan > 0 && hecho >= plan;
+    });
+    // racha: semanas completas seguidas, hacia atrás desde esta semana (si todavía no la completó, desde la anterior)
+    var racha = 0, w = completa[hoy] ? hoy : hoy - 1;
+    while (w >= 1 && completa[w]) { racha++; w--; }
+
     $("[data-mes-dias]").textContent = hechos;
     $("[data-mes-dias-de]").textContent = totalPlan ? "de " + totalPlan + " días del mes" : "días completados";
-    $("[data-mes-semana]").textContent = hechosSemana;
-    $("[data-mes-semana-de]").textContent = diasSemana ? "de " + diasSemana + " esta semana" : "esta semana";
-    $("[data-mes-ej]").textContent = ejercicios;
+    $("[data-mes-adh]").textContent = (planHastaHoy ? Math.round(hechosHastaHoy / planHastaHoy * 100) : 0) + "%";
+    $("[data-mes-racha]").textContent = racha;
+    $("[data-mes-racha-de]").textContent = racha === 1 ? "semana seguida" : "semanas seguidas";
     $("[data-mes-bar]").style.width = (totalPlan ? Math.min(100, Math.round(hechos / totalPlan * 100)) : 0) + "%";
+
+    // mapa: una fila por semana, un cuadradito por día planificado; los hechos llevan su fecha debajo
+    var mapa = $("[data-mapa-mes]");
+    if (!mapa) return;
+    mapa.innerHTML = semanas.map(function (s) {
+      var celdas = s.dias.map(function (d) {
+        var f = fechas[s.semana + "|" + d.dia];
+        var hecho = f !== undefined;
+        return '<span class="mapa-celda' + (hecho ? ' is-hecho' : '') + '" title="' + escHtml(d.dia + (hecho ? " — hecho" + (f ? " el " + fechaCorta(f) : "") : " — pendiente")) + '">' +
+          '<i>' + (hecho ? "✓" : "") + '</i><small>' + (hecho ? escHtml(fechaCorta(f)) : "") + '</small></span>';
+      }).join("");
+      var hechosSem = hechosPorSemana[String(s.semana)] || 0;
+      return '<div class="mapa-fila' + (s.semana === hoy ? ' is-actual' : '') + '">' +
+        '<span class="mapa-sem">Sem ' + s.semana + '</span>' +
+        '<span class="mapa-celdas">' + celdas + '</span>' +
+        '<span class="mapa-total">' + hechosSem + '/' + s.dias.length + '</span></div>';
+    }).join("");
   }
 
   // ---- "Mis objetivos": el punto de partida del perfil + metas que el alumno suma y va tildando ----
@@ -1048,7 +1090,7 @@
     Object.keys(log).forEach(function (k) {
       if (k.charAt(0) === "_") return;
       var v = log[k] || {};
-      if (k.indexOf("hecho|") === 0) { if (v.hecho === "1") out[k] = { hecho: "1" }; return; }
+      if (k.indexOf("hecho|") === 0) { if (v.hecho === "1") out[k] = v.f ? { hecho: "1", f: v.f } : { hecho: "1" }; return; }
       var o = {};
       if (v.ok === "1") o.ok = "1";
       if (v.hechoTxt) o.hechoTxt = v.hechoTxt;

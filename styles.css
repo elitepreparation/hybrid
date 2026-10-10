@@ -881,3 +881,19 @@ ul { list-style: none; }
 .apodo-input:focus { outline: none; border-bottom-color: var(--accent); }
 .apodo-hint { color: var(--mute); font-size: .85rem; max-width: 40ch; }
 @media (max-width: 640px) { .avatar-xl { width: 132px; height: 132px; } .avatar-xl-ini { font-size: 3.5rem; } }
+
+/* Mapa de constancia del mes: una fila por semana, un cuadrado por día planificado */
+.mapa-mes { display: flex; flex-direction: column; gap: .35rem; margin-top: 1rem; }
+.mapa-fila { display: grid; grid-template-columns: 3.1rem minmax(0, 1fr) 2.2rem; align-items: center; gap: .5rem; padding: .3rem .4rem; }
+.mapa-fila.is-actual { background: var(--bg-2); border-left: 3px solid var(--accent); }
+.mapa-sem { font-family: var(--mono); font-size: .68rem; text-transform: uppercase; letter-spacing: .04em; color: var(--mute); }
+.mapa-total { font-family: var(--mono); font-size: .75rem; font-weight: 700; color: var(--ink); text-align: right; }
+.mapa-celdas { display: flex; flex-wrap: wrap; gap: .35rem; }
+.mapa-celda { display: flex; flex-direction: column; align-items: center; gap: .1rem; width: 30px; }
+.mapa-celda i {
+  width: 26px; height: 26px; border: 2px solid var(--line-strong); display: grid; place-items: center;
+  font-style: normal; font-weight: 700; font-size: .85rem; color: #fff; background: var(--bg);
+}
+.mapa-celda.is-hecho i { background: var(--accent); border-color: var(--accent); }
+.mapa-celda small { font-family: var(--mono); font-size: .56rem; color: var(--mute); line-height: 1; min-height: .6rem; }
+.mapa-fila.is-actual .mapa-celda small { color: var(--ink); }

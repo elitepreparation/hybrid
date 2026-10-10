@@ -41,6 +41,11 @@
     return new Date(iso).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
   }
 
+  function fechaCorta(f) {
+    var m = /^\d{4}-(\d{2})-(\d{2})$/.exec(String(f || ""));
+    return m ? Number(m[2]) + "/" + Number(m[1]) : "";
+  }
+
   function fmtDia(iso) {
     if (!iso) return "—";
     return new Date(iso).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -73,7 +78,7 @@
       if (k.indexOf("hecho|") === 0) {
         if (v.hecho !== "1") return;
         var p = k.split("|");
-        (hechosPorSemana[p[1]] = hechosPorSemana[p[1]] || []).push(p[2]);
+        (hechosPorSemana[p[1]] = hechosPorSemana[p[1]] || []).push(p[2] + (v.f ? " (" + fechaCorta(v.f) + ")" : ""));
         total++;
       } else if (v.ok === "1" || v.hechoTxt || (v.peso !== undefined && v.peso !== "")) {
         var q = k.split("|");
