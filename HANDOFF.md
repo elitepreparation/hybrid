@@ -206,3 +206,11 @@ Página privada para Gaby: lista a todos los alumnos con **último ingreso**, **
 - **Clave:** vive en Apps Script > Configuración del proyecto > Propiedades de la secuencia de comandos > `ADMIN_CLAVE` (no está en el código ni en GitHub). Tras 5 intentos fallidos se bloquea 10 minutos.
 - **Datos de actividad:** el perfil del alumno avisa al backend cada ingreso (`sesion`) y cada ~2 min con la pantalla visible (`latido`). Se guardan en "Alumnos - claves", columnas **I** (Último ingreso), **J** (Tiempo total, seg), **K** (Ingresos), **L** (Última sesión, seg). La columna H sigue siendo el vencimiento.
 - **Despliegue:** requiere pegar `apps-script/Codigo.gs` en el editor y publicar una **Nueva versión** (ver sección 6). Sin eso, el panel no carga y el seguimiento simplemente no registra nada.
+
+### Registros del alumno, festejo y borrado (10 oct 2026)
+
+- Al marcar un día como hecho sale un festejo de ~2 segundos (confeti, globos y "¡Día completado!"). No sale al deshacer.
+- Por ejercicio, el alumno anota "lo que hizo" y lo tilda. Todo se guarda en su fila de "Alumnos - claves" (columna **G**, Registros) y se ve en `admin.html`.
+- **Los registros se guardan hasta que Gaby los borre desde `admin.html`** (botones "Borrar semana", "Borrar este mes" y "Borrar TODOS los registros"). Al borrar, el servidor cambia una marca (columna **M**) y el celular del alumno la detecta al abrir su perfil: adopta la copia del servidor y no vuelve a subir lo borrado.
+- Las claves de registros son semana 1–4 sin mes, así que **al cambiar de mes** el perfil del alumno archiva el mes anterior en la columna **N** (Historial, JSON por mes `AAAA-MM`) y arranca el mes nuevo limpio. El historial se ve y se borra desde el panel. Límite: ~45.000 caracteres por celda; si se llena, el archivo falla y el alumno conserva sus datos locales, así que conviene borrar meses viejos de vez en cuando.
+- Backend desplegado: versión 17.
