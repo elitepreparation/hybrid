@@ -84,6 +84,12 @@
 
   function showView(id) {
     ["view-clave", "view-form", "view-dashboard"].forEach(function (v) { $("#" + v).hidden = (v !== id); });
+    var conSesion = id === "view-dashboard" || (id === "view-form" && !!getJSON(KEYS.profile));
+    var planilla = $("[data-planilla]");
+    if (planilla) planilla.hidden = !conSesion;
+    var salir = $("[data-logout]");
+    if (salir) salir.hidden = (id === "view-clave");
+    cerrarMenuPlanilla();
   }
 
   // el pago habilita los DOS planes (OPEN y PRO) por 1 mes — el vencimiento lo calcula
@@ -255,30 +261,60 @@
         guardarEnServidor({ perfil: profile });
         if (btn) { btn.disabled = false; btn.textContent = textoOriginal; }
         renderDashboard();
+        marcarSeccion("plan");
         showView("view-dashboard");
       });
     });
   }
 
   // ---- Dashboard: toolbar ----
-  function initDashToolbar() {
-    $$("[data-dash-tab]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        $$("[data-dash-tab]").forEach(function (b) { b.classList.toggle("is-active", b === btn); });
-        $$("[data-dash-panel]").forEach(function (p) { p.hidden = (p.dataset.dashPanel !== btn.dataset.dashTab); });
-      });
+  // ---- Menú "Tu Planilla": Perfil / Planificación / Videos, uno debajo del otro ----
+  function cerrarMenuPlanilla() {
+    var menu = $("[data-planilla-menu]"), btn = $("[data-planilla-btn]");
+    if (menu) menu.hidden = true;
+    if (btn) btn.setAttribute("aria-expanded", "false");
+  }
+
+  function marcarSeccion(seccion) {
+    $$("[data-ir]").forEach(function (b) {
+      if (b.dataset.ir === seccion) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
     });
-    $("[data-toggle-monthly]").addEventListener("click", function (e) {
-      var box = $("[data-monthly-view]");
-      box.hidden = !box.hidden;
-      e.target.textContent = box.hidden ? "Ver planificación mensual" : "Ocultar planificación mensual";
-    });
-    $("[data-edit-profile]").addEventListener("click", function () {
+  }
+
+  function irA(seccion) {
+    if (seccion === "perfil") {
       fillForm(getJSON(KEYS.profile));
       var nivel = getJSON(KEYS.nivel);
       $("[data-registros-card]").hidden = !nivel;
       if (nivel) renderRegistros(nivel);
       showView("view-form");
+    } else {
+      $$("[data-dash-panel]").forEach(function (p) { p.hidden = (p.dataset.dashPanel !== seccion); });
+      showView("view-dashboard");
+    }
+    marcarSeccion(seccion);
+    window.scrollTo(0, 0);
+  }
+
+  function initDashToolbar() {
+    var btn = $("[data-planilla-btn]"), menu = $("[data-planilla-menu]");
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var abrir = menu.hidden;
+      menu.hidden = !abrir;
+      btn.setAttribute("aria-expanded", String(abrir));
+    });
+    menu.addEventListener("click", function (e) {
+      var item = e.target.closest("[data-ir]");
+      if (item) irA(item.dataset.ir);
+    });
+    document.addEventListener("click", function (e) { if (!e.target.closest("[data-planilla]")) cerrarMenuPlanilla(); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") cerrarMenuPlanilla(); });
+
+    $("[data-toggle-monthly]").addEventListener("click", function (e) {
+      var box = $("[data-monthly-view]");
+      box.hidden = !box.hidden;
+      e.target.textContent = box.hidden ? "Ver planificación mensual" : "Ocultar planificación mensual";
     });
     $("[data-logout]").addEventListener("click", cerrarSesion);
   }
@@ -560,8 +596,40 @@
         videosCache = data.videos;
         var nv = getJSON(KEYS.nivel); if (nv && !$("#view-dashboard").hidden) renderWeekly(nv);
         renderVideoList($("[data-video-search]").value);
+        renderQuickVideos();
       }
     }).catch(function () { /* sin conexión: se queda con la lista de muestra */ });
+  }
+
+  // ---- Acceso rápido: buscar un video por nombre sin salir de la planificación ----
+  function renderQuickVideos() {
+    var host = $("[data-quick-results]");
+    if (!host) return;
+    var q = ($("[data-quick-search]").value || "").trim().toLowerCase();
+    var conVideo = videosCache.filter(function (v) { return v.id || driveId(v.url); });
+    if (!q) {
+      host.innerHTML = '<p class="quick-hint">Escribí el nombre del ejercicio para ver su técnica.</p>';
+      return;
+    }
+    var items = conVideo.filter(function (v) {
+      return String(v.nombre).toLowerCase().indexOf(q) > -1 || String(v.grupo).toLowerCase().indexOf(q) > -1;
+    }).slice(0, 8);
+    host.innerHTML = items.length
+      ? items.map(function (v) {
+        var id = v.id || driveId(v.url);
+        return '<button type="button" class="quick-item" data-play-id="' + id + '" data-play-nombre="' + String(v.nombre).replace(/"/g, "&quot;") + '">' +
+          '<span class="quick-play">▶</span><span><strong>' + v.nombre + '</strong><small>' + v.grupo + '</small></span></button>';
+      }).join("")
+      : '<p class="quick-hint">No hay videos con ese nombre.</p>';
+  }
+
+  function initQuickVideos() {
+    $("[data-quick-search]").addEventListener("input", renderQuickVideos);
+    $("[data-quick-results]").addEventListener("click", function (e) {
+      var play = e.target.closest("[data-play-id]");
+      if (play) openVideo(play.dataset.playId, play.dataset.playNombre);
+    });
+    renderQuickVideos();
   }
 
   // ---- Planificación real: archivo subido + planilla estructurada ----
@@ -669,6 +737,8 @@
     var nivel = getJSON(KEYS.nivel) || "OPEN";
     // solo se ve el nivel pagado — el otro botón ni se muestra, no hay para dónde "cambiarse" gratis
     $$("[data-toggle-nivel]").forEach(function (b) { b.hidden = b.dataset.toggleNivel !== nivel; });
+    $$("[data-dash-panel]").forEach(function (p) { p.hidden = (p.dataset.dashPanel !== "plan"); });
+    marcarSeccion("plan");
     setNivelActivo(nivel);
     iniciarSeguimiento();
   }
@@ -681,6 +751,7 @@
     initNivelToggle();
     initPlanNav();
     initVideos();
+    initQuickVideos();
 
     var fab = $("[data-whatsapp-fab]");
     var brand = window.__BRAND__ || {};

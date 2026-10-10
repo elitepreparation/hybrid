@@ -16,17 +16,28 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261009s">
+<link rel="stylesheet" href="styles.css?v=20261010b">
 </head>
 <body>
 <a href="#main" class="skip-link">Saltar al contenido</a>
 
 <header class="nav">
-  <a href="index.html" class="nav-brand">
-    <img src="assets/img/logo.jpg?v=20261009a" alt="Elite Preparation" width="120" height="120">
-  </a>
+  <div class="nav-left">
+    <a href="index.html" class="nav-brand nav-brand--text">Elite Preparation</a>
+    <div class="planilla" data-planilla hidden>
+      <button type="button" class="planilla-btn" data-planilla-btn aria-haspopup="true" aria-expanded="false">
+        <span>Tu Planilla</span><svg viewBox="0 0 12 8" width="12" height="8" aria-hidden="true"><path d="M1 1.5 6 6.5l5-5" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+      </button>
+      <div class="planilla-menu" data-planilla-menu role="menu" hidden>
+        <button type="button" role="menuitem" data-ir="perfil"><b>Perfil</b><small>Tus datos</small></button>
+        <button type="button" role="menuitem" data-ir="plan"><b>Planificación</b><small>Entrenamientos por día</small></button>
+        <button type="button" role="menuitem" data-ir="videos"><b>Videos</b><small>Biblioteca de ejercicios</small></button>
+      </div>
+    </div>
+  </div>
   <div class="nav-actions">
-    <a class="btn btn-ghost" href="index.html">Volver al inicio</a>
+    <a class="btn btn-ghost nav-home" href="index.html">Volver al inicio</a>
+    <button type="button" class="btn btn-ghost" data-logout hidden aria-label="Cerrar sesión"><span class="txt-long">Cerrar sesión</span><span class="txt-short">Salir</span></button>
   </div>
 </header>
 
@@ -111,18 +122,10 @@
   </section>
 
   <section id="view-dashboard" hidden>
-    <div class="dash-toolbar">
-      <nav class="dash-tabs">
-        <button type="button" class="dash-tab is-active" data-dash-tab="plan">Planificación</button>
-        <button type="button" class="dash-tab" data-dash-tab="videos">Videos</button>
-      </nav>
-      <button type="button" class="btn btn-ghost" data-edit-profile>Perfil ✎</button>
-      <button type="button" class="btn btn-ghost" data-logout>Cerrar sesión</button>
-    </div>
+    <div class="section" style="max-width:1200px;">
 
-    <div class="section" style="max-width:1100px;">
-
-      <div data-dash-panel="plan">
+      <div data-dash-panel="plan" class="plan-layout">
+      <div class="plan-main">
         <div class="plan-header">
           <div>
             <p class="kicker">Hola</p>
@@ -154,6 +157,13 @@
           <button type="button" class="btn btn-ghost" data-toggle-monthly>Ver planificación mensual</button>
         </div>
         <div data-monthly-view hidden style="margin-top:1.5rem;"></div>
+      </div>
+      <aside class="plan-aside" aria-label="Buscar un video">
+        <p class="kicker">Acceso rápido</p>
+        <h2 class="plan-aside-title">Buscá un video</h2>
+        <input type="search" data-quick-search placeholder="Ej: sentadilla, remo…" aria-label="Buscar video por nombre">
+        <div data-quick-results class="quick-results"></div>
+      </aside>
       </div>
 
       <div data-dash-panel="videos" hidden>
@@ -190,6 +200,6 @@
 </footer>
 
 <script defer src="lib/manifest.js?v=20261009a"></script>
-<script defer src="profile.js?v=20261009c"></script>
+<script defer src="profile.js?v=20261010a"></script>
 </body>
 </html>
