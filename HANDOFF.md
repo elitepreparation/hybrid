@@ -228,3 +228,14 @@ Las planillas de planificación admiten una **columna G opcional, "Bloque"** (ej
 - El primer bloque de números del inicio ("alumnos activos") sale de `?action=stats` del backend: cuenta los alumnos de "Alumnos - claves" con plan vigente (pagaron hace menos de 30 días). Devuelve solo el número, sin datos personales, y se guarda 10 minutos en caché. Si da 0 o falla, el bloque se oculta. Backend desplegado: versión 21.
 - La banda que corre dice "Compromiso · Esfuerzo · Progreso · Resultados" (se edita en `index.html`, bloque `.marquee-track`; cada mitad debe seguir siendo más ancha que la pantalla).
 - Los símbolos que se dibujan desde el CSS (`•`, `→`, `–`) están escritos como escapes (`\2022`, `\2192`, `\2013`) para que no se rompan si el archivo se guarda con otra codificación. Antes estaban mal codificados y se veían como "â".
+
+### Registro de personas nuevas (11 oct 2026)
+
+En `perfil.html`, la pantalla de ingreso tiene dos pestañas: **"Ya tengo clave"** (mail + clave, como siempre) y **"Soy nuevo"**. Quien toca "Soy nuevo" pone nombre y mail, completa enseguida el formulario de datos y queda **pendiente de activación**: el backend (`registrar`) agrega una fila a "Alumnos - claves" con Nombre, Email y el Perfil (JSON), pero **sin Clave, Nivel ni Fecha de pago**, así que no puede entrar al plan.
+
+**Para activarla:** en "Alumnos - claves", completar **Clave**, **Nivel** (OPEN, PRO o PERSONALIZADO) y **Fecha de pago**. Desde ese momento entra con su mail y la clave, y encuentra sus datos ya cargados. En `admin.html` los pendientes figuran como "pendiente de activación" y suman al contador "Por activar".
+
+- Si el mail ya existe, el registro no toca la fila existente.
+- Límite contra spam: hasta 40 registros por hora; no se aceptan links de archivos ni objetivos desde afuera.
+- En el registro no se pide foto ni apto físico (se suben después, ya como alumno).
+- Backend desplegado: versión 22.
