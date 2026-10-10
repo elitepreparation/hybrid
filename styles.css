@@ -840,3 +840,15 @@ ul { list-style: none; }
 @media (max-width: 640px) { .nav-avatar { width: 30px; height: 30px; } .nav-avatar span { font-size: .85rem; } .nav-id { gap: .2rem; } }
 
 .section-lead { margin-top: 1rem; max-width: 60ch; color: var(--ink-soft); font-size: 1.05rem; }
+
+/* Perfil: foto, ELITE PREPARATION y Tu Planilla en una sola fila */
+.nav-id { flex-direction: row; align-items: center; gap: .7rem; }
+.nav-left { gap: .9rem; }
+@media (max-width: 640px) {
+  .nav-id { gap: .4rem; }
+  .nav-left { gap: .4rem; }
+  .nav-brand--text { font-size: .82rem; letter-spacing: .02em; }
+  .planilla-btn { padding: .45rem .5rem; font-size: .62rem; gap: .3rem; }
+  .nav-actions .btn { padding: .5rem .55rem; font-size: .66rem; }
+  .nav { padding: .6rem .7rem; gap: .35rem; }
+}
