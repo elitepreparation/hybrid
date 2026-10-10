@@ -554,7 +554,7 @@
   }
 
   // bloques que siempre aparecen en Videos, aunque todavía no tengan videos cargados
-  var CATEGORIAS_FIJAS = ["Movilidad", "Elongación", "Ejercicios de fuerza", "Técnica de carrera"];
+  var CATEGORIAS_FIJAS = ["Movilidad", "Elongación", "Técnica de carrera"];
   var categoriasServidor = []; // carpetas de primer nivel de "Videos ejercicios" (incluye las vacías)
 
   // bloque al que pertenece un video: la carpeta de primer nivel; "Movilidad Tren Superior/Inferior/Zona Media"

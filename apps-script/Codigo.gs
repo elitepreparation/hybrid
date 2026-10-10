@@ -703,7 +703,7 @@ function adminBorrarRegistros(claveAdmin, email, alcance) {
 function crearCarpetasVideos() {
   var base = subFolder(rootFolder(), "Videos ejercicios");
   if (!base) throw new Error('No existe la carpeta "Videos ejercicios"');
-  ["Elongación", "Ejercicios de fuerza", "Técnica de carrera"].forEach(function (n) {
+  ["Elongación", "Técnica de carrera"].forEach(function (n) {
     if (!subFolder(base, n)) base.createFolder(n);
   });
   return "listo";
