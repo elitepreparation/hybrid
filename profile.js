@@ -374,6 +374,39 @@
   function exKey(semana, dia, ejercicio) { return semana + "|" + dia + "|" + ejercicio; }
   function attr(v) { return String(v).replace(/&/g, "&amp;").replace(/"/g, "&quot;"); }
 
+  // ---- "Hoy te toca": el próximo día pendiente de esta semana, a un toque ----
+  function renderHoy(nivel) {
+    var card = $("[data-hoy-card]");
+    if (!card) return;
+    var log = getJSON(KEYS.log) || {};
+    var hoy = semanaActual();
+    var dias = diasDeSemana(nivel, hoy);
+    if (!dias.length) { card.hidden = true; return; }
+    var pendiente = dias.filter(function (d) { return !diaHecho(log, hoy, d.dia); })[0];
+    card.hidden = false;
+    card.classList.toggle("is-completa", !pendiente);
+    $("[data-hoy-kicker]").textContent = pendiente ? "Hoy te toca" : "Semana " + hoy;
+    if (pendiente) {
+      var hechos = dias.length - dias.filter(function (d) { return !diaHecho(log, hoy, d.dia); }).length;
+      $("[data-hoy-titulo]").textContent = pendiente.dia + (pendiente.foco ? " · " + pendiente.foco : "");
+      $("[data-hoy-meta]").textContent = pendiente.ejercicios.length + (pendiente.ejercicios.length === 1 ? " ejercicio" : " ejercicios") + " · " + hechos + " de " + dias.length + " días hechos esta semana";
+      $("[data-hoy-ir]").hidden = false;
+      $("[data-hoy-ir]").dataset.dia = pendiente.dia;
+    } else {
+      $("[data-hoy-titulo]").textContent = "¡Semana completa!";
+      $("[data-hoy-meta]").textContent = "Hiciste los " + dias.length + " días de esta semana. Descansá y a seguir con la próxima.";
+      $("[data-hoy-ir]").hidden = true;
+    }
+  }
+
+  // link de WhatsApp para consultarle a Gaby sobre un día puntual
+  function waConsultaDia(semana, dia) {
+    var brand = window.__BRAND__ || {};
+    var p = getJSON(KEYS.profile) || {};
+    var txt = "Hola Gaby, soy " + (nombreVisible(p) || "alumno") + ". Tengo una consulta sobre el " + dia.dia + (dia.foco ? " (" + dia.foco + ")" : "") + " de la semana " + semana + ".";
+    return "https://wa.me/" + (brand.whatsapp || "") + "?text=" + encodeURIComponent(txt);
+  }
+
   function diaDetalleHTML(semana, dia, log) {
     var okCount = 0;
     function fila(ej) {
@@ -404,19 +437,28 @@
       return '<section class="blk">' + (g.nombre ? '<p class="blk-title">' + escHtml(g.nombre) + '</p>' : '') +
         '<ul class="ex-list">' + g.items.map(fila).join("") + '</ul></section>';
     }).join("");
+    var rpeActual = Number((log[hechoKey(semana, dia.dia)] || {}).rpe) || 0;
+    var rpeHtml = '<div class="rpe" role="group" aria-label="Esfuerzo del día">' +
+      '<p class="rpe-titulo">¿Qué tan duro estuvo? <small>1 = suave · 10 = máximo</small></p><div class="rpe-botones">' +
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (n) {
+        return '<button type="button" class="rpe-btn' + (n === rpeActual ? ' is-activo' : '') + '" data-rpe="' + n + '" data-semana="' + semana + '" data-dia="' + attr(dia.dia) + '" aria-pressed="' + (n === rpeActual) + '">' + n + '</button>';
+      }).join("") + '</div></div>';
     var hecho = diaHecho(log, semana, dia.dia);
     return '<div class="log-day day-card' + (hecho ? ' is-done' : '') + '">' +
       '<div class="log-day-head"><h3>' + dia.dia + '</h3></div>' +
       '<p class="ex-progress" data-ex-progress>' + okCount + ' de ' + dia.ejercicios.length + ' ejercicios hechos</p>' +
       '<div class="ex-head" aria-hidden="true"><span>Ejercicio</span><span>A hacer</span><span>Lo que hice</span><span>✓</span></div>' +
-      bloques +
+      bloques + rpeHtml +
+      '<div class="day-acciones">' +
       '<button type="button" class="btn ' + (hecho ? 'btn-ghost' : 'btn-primary') + ' day-done" data-toggle-hecho data-semana="' + semana + '" data-dia="' + dia.dia + '">' +
-      (hecho ? '✓ Día hecho — deshacer' : 'Marcar día como hecho') + '</button></div>';
+      (hecho ? '✓ Día hecho — deshacer' : 'Marcar día como hecho') + '</button>' +
+      '<a class="btn btn-ghost day-consulta" href="' + waConsultaDia(semana, dia) + '" target="_blank" rel="noopener">Consultar este día</a></div></div>';
   }
 
   function renderWeekly(nivel) {
     var log = getJSON(KEYS.log) || {};
     renderMes(nivel);
+    renderHoy(nivel);
     var semanas = semanasFor(nivel);
     var hoy = semanaActual();
     if (vista.nivel !== nivel) { vista.nivel = nivel; vista.semana = hoy; vista.dia = null; }
@@ -460,6 +502,15 @@
 
   function initPlanNav() {
     var panel = $("[data-week-panel]");
+    var hoyBtn = $("[data-hoy-ir]");
+    if (hoyBtn) hoyBtn.addEventListener("click", function () {
+      var nv = getJSON(KEYS.nivel) || "OPEN";
+      vista.semana = semanaActual();
+      vista.dia = hoyBtn.dataset.dia;
+      renderWeekly(nv);
+      var det = $("[data-week-dias]");
+      if (det) det.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
     // "Lo que hice" y tilde por ejercicio: se guardan en el mismo registro del alumno
     function guardarEjercicio(k, campos) {
       var log = getJSON(KEYS.log) || {};
@@ -492,12 +543,29 @@
       if (sem) { vista.semana = Number(sem.dataset.semanaChip); vista.dia = null; renderWeekly(nivel); return; }
       var dia = e.target.closest("[data-dia-chip]");
       if (dia) { vista.dia = dia.dataset.diaChip; renderWeekly(nivel); return; }
+      var rpeBtn = e.target.closest("[data-rpe]");
+      if (rpeBtn) {
+        var lg = getJSON(KEYS.log) || {};
+        var kk = hechoKey(rpeBtn.dataset.semana, rpeBtn.dataset.dia);
+        var ant = lg[kk] || { hecho: "0" };
+        var nuevoRpe = Number(rpeBtn.dataset.rpe);
+        lg[kk] = { hecho: ant.hecho || "0" };
+        if (ant.f) lg[kk].f = ant.f;
+        if (Number(ant.rpe) !== nuevoRpe) lg[kk].rpe = nuevoRpe; // tocar el mismo número lo saca
+        setJSON(KEYS.log, lg);
+        guardarRegistrosServidor(lg);
+        renderWeekly(nivel);
+        return;
+      }
       var toggle = e.target.closest("[data-toggle-hecho]");
       if (toggle) {
         var log = getJSON(KEYS.log) || {};
         var key = hechoKey(toggle.dataset.semana, toggle.dataset.dia);
         var marcar = !diaHecho(log, toggle.dataset.semana, toggle.dataset.dia);
-        log[key] = marcar ? { hecho: "1", f: fechaHoy() } : { hecho: "0" };
+        var previoDia = log[key] || {};
+        var nuevoDia = marcar ? { hecho: "1", f: fechaHoy() } : { hecho: "0" };
+        if (previoDia.rpe) nuevoDia.rpe = previoDia.rpe;
+        log[key] = nuevoDia;
         setJSON(KEYS.log, log);
         guardarRegistrosServidor(log);
         renderWeekly(nivel);
@@ -1090,7 +1158,7 @@
     Object.keys(log).forEach(function (k) {
       if (k.charAt(0) === "_") return;
       var v = log[k] || {};
-      if (k.indexOf("hecho|") === 0) { if (v.hecho === "1") out[k] = v.f ? { hecho: "1", f: v.f } : { hecho: "1" }; return; }
+      if (k.indexOf("hecho|") === 0) { if (v.hecho === "1") var e1 = { hecho: "1" }; if (v.f) e1.f = v.f; if (v.rpe) e1.rpe = v.rpe; out[k] = e1; return; }
       var o = {};
       if (v.ok === "1") o.ok = "1";
       if (v.hechoTxt) o.hechoTxt = v.hechoTxt;

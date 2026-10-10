@@ -78,7 +78,7 @@
       if (k.indexOf("hecho|") === 0) {
         if (v.hecho !== "1") return;
         var p = k.split("|");
-        (hechosPorSemana[p[1]] = hechosPorSemana[p[1]] || []).push(p[2] + (v.f ? " (" + fechaCorta(v.f) + ")" : ""));
+        (hechosPorSemana[p[1]] = hechosPorSemana[p[1]] || []).push(p[2] + (v.f ? " (" + fechaCorta(v.f) + ")" : "") + (v.rpe ? " · esfuerzo " + v.rpe : ""));
         total++;
       } else if (v.ok === "1" || v.hechoTxt || (v.peso !== undefined && v.peso !== "")) {
         var q = k.split("|");
