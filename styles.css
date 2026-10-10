@@ -943,3 +943,7 @@ ul { list-style: none; }
 
 /* lo que tiene el atributo hidden nunca se muestra, aunque otra regla le ponga display */
 [hidden] { display: none !important; }
+
+/* aviso de alta y cumpleaños en el panel */
+.alta-aviso { margin-top: 1rem; padding: .75rem .9rem; font-size: .82rem; line-height: 1.45; color: var(--ink-soft); background: var(--bg-2); border-left: 3px solid var(--accent); text-align: left; }
+.admin-cumple { color: #b9770e !important; font-weight: 600; }

@@ -750,6 +750,8 @@ function registrarAlumno(nombre, email, perfilJson) {
     // por seguridad no se aceptan links de archivos ni objetivos cargados desde afuera
     delete perfil.fotoPerfilUrl; delete perfil.fotoAptoUrl; delete perfil.metas;
   }
+  if (!perfil) perfil = {};
+  perfil.registrado = new Date().toISOString(); // cuándo se registró (lo ve Gaby en el panel)
   var cache = CacheService.getScriptCache();
   var porHora = Number(cache.get("reg_hora")) || 0;
   if (porHora >= 40) return { ok: false, error: "demasiados registros, probá más tarde" };

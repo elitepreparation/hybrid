@@ -46,6 +46,11 @@
     return m ? Number(m[2]) + "/" + Number(m[1]) : "";
   }
 
+  function fechaLarga(f) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(f || ""));
+    return m ? Number(m[3]) + "/" + Number(m[2]) + "/" + m[1] : "";
+  }
+
   function fmtDia(iso) {
     if (!iso) return "—";
     return new Date(iso).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -100,6 +105,23 @@
   }
 
   // ---- render ----
+  // días que faltan para el próximo cumpleaños (0 = hoy), o null si no cargó la fecha
+  function diasParaCumple(a) {
+    var f = a.perfil && a.perfil.cumple;
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(f || ""));
+    if (!m) return null;
+    var hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+    var prox = new Date(hoy.getFullYear(), Number(m[2]) - 1, Number(m[3]));
+    if (prox < hoy) prox = new Date(hoy.getFullYear() + 1, Number(m[2]) - 1, Number(m[3]));
+    return Math.round((prox - hoy) / DIA_MS);
+  }
+
+  function etiquetaCumple(a) {
+    var d = diasParaCumple(a);
+    if (d === null || d > 7) return "";
+    return '<small class="admin-cumple">🎂 ' + (d === 0 ? "cumple hoy" : d === 1 ? "cumple mañana" : "cumple en " + d + " días") + '</small>';
+  }
+
   function estadoVenc(a) {
     var d = diasHastaVencer(a);
     if (!a.vencimiento) return { cls: "is-warn", txt: "pendiente de activación" + (a.perfil && a.perfil.planInteres ? " · quiere " + a.perfil.planInteres : "") };
@@ -147,7 +169,7 @@
       : '<li class="admin-muted">Todavía no marcó ningún día como hecho.</li>';
     var perfil = a.perfil || {};
     var datos = [
-      ["Mail", a.email], ["Plan que le interesa", perfil.planInteres], ["Ciudad", perfil.ciudad], ["WhatsApp", perfil.whatsapp], ["Objetivos", perfil.objetivos], ["Lesiones", perfil.historialLesiones], ["Patologías", perfil.patologias], ["Instagram", perfil.instagram], ["Pagó el", fmtDia(a.fechaPago)]
+      ["Mail", a.email], ["Plan que le interesa", perfil.planInteres], ["Cumpleaños", fechaLarga(perfil.cumple)], ["Se registró el", perfil.registrado ? fmtDia(perfil.registrado) : ""], ["Ciudad", perfil.ciudad], ["WhatsApp", perfil.whatsapp], ["Objetivos", perfil.objetivos], ["Lesiones", perfil.historialLesiones], ["Patologías", perfil.patologias], ["Instagram", perfil.instagram], ["Pagó el", fmtDia(a.fechaPago)]
     ].filter(function (d) { return d[1]; }).map(function (d) { return '<li><b>' + esc(d[0]) + ':</b> ' + esc(d[1]) + '</li>'; }).join("");
     var fotos = [];
     if (perfil.fotoPerfilUrl) fotos.push('<a href="' + esc(perfil.fotoPerfilUrl) + '" target="_blank" rel="noopener">Foto de perfil</a>');
@@ -190,7 +212,7 @@
     var abre = abierto === a.email;
     return '<article class="admin-row' + (abre ? ' is-open' : '') + '">' +
       '<button type="button" class="admin-row-main" data-toggle="' + esc(a.email) + '" aria-expanded="' + abre + '">' +
-        '<span class="admin-cell admin-name"><strong>' + esc(a.nombre || a.email) + '</strong><small>' + esc(a.nivel || "sin nivel") + '</small></span>' +
+        '<span class="admin-cell admin-name"><strong>' + esc(a.nombre || a.email) + '</strong><small>' + esc(a.nivel || "sin nivel") + '</small>' + etiquetaCumple(a) + '</span>' +
         '<span class="admin-cell"><em>Último ingreso</em><b class="' + (inactivo ? 'is-bad-txt' : '') + '">' + esc(haceCuanto(a.ultimoIngreso)) + '</b><small>' + esc(fmtFecha(a.ultimoIngreso)) + '</small></span>' +
         '<span class="admin-cell"><em>Tiempo</em><b>' + esc(fmtTiempo(a.ultimaSesionSeg)) + '</b><small>total ' + esc(fmtTiempo(a.tiempoTotalSeg)) + ' · ' + a.ingresos + (a.ingresos === 1 ? ' ingreso' : ' ingresos') + '</small></span>' +
         '<span class="admin-cell"><em>Avance</em><b>' + prog + '</b>' + (av.esperados ? '<span class="week-progress-bar"><span style="width:' + pct + '%"></span></span>' : '') + '</span>' +
@@ -208,6 +230,7 @@
       if (filtro === "inactivos") return diasSinEntrar(a) > 7;
       if (filtro === "vencen") { var d = diasHastaVencer(a); return d >= 0 && d <= 7; }
       if (filtro === "vencidos") return diasHastaVencer(a) < 0;
+      if (filtro === "pendientes") return !a.vencimiento;
       return true;
     });
     lista.sort(function (x, y) {
