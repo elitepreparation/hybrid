@@ -61,6 +61,7 @@
   var KEYS = {
     profile: "complex180_profile", nivel: "complex180_nivel", log: "complex180_log",
     vencimiento: "complex180_vencimiento", email: "complex180_email", clave: "complex180_clave",
+    reinicio: "complex180_reinicio", // marca que cambia cuando Gaby borra registros desde su panel
     nombreCuenta: "complex180_nombre_cuenta" // el "Nombre" que Lucas cargó en Alumnos - claves,
     // no el que el alumno completó en su perfil — es el que usa el Plan Personalizado para
     // encontrar su hoja en Drive
@@ -185,6 +186,7 @@
             // el servidor manda el perfil/registros guardados la última vez (en cualquier dispositivo)
             if (data.perfil) setJSON(KEYS.profile, data.perfil);
             if (data.registros) setJSON(KEYS.log, data.registros);
+            if (data.reinicio) localStorage.setItem(KEYS.reinicio, data.reinicio);
             if (getJSON(KEYS.profile)) { renderDashboard(); showView("view-dashboard"); }
             else { showView("view-form"); }
           } else if (data.error === "vencido") {
@@ -474,11 +476,13 @@
       if (toggle) {
         var log = getJSON(KEYS.log) || {};
         var key = hechoKey(toggle.dataset.semana, toggle.dataset.dia);
-        log[key] = { hecho: diaHecho(log, toggle.dataset.semana, toggle.dataset.dia) ? "0" : "1" };
+        var marcar = !diaHecho(log, toggle.dataset.semana, toggle.dataset.dia);
+        log[key] = { hecho: marcar ? "1" : "0" };
         setJSON(KEYS.log, log);
         guardarRegistrosServidor(log);
         renderWeekly(nivel);
         renderMonthly(nivel);
+        if (marcar) festejar();
         return;
       }
       var play = e.target.closest("[data-play-id]");
@@ -752,16 +756,97 @@
   function postAccion(action, extra) {
     var email = localStorage.getItem(KEYS.email);
     var clave = localStorage.getItem(KEYS.clave);
-    if (!email || !clave) return;
+    if (!email || !clave) return Promise.resolve(null);
     var body = new URLSearchParams({ action: action, email: email, clave: clave });
     Object.keys(extra || {}).forEach(function (k) { body.set(k, extra[k]); });
-    fetch(API_URL, { method: "POST", body: body, keepalive: true }).catch(function () { /* sin conexión: no se registra */ });
+    return fetch(API_URL, { method: "POST", body: body, keepalive: true })
+      .then(function (r) { return r.json(); })
+      .catch(function () { return null; /* sin conexión: no se registra */ });
+  }
+
+  // ---- Registros: sincronización con lo que Gaby borra desde su panel + cambio de mes ----
+  function mesClave() {
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+  }
+
+  // para el historial solo se guarda lo que importa (días hechos, ejercicios tildados, texto y pesos)
+  function compactarRegistros(log) {
+    var out = {};
+    Object.keys(log).forEach(function (k) {
+      if (k.charAt(0) === "_") return;
+      var v = log[k] || {};
+      if (k.indexOf("hecho|") === 0) { if (v.hecho === "1") out[k] = { hecho: "1" }; return; }
+      var o = {};
+      if (v.ok === "1") o.ok = "1";
+      if (v.hechoTxt) o.hechoTxt = v.hechoTxt;
+      if (v.peso !== undefined && v.peso !== "") o.peso = v.peso;
+      if (Object.keys(o).length) out[k] = o;
+    });
+    return out;
+  }
+
+  // las claves de registros son semana 1-4 sin mes: al cambiar de mes se archiva el anterior
+  // (queda en el panel de Gaby) y el alumno arranca el mes nuevo limpio
+  function rotarMesSiHaceFalta() {
+    var log = getJSON(KEYS.log) || {};
+    var actual = mesClave();
+    if (!log._mes) { log._mes = actual; setJSON(KEYS.log, log); return Promise.resolve(false); }
+    if (log._mes === actual) return Promise.resolve(false);
+    var viejo = compactarRegistros(log);
+    function reiniciar() {
+      var nuevo = { _mes: actual };
+      setJSON(KEYS.log, nuevo);
+      guardarRegistrosServidor(nuevo);
+      return true;
+    }
+    if (!Object.keys(viejo).length) return Promise.resolve(reiniciar());
+    return postAccion("archivarMes", { mes: log._mes, datos: JSON.stringify(viejo) })
+      .then(function (r) { return (r && r.ok) ? reiniciar() : false; });
+  }
+
+  function sincronizarRegistros(data) {
+    if (data && data.ok) {
+      var local = localStorage.getItem(KEYS.reinicio) || "";
+      if (data.reinicio && data.reinicio !== local) {
+        setJSON(KEYS.log, data.registros || {});
+        localStorage.setItem(KEYS.reinicio, data.reinicio);
+      }
+    }
+    return rotarMesSiHaceFalta().then(function () {
+      var nv = getJSON(KEYS.nivel);
+      if (nv && !$("#view-dashboard").hidden) { renderWeekly(nv); renderMonthly(nv); }
+    });
+  }
+
+  // ---- Festejo al completar un día: confeti y globos durante ~2 segundos ----
+  function festejar() {
+    var cont = document.createElement("div");
+    cont.className = "festejo";
+    cont.setAttribute("aria-hidden", "true");
+    var html = '<div class="festejo-msg">¡Día completado!</div>';
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      var colores = ["#1a5fe0", "#0b2f7a", "#f5b700", "#e63946", "#2ecc71", "#ff7a00", "#8e44ad"];
+      var al = function (a, b) { return a + Math.random() * (b - a); };
+      for (var i = 0; i < 46; i++) {
+        html += '<i class="festejo-confeti" style="left:' + al(0, 100).toFixed(1) + '%;background:' + colores[i % colores.length] +
+          ';width:' + al(6, 11).toFixed(0) + 'px;height:' + al(9, 16).toFixed(0) + 'px;--d:' + al(0, .35).toFixed(2) + 's;--t:' + al(1.3, 1.7).toFixed(2) +
+          's;--r:' + al(-720, 720).toFixed(0) + 'deg"></i>';
+      }
+      for (var j = 0; j < 9; j++) {
+        html += '<b class="festejo-globo" style="left:' + al(6, 92).toFixed(1) + '%;background:' + colores[(j + 2) % colores.length] +
+          ';--d:' + al(0, .3).toFixed(2) + 's;--t:' + al(1.5, 1.8).toFixed(2) + 's"></b>';
+      }
+    }
+    cont.innerHTML = html;
+    document.body.appendChild(cont);
+    setTimeout(function () { cont.remove(); }, 2200);
   }
 
   function iniciarSeguimiento() {
     if (seguimientoActivo) return;
     seguimientoActivo = true;
-    postAccion("sesion");
+    postAccion("sesion").then(sincronizarRegistros);
     var acumulado = 0;
     var desde = document.visibilityState === "visible" ? Date.now() : null;
     function enviar() {

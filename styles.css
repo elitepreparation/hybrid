@@ -687,3 +687,58 @@ ul { list-style: none; }
   .txt-short { display: inline; }
   .planilla-menu { min-width: 230px; }
 }
+
+/* Festejo al completar un día (~2 segundos) */
+.festejo { position: fixed; inset: 0; z-index: 400; pointer-events: none; overflow: hidden; }
+.festejo-msg {
+  position: absolute; left: 50%; top: 38%; transform: translate(-50%, -50%) scale(.6); opacity: 0;
+  background: var(--ink); color: #fff; padding: 1rem 1.6rem; border: 3px solid var(--accent);
+  font-family: var(--display); text-transform: uppercase; font-size: clamp(1.4rem, 5vw, 2.2rem); letter-spacing: .04em; white-space: nowrap;
+  box-shadow: 8px 8px 0 var(--accent);
+  animation: festejo-msg 2s var(--ease-out) forwards;
+}
+@keyframes festejo-msg {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.6); }
+  15% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+  25% { transform: translate(-50%, -50%) scale(1); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+.festejo-confeti {
+  position: absolute; top: -20px; display: block; opacity: 0;
+  animation: festejo-cae var(--t, 1.5s) linear var(--d, 0s) forwards;
+}
+@keyframes festejo-cae {
+  0% { opacity: 1; transform: translateY(0) rotate(0); }
+  90% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(110vh) rotate(var(--r, 360deg)); }
+}
+.festejo-globo {
+  position: absolute; bottom: -90px; display: block; width: 46px; height: 58px; border-radius: 50% 50% 48% 48%; opacity: 0;
+  animation: festejo-sube var(--t, 1.7s) ease-out var(--d, 0s) forwards;
+}
+.festejo-globo::after {
+  content: ""; position: absolute; left: 50%; top: 100%; width: 2px; height: 34px; background: rgba(14,27,48,.45); transform: translateX(-50%);
+}
+.festejo-globo::before {
+  content: ""; position: absolute; left: 22%; top: 14%; width: 22%; height: 26%; border-radius: 50%; background: rgba(255,255,255,.45);
+}
+@keyframes festejo-sube {
+  0% { opacity: 1; transform: translate(0, 0); }
+  50% { transform: translate(14px, -55vh); }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-8px, -115vh); }
+}
+
+/* Panel del coach: borrado de registros e historial */
+.admin-del {
+  font-family: var(--mono); font-size: .66rem; text-transform: uppercase; letter-spacing: .04em;
+  border: 2px solid #c0392b; color: #c0392b; padding: .25rem .55rem; margin-left: .5rem; background: var(--bg);
+}
+.admin-del:hover { background: #c0392b; color: #fff; }
+.admin-del:disabled { opacity: .5; cursor: wait; }
+.admin-danger { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; border-top: 1px dashed var(--line); padding-top: 1rem; }
+.admin-danger .admin-del { margin-left: 0; padding: .55rem .9rem; font-size: .72rem; }
+.admin-hist { border: 1px solid var(--line); padding: .6rem .8rem; margin-top: .5rem; }
+.admin-hist summary { cursor: pointer; font-size: .9rem; }
+.admin-hist ul { margin-top: .6rem; }

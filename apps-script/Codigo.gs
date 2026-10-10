@@ -33,6 +33,8 @@ function doPost(e) {
     else if (action === "sesion") out = registrarSesion(e.parameter.email, e.parameter.clave);
     else if (action === "latido") out = registrarLatido(e.parameter.email, e.parameter.clave, e.parameter.segundos);
     else if (action === "admin") out = getAdminAlumnos(e.parameter.claveAdmin);
+    else if (action === "archivarMes") out = archivarMes(e.parameter.email, e.parameter.clave, e.parameter.mes, e.parameter.datos);
+    else if (action === "adminBorrar") out = adminBorrarRegistros(e.parameter.claveAdmin, e.parameter.email, e.parameter.alcance);
     else out = { ok: false, error: "accion desconocida" };
   } catch (err) {
     out = { ok: false, error: String(err) };
@@ -253,7 +255,8 @@ function getAlumnoLogin(email, clave) {
     nivel: (nivel === "OPEN" || nivel === "PRO" || nivel === "PERSONALIZADO") ? nivel : "",
     vencimiento: vencimiento.toISOString(),
     perfil: parseJSONSeguro(r[5]),
-    registros: parseJSONSeguro(r[6])
+    registros: parseJSONSeguro(r[6]),
+    reinicio: String(r[12] || "") // COL_REINICIO (se define más abajo en el archivo)
   };
 }
 
@@ -528,10 +531,14 @@ function reorganizarPlanificaciones() {
 //   I Último ingreso | J Tiempo total (seg) | K Ingresos | L Última sesión (seg)
 // La clave del panel NO está en el código: se guarda en Configuración del proyecto >
 // Propiedades de la secuencia de comandos > ADMIN_CLAVE (la define Gaby en el editor).
+//   M Reinicio de registros (marca que cambia cuando Gaby borra datos desde el panel, así el celular
+//     del alumno se entera y no vuelve a subir lo borrado) | N Historial de meses anteriores (JSON)
 var COL_ULTIMO = 9, COL_TIEMPO = 10, COL_INGRESOS = 11, COL_ULTSESION = 12;
+var COL_REINICIO = 13, COL_HISTORIAL = 14;
+var MAX_CELDA = 45000; // una celda de Sheets admite 50.000 caracteres
 
 function asegurarEncabezadosAdmin(hoja) {
-  var enc = ["Último ingreso", "Tiempo total (seg)", "Ingresos", "Última sesión (seg)"];
+  var enc = ["Último ingreso", "Tiempo total (seg)", "Ingresos", "Última sesión (seg)", "Reinicio de registros", "Historial (JSON)"];
   var actual = hoja.getRange(1, COL_ULTIMO, 1, enc.length).getValues()[0];
   for (var i = 0; i < enc.length; i++) {
     if (!actual[i]) hoja.getRange(1, COL_ULTIMO + i).setValue(enc[i]).setFontWeight("bold");
@@ -551,7 +558,9 @@ function registrarSesion(email, clave) {
     res.hoja.getRange(res.fila, COL_INGRESOS).setValue(ingresos + 1);
     res.hoja.getRange(res.fila, COL_ULTSESION).setValue(0);
   } finally { lock.releaseLock(); }
-  return { ok: true };
+  // devuelve los registros guardados y la marca de reinicio: si Gaby borró algo desde el panel,
+  // el celular del alumno adopta esta copia en vez de volver a subir lo viejo
+  return { ok: true, reinicio: String(res.r[COL_REINICIO - 1] || ""), registros: parseJSONSeguro(res.r[6]) };
 }
 
 // "latido": el perfil abierto avisa cada tanto cuántos segundos pasaron desde el aviso anterior
@@ -612,8 +621,76 @@ function getAdminAlumnos(claveAdmin) {
       ingresos: Number(r[COL_INGRESOS - 1]) || 0,
       ultimaSesionSeg: Number(r[COL_ULTSESION - 1]) || 0,
       perfil: parseJSONSeguro(r[5]),
-      registros: parseJSONSeguro(r[6])
+      registros: parseJSONSeguro(r[6]),
+      historial: parseJSONSeguro(r[COL_HISTORIAL - 1])
     });
   }
   return { ok: true, ahora: new Date().toISOString(), alumnos: alumnos };
+}
+
+// el perfil del alumno, al cambiar de mes, manda acá el mes que cierra para no mezclarlo con el nuevo.
+// Queda en la columna N (por mes) hasta que Gaby lo borre desde el panel.
+function archivarMes(email, clave, mes, datosJson) {
+  var res = buscarFilaAlumno(email, clave);
+  if (!res.ok) return res;
+  var mesNorm = String(mes || "").trim();
+  if (!/^\d{4}-\d{2}$/.test(mesNorm)) return { ok: false, error: "mes invalido" };
+  var datos = parseJSONSeguro(datosJson);
+  if (!datos) return { ok: false, error: "datos invalidos" };
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    asegurarEncabezadosAdmin(res.hoja);
+    var celda = res.hoja.getRange(res.fila, COL_HISTORIAL);
+    var hist = parseJSONSeguro(celda.getValue()) || {};
+    hist[mesNorm] = datos;
+    var txt = JSON.stringify(hist);
+    if (txt.length > MAX_CELDA) return { ok: false, error: "historial lleno" };
+    celda.setValue(txt);
+  } finally { lock.releaseLock(); }
+  return { ok: true };
+}
+
+// borra registros de un alumno desde el panel.
+// alcance: "todo" | "semana:N" (mes en curso) | "mes:AAAA-MM" (historial)
+function adminBorrarRegistros(claveAdmin, email, alcance) {
+  verificarAdmin(claveAdmin);
+  var alumnosFolder = subFolder(rootFolder(), "Alumnos");
+  var archivos = alumnosFolder ? alumnosFolder.getFilesByName("Alumnos - claves") : null;
+  if (!archivos || !archivos.hasNext()) throw new Error("no existe la planilla de alumnos");
+  var hoja = SpreadsheetApp.open(archivos.next()).getSheets()[0];
+  var values = hoja.getDataRange().getValues();
+  var emailNorm = String(email || "").trim().toLowerCase();
+  var fila = 0;
+  for (var i = 1; i < values.length; i++) {
+    if (String(values[i][1] || "").trim().toLowerCase() === emailNorm) { fila = i + 1; break; }
+  }
+  if (!fila) throw new Error("alumno no encontrado");
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    asegurarEncabezadosAdmin(hoja);
+    var al = String(alcance || "");
+    var reg = parseJSONSeguro(hoja.getRange(fila, 7).getValue()) || {};
+    var hist = parseJSONSeguro(hoja.getRange(fila, COL_HISTORIAL).getValue()) || {};
+    if (al === "todo") {
+      reg = {}; hist = {};
+    } else if (/^semana:\d+$/.test(al)) {
+      var sem = al.split(":")[1];
+      Object.keys(reg).forEach(function (k) {
+        if (k.charAt(0) === "_") return;
+        var p = k.split("|");
+        if ((p[0] === "hecho" ? p[1] : p[0]) === sem) delete reg[k];
+      });
+    } else if (/^mes:\d{4}-\d{2}$/.test(al)) {
+      delete hist[al.split(":")[1]];
+    } else {
+      throw new Error("alcance invalido");
+    }
+    hoja.getRange(fila, 7).setValue(Object.keys(reg).length ? JSON.stringify(reg) : "");
+    hoja.getRange(fila, COL_HISTORIAL).setValue(Object.keys(hist).length ? JSON.stringify(hist) : "");
+    hoja.getRange(fila, COL_REINICIO).setValue(String(new Date().getTime()));
+  } finally { lock.releaseLock(); }
+  return { ok: true };
 }

@@ -62,26 +62,36 @@
   function diasHastaVencer(a) { return a.vencimiento ? (new Date(a.vencimiento) - ahora) / DIA_MS : -Infinity; }
 
   // ---- avances (salen del "log" que guarda el perfil del alumno) ----
-  // claves: "hecho|semana|Día N" -> {hecho:"1"}   y   "semana|Día N|Ejercicio" -> {series,reps,peso}
-  function avance(a) {
-    var reg = a.registros || {};
-    var hechosPorSemana = {}, pesos = [], total = 0;
+  // claves: "hecho|semana|Día N" -> {hecho:"1"}   y   "semana|Día N|Ejercicio" -> {ok, hechoTxt, peso, ...}
+  // las que empiezan con "_" son internas (por ejemplo "_mes") y no se muestran
+  function resumen(reg) {
+    reg = reg || {};
+    var hechosPorSemana = {}, entradas = [], total = 0;
     Object.keys(reg).forEach(function (k) {
+      if (k.charAt(0) === "_") return;
       var v = reg[k] || {};
       if (k.indexOf("hecho|") === 0) {
         if (v.hecho !== "1") return;
         var p = k.split("|");
         (hechosPorSemana[p[1]] = hechosPorSemana[p[1]] || []).push(p[2]);
         total++;
-      } else if (v.peso !== undefined && v.peso !== "") {
+      } else if (v.ok === "1" || v.hechoTxt || (v.peso !== undefined && v.peso !== "")) {
         var q = k.split("|");
-        pesos.push({ semana: q[0], dia: q[1], ejercicio: q.slice(2).join("|"), series: v.series, reps: v.reps, peso: v.peso });
+        entradas.push({ semana: q[0], dia: q[1], ejercicio: q.slice(2).join("|"), ok: v.ok === "1", txt: v.hechoTxt || "", peso: v.peso });
       }
     });
+    entradas.sort(function (x, y) { return Number(x.semana) - Number(y.semana) || String(x.dia).localeCompare(String(y.dia)); });
+    return { hechosPorSemana: hechosPorSemana, entradas: entradas, total: total };
+  }
+
+  function avance(a) {
+    var r = resumen(a.registros);
     var esperados = DIAS_POR_NIVEL[a.nivel] || 0;
     var sem = semanaActual();
-    var hechosSemana = (hechosPorSemana[String(sem)] || []).length;
-    return { hechosPorSemana: hechosPorSemana, pesos: pesos, total: total, esperados: esperados, hechosSemana: hechosSemana, semana: sem };
+    r.esperados = esperados;
+    r.semana = sem;
+    r.hechosSemana = (r.hechosPorSemana[String(sem)] || []).length;
+    return r;
   }
 
   // ---- render ----
@@ -108,18 +118,27 @@
     }).join("");
   }
 
+  function btnBorrar(email, alcance, texto) {
+    return '<button type="button" class="admin-del" data-borrar="' + esc(alcance) + '" data-email="' + esc(email) + '">' + esc(texto) + '</button>';
+  }
+
+  function tablaEntradas(entradas) {
+    if (!entradas.length) return '<p class="admin-muted">Sin ejercicios registrados.</p>';
+    return '<table class="log-table"><thead><tr><th>Sem</th><th>Día</th><th>Ejercicio</th><th>Lo que hizo</th><th>Peso</th><th>✓</th></tr></thead><tbody>' +
+      entradas.map(function (p) {
+        return '<tr><td>' + esc(p.semana) + '</td><td>' + esc(p.dia) + '</td><td>' + esc(p.ejercicio) + '</td><td>' + esc(p.txt || "—") + '</td><td>' +
+          (p.peso !== undefined && p.peso !== "" ? esc(p.peso) + ' kg' : '—') + '</td><td>' + (p.ok ? '✓' : '') + '</td></tr>';
+      }).join("") + '</tbody></table>';
+  }
+
   function detalleHTML(a) {
     var av = avance(a);
     var semanas = Object.keys(av.hechosPorSemana).sort();
     var hechos = semanas.length
-      ? semanas.map(function (s) { return '<li><b>Semana ' + esc(s) + ':</b> ' + av.hechosPorSemana[s].map(esc).join(", ") + '</li>'; }).join("")
+      ? semanas.map(function (s) {
+        return '<li><b>Semana ' + esc(s) + ':</b> ' + av.hechosPorSemana[s].map(esc).join(", ") + ' ' + btnBorrar(a.email, "semana:" + s, "Borrar semana") + '</li>';
+      }).join("")
       : '<li class="admin-muted">Todavía no marcó ningún día como hecho.</li>';
-    var pesos = av.pesos.length
-      ? '<table class="log-table"><thead><tr><th>Sem</th><th>Día</th><th>Ejercicio</th><th>Series × reps</th><th>Peso</th></tr></thead><tbody>' +
-        av.pesos.sort(function (x, y) { return Number(x.semana) - Number(y.semana) || String(x.dia).localeCompare(String(y.dia)); }).map(function (p) {
-          return '<tr><td>' + esc(p.semana) + '</td><td>' + esc(p.dia) + '</td><td>' + esc(p.ejercicio) + '</td><td>' + esc(p.series) + ' × ' + esc(p.reps) + '</td><td>' + esc(p.peso) + ' kg</td></tr>';
-        }).join("") + '</tbody></table>'
-      : '<p class="admin-muted">No cargó pesos todavía.</p>';
     var perfil = a.perfil || {};
     var datos = [
       ["Mail", a.email], ["Ciudad", perfil.ciudad], ["WhatsApp", perfil.whatsapp], ["Objetivos", perfil.objetivos], ["Lesiones", perfil.historialLesiones], ["Patologías", perfil.patologias], ["Instagram", perfil.instagram], ["Pagó el", fmtDia(a.fechaPago)]
@@ -127,10 +146,26 @@
     var fotos = [];
     if (perfil.fotoPerfilUrl) fotos.push('<a href="' + esc(perfil.fotoPerfilUrl) + '" target="_blank" rel="noopener">Foto de perfil</a>');
     if (perfil.fotoAptoUrl) fotos.push('<a href="' + esc(perfil.fotoAptoUrl) + '" target="_blank" rel="noopener">Apto físico</a>');
+
+    var hist = a.historial || {};
+    var meses = Object.keys(hist).sort().reverse();
+    var historial = meses.length
+      ? meses.map(function (m) {
+        var r = resumen(hist[m]);
+        return '<details class="admin-hist"><summary><b>' + esc(m) + '</b> — ' + r.total + (r.total === 1 ? ' día hecho' : ' días hechos') + ', ' + r.entradas.length + ' ejercicios registrados ' +
+          btnBorrar(a.email, "mes:" + m, "Borrar este mes") + '</summary>' +
+          '<ul>' + Object.keys(r.hechosPorSemana).sort().map(function (s) { return '<li><b>Semana ' + esc(s) + ':</b> ' + r.hechosPorSemana[s].map(esc).join(", ") + '</li>'; }).join("") + '</ul>' +
+          tablaEntradas(r.entradas) + '</details>';
+      }).join("")
+      : '<p class="admin-muted">Todavía no hay meses anteriores guardados.</p>';
+
     return '<div class="admin-detail">' +
-      '<div><p class="admin-sub">Días hechos</p><ul>' + hechos + '</ul></div>' +
+      '<div><p class="admin-sub">Días hechos (mes en curso)</p><ul>' + hechos + '</ul></div>' +
       '<div><p class="admin-sub">Datos</p><ul>' + datos + '</ul>' + (fotos.length ? '<p>' + fotos.join(" · ") + '</p>' : '') + '</div>' +
-      '<div class="admin-detail-wide"><p class="admin-sub">Pesos registrados</p>' + pesos + '</div></div>';
+      '<div class="admin-detail-wide"><p class="admin-sub">Ejercicios registrados (mes en curso)</p>' + tablaEntradas(av.entradas) + '</div>' +
+      '<div class="admin-detail-wide"><p class="admin-sub">Historial de meses anteriores</p>' + historial + '</div>' +
+      '<div class="admin-detail-wide admin-danger"><p class="admin-muted">Los registros se guardan hasta que los borres vos.</p>' +
+        btnBorrar(a.email, "todo", "Borrar TODOS los registros de este alumno") + '</div></div>';
   }
 
   function filaHTML(a) {
@@ -216,6 +251,22 @@
     ["[data-admin-search]", "[data-admin-filter]", "[data-admin-sort]"].forEach(function (s) {
       $(s).addEventListener("input", render);
     });
+    $("[data-admin-list]").addEventListener("click", function (e) {
+      var del = e.target.closest("[data-borrar]");
+      if (!del) return;
+      e.stopPropagation();
+      var alcance = del.dataset.borrar, email = del.dataset.email;
+      var txt = alcance === "todo" ? "TODOS los registros (mes en curso e historial)"
+        : alcance.indexOf("semana:") === 0 ? "los registros de la " + alcance.replace(":", " ")
+        : "los registros del mes " + alcance.split(":")[1];
+      if (!confirm("¿Borrar " + txt + " de " + email + "?\n\nEsto no se puede deshacer.")) return;
+      del.disabled = true;
+      var body = new URLSearchParams({ action: "adminBorrar", claveAdmin: getClave(), email: email, alcance: alcance });
+      fetch(API_URL, { method: "POST", body: body }).then(function (r) { return r.json(); }).then(function (d) {
+        if (!d || !d.ok) { alert("No se pudo borrar: " + ((d && d.error) || "error")); del.disabled = false; return; }
+        cargar(getClave(), false);
+      }).catch(function () { alert("No hay conexión con el servidor."); del.disabled = false; });
+    }, true);
     $("[data-admin-list]").addEventListener("click", function (e) {
       var b = e.target.closest("[data-toggle]");
       if (!b) return;
