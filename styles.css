@@ -165,6 +165,7 @@ ul { list-style: none; }
   :root { --logo-w: clamp(225px, calc(17vw - 26px), 325px); }
   .brand-mark img { width: var(--logo-w); }
   .hero { grid-template-columns: 1.2fr .8fr; align-items: start; padding-top: 0; margin-top: calc(var(--logo-w) / 1.405 * -0.72); }
+  .hero-title { font-size: clamp(2.6rem, 4.8vw, 5.2rem); }
   .hero-figure { justify-self: end; }
 }
 
@@ -837,3 +838,5 @@ ul { list-style: none; }
 .nav-avatar.is-loading { opacity: .55; cursor: wait; animation: avatar-pulso 1s ease-in-out infinite; }
 @keyframes avatar-pulso { 50% { transform: scale(.92); } }
 @media (max-width: 640px) { .nav-avatar { width: 30px; height: 30px; } .nav-avatar span { font-size: .85rem; } .nav-id { gap: .2rem; } }
+
+.section-lead { margin-top: 1rem; max-width: 60ch; color: var(--ink-soft); font-size: 1.05rem; }
