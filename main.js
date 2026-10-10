@@ -25,20 +25,25 @@
     });
   }
 
-  // Precios: se muestran recién cuando el alumno elige un plan
+  // Precios: se muestran recién cuando el alumno elige un plan (toca la tarjeta)
   function initPlanPicker() {
-    const root = $("[data-plan-picker]");
-    if (!root) return;
-    const detail = $("[data-plan-detail]", root);
-    const picks = $$(".plan-pick", root);
-    root.addEventListener("click", e => {
-      const btn = e.target.closest(".plan-pick");
-      if (!btn) return;
-      picks.forEach(p => { const on = p === btn; p.classList.toggle("is-active", on); p.setAttribute("aria-pressed", on); });
-      $("[data-plan-detail-name]", detail).textContent = btn.textContent;
-      $("[data-plan-detail-price]", detail).textContent = btn.dataset.price;
-      $("[data-plan-detail-cta]", detail).href = waLink(btn.dataset.plan === "PERSONALIZADO" ? "" : btn.dataset.plan, btn.dataset.mensaje || "");
-      detail.hidden = false;
+    const cards = $$(".nivel-card--pick");
+    if (!cards.length) return;
+    function elegir(card) {
+      cards.forEach(c => {
+        const on = c === card;
+        c.classList.toggle("is-selected", on);
+        c.setAttribute("aria-pressed", on);
+        $(".nivel-price", c).hidden = !on;
+        $(".nivel-hint", c).hidden = on;
+        if (on) $("[data-price-value]", c).textContent = c.dataset.price;
+      });
+    }
+    cards.forEach(card => {
+      card.addEventListener("click", e => { if (!e.target.closest("a")) elegir(card); });
+      card.addEventListener("keydown", e => {
+        if ((e.key === "Enter" || e.key === " ") && e.target === card) { e.preventDefault(); elegir(card); }
+      });
     });
   }
 

@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap">
 
 <link rel="preload" as="image" href="assets/img/gaby-hero.jpg" fetchpriority="high">
-<link rel="stylesheet" href="styles.css?v=20261009p">
+<link rel="stylesheet" href="styles.css?v=20261009q">
 </head>
 <body>
 <a href="#main" class="skip-link">Saltar al contenido</a>
@@ -33,7 +33,7 @@
     <a href="#metodo">Método</a>
     <a href="#niveles">Niveles</a>
     <a href="#como-funciona">Cómo funciona</a>
-    <a href="#precio">Precio</a>
+    <a href="#niveles">Planes</a>
     <a href="#faq">FAQ</a>
   </nav>
   <div class="nav-actions">
@@ -53,7 +53,7 @@
       <p class="hero-sub">Elegí el Plan Híbrido (niveles OPEN y PRO) o un Plan Personalizado 100% a tu medida. Entrenás con guía en video y registrás tu progreso en tu propio perfil.</p>
       <div class="hero-actions">
         <a class="btn btn-primary" data-whatsapp href="#" target="_blank" rel="noopener">Escribir por WhatsApp</a>
-        <a class="btn btn-ghost" href="#precio">Ver planes</a>
+        <a class="btn btn-ghost" href="#niveles">Ver planes</a>
       </div>
     </div>
     <div class="hero-figure reveal">
@@ -91,7 +91,7 @@
       <h2 class="section-title">Elegí tu plan...</h2>
     </div>
     <div class="niveles-grid" data-niveles>
-      <article class="nivel-card reveal">
+      <article class="nivel-card nivel-card--pick reveal" data-price="$40.000" tabindex="0" role="button" aria-pressed="false">
         <h3 class="nivel-name">OPEN</h3>
         <p class="nivel-para">Para arrancar fuerte o volver con orden</p>
         <p class="nivel-detalle">Ideal si estás iniciando el entrenamiento híbrido o venís de una pausa. 4 días de entrenamiento por semana, mismo método, cargas y progresión pensadas para construir base.</p>
@@ -101,9 +101,11 @@
           <li>Videos explicativos de cada ejercicio</li>
           <li>Ajustes de nivel cuando estés listo</li>
         </ul>
+        <p class="nivel-hint">Tocá para ver el precio</p>
+        <p class="nivel-price" hidden><span data-price-value></span><small>/mes</small></p>
         <a class="btn btn-primary" data-whatsapp data-nivel="OPEN" href="#" target="_blank" rel="noopener">Quiero el nivel OPEN</a>
       </article>
-      <article class="nivel-card reveal">
+      <article class="nivel-card nivel-card--pick reveal" data-price="$50.000" tabindex="0" role="button" aria-pressed="false">
         <h3 class="nivel-name">PRO</h3>
         <p class="nivel-para">Para quien ya entrena y quiere más</p>
         <p class="nivel-detalle">6 días de entrenamiento por semana, mayor exigencia: más volumen, más intensidad, progresiones avanzadas de fuerza y resistencia combinadas.</p>
@@ -113,9 +115,11 @@
           <li>Videos explicativos de cada ejercicio</li>
           <li>Cargas y series de nivel avanzado</li>
         </ul>
+        <p class="nivel-hint">Tocá para ver el precio</p>
+        <p class="nivel-price" hidden><span data-price-value></span><small>/mes</small></p>
         <a class="btn btn-primary" data-whatsapp data-nivel="PRO" href="#" target="_blank" rel="noopener">Quiero el nivel PRO</a>
       </article>
-      <article class="nivel-card reveal">
+      <article class="nivel-card nivel-card--pick reveal" data-price="$60.000" tabindex="0" role="button" aria-pressed="false">
         <h3 class="nivel-name">PERSONALIZADA</h3>
         <p class="nivel-para">Planificación 100% a tu medida</p>
         <p class="nivel-detalle">Un plan armado solo para vos, según tus objetivos, tu nivel y tu rutina. Seguimiento cercano y ajustes a medida que avanzás.</p>
@@ -125,6 +129,8 @@
           <li>Videos explicativos de cada ejercicio</li>
           <li>Ajustes según tu progreso y tus objetivos</li>
         </ul>
+        <p class="nivel-hint">Tocá para ver el precio</p>
+        <p class="nivel-price" hidden><span data-price-value></span><small>/mes</small></p>
         <a class="btn btn-primary" data-whatsapp data-mensaje="Hola Gaby, quiero mi Plan Personalizado" href="#" target="_blank" rel="noopener">Quiero mi plan personalizado</a>
       </article>
     </div>
@@ -146,26 +152,6 @@
       <a href="assets/img/galeria-1.jpg" class="reveal"><img src="assets/img/galeria-1.jpg" alt="Atleta en la máquina de remo" loading="lazy" decoding="async"></a>
       <a href="assets/img/galeria-2.jpg" class="reveal"><img src="assets/img/galeria-2.jpg" alt="Empuje de trineo con carga" loading="lazy" decoding="async"></a>
       <a href="assets/img/galeria-3.jpg" class="reveal"><img src="assets/img/galeria-3.jpg" alt="Retrato de atleta híbrido" loading="lazy" decoding="async"></a>
-    </div>
-  </section>
-
-  <section class="section section-alt" id="precio">
-    <div class="section-head reveal">
-      <p class="kicker">Precio</p>
-      <h2 class="section-title">Elegí tu plan...</h2>
-    </div>
-
-    <div class="plan-picker reveal" data-plan-picker>
-      <div class="plan-grid">
-        <button type="button" class="plan-pick" data-plan="OPEN" data-price="$40.000" aria-pressed="false">Open</button>
-        <button type="button" class="plan-pick" data-plan="PRO" data-price="$50.000" aria-pressed="false">Pro</button>
-        <button type="button" class="plan-pick" data-plan="PERSONALIZADO" data-price="$60.000" data-mensaje="Hola Gaby, quiero mi Plan Personalizado" aria-pressed="false">Personalizado</button>
-      </div>
-      <div class="plan-detail" data-plan-detail hidden aria-live="polite">
-        <span class="plan-card-name" data-plan-detail-name></span>
-        <span class="plan-card-price"><span data-plan-detail-price></span><small>/mes</small></span>
-        <a class="btn btn-primary" data-plan-detail-cta href="#" target="_blank" rel="noopener">Quiero este plan</a>
-      </div>
     </div>
   </section>
 
@@ -227,6 +213,6 @@
 <script defer src="lib/gsap.min.js"></script>
 <script defer src="lib/ScrollTrigger.min.js"></script>
 <script defer src="lib/manifest.js?v=20261009a"></script>
-<script defer src="main.js?v=20261009c"></script>
+<script defer src="main.js?v=20261009d"></script>
 </body>
 </html>

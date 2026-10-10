@@ -227,29 +227,14 @@ ul { list-style: none; }
 .galeria a:hover img { transform: scale(1.04); }
 @media (min-width: 720px) { .galeria { grid-template-columns: repeat(3, 1fr); } }
 
-/* Precio: selector de plan (Plan Híbrido / Plan Personalizado, y sus 2 opciones adentro) */
-.plan-grid { display: grid; gap: 1.5rem; }
-@media (min-width: 720px) { .plan-grid { grid-template-columns: repeat(3, 1fr); } }
-
-.plan-card-name { font-family: var(--display); text-transform: uppercase; font-size: 1.4rem; }
-.plan-card-note { color: var(--ink-soft); font-size: .9rem; }
-.plan-card-price { font-family: var(--mono); font-weight: 700; font-size: 1.5rem; color: var(--accent); margin-top: auto; padding-top: .5rem; }
-.plan-card-price small { font-size: .55em; color: var(--mute); font-weight: 400; margin-left: .25em; }
-
-.plan-pick {
-  border: 2px solid var(--ink); padding: 2rem 1.5rem; background: var(--bg); text-align: center;
-  font-family: var(--display); text-transform: uppercase; font-size: 1.8rem; color: var(--ink);
-  transition: transform .3s var(--ease-out), box-shadow .3s var(--ease-out), background .2s, color .2s;
-}
-.plan-pick:hover, .plan-pick:focus-visible { transform: translateY(-4px); box-shadow: 6px 6px 0 var(--accent); }
-.plan-pick.is-active { background: var(--ink); color: #fff; box-shadow: 6px 6px 0 var(--accent); }
-.plan-detail {
-  margin-top: 1.5rem; border: 2px solid var(--ink); padding: 2rem; background: var(--bg);
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem 2rem;
-}
-.plan-detail[hidden] { display: none; }
-.plan-detail .plan-card-name { font-size: 2rem; color: var(--accent); }
-.plan-detail .plan-card-price { font-size: 2.2rem; margin: 0; padding: 0; }
+/* Tarjetas de plan: el precio aparece al elegir la tarjeta */
+.nivel-card--pick { cursor: pointer; }
+.nivel-card--pick.is-selected { border-color: var(--accent); box-shadow: 8px 8px 0 var(--accent); }
+.nivel-hint { margin-top: 1.5rem; font-family: var(--mono); font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: var(--mute); }
+.nivel-price { margin-top: 1.5rem; font-family: var(--mono); font-weight: 700; font-size: 2.2rem; color: var(--accent); }
+.nivel-price small { font-size: .45em; color: var(--mute); font-weight: 400; margin-left: .25em; }
+.nivel-hint[hidden], .nivel-price[hidden] { display: none; }
+.nivel-card--pick .btn { margin-top: 1rem; }
 
 /* Alumnos teaser */
 .alumnos-box {
