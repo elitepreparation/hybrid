@@ -409,10 +409,18 @@
     $("[data-week-progress]").innerHTML = '<div class="week-progress-text"><strong>' + hechos + ' de ' + dias.length + '</strong> días hechos esta semana</div>' +
       '<div class="week-progress-bar"><span style="width:' + Math.round(hechos / dias.length * 100) + '%"></span></div>';
 
+    // 3 a 5 días: todos en una fila; más de 5: se reparten en dos filas parejas
+    $("[data-day-nav]").style.setProperty("--cols", dias.length <= 5 ? dias.length : Math.ceil(dias.length / 2));
     $("[data-day-nav]").innerHTML = dias.map(function (d) {
       var on = d.dia === vista.dia, ok = diaHecho(log, vista.semana, d.dia);
+      var MAX = 4;
+      var resumen = d.ejercicios.slice(0, MAX).map(function (e) { return '<li>' + e.nombre + '</li>'; }).join("") +
+        (d.ejercicios.length > MAX ? '<li class="day-more">+ ' + (d.ejercicios.length - MAX) + ' más</li>' : '');
       return '<button type="button" role="tab" aria-selected="' + on + '" class="day-chip' + (on ? ' is-active' : '') + (ok ? ' is-done' : '') + '" data-dia-chip="' + d.dia + '">' +
-        '<b>' + d.dia + (ok ? ' ✓' : '') + '</b><small>' + d.foco + '</small></button>';
+        '<span class="day-chip-head"><b>' + d.dia + '</b>' + (ok ? '<i class="day-check" aria-label="Día hecho">✓</i>' : '') + '</span>' +
+        '<small class="day-foco">' + d.foco + '</small>' +
+        '<ul class="day-sum">' + resumen + '</ul>' +
+        '<span class="day-count">' + d.ejercicios.length + (d.ejercicios.length === 1 ? ' ejercicio' : ' ejercicios') + '</span></button>';
     }).join("");
 
     var dia = dias.filter(function (d) { return d.dia === vista.dia; })[0];
