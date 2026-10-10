@@ -16,14 +16,21 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261010n">
+<link rel="stylesheet" href="styles.css?v=20261010o">
 </head>
 <body>
 <a href="#main" class="skip-link">Saltar al contenido</a>
 
 <header class="nav">
   <div class="nav-left">
-    <a href="index.html" class="nav-brand nav-brand--text">Elite Preparation</a>
+    <div class="nav-id">
+      <a href="index.html" class="nav-brand nav-brand--text">Elite Preparation</a>
+      <button type="button" class="nav-avatar no-foto" data-avatar hidden aria-label="Subir o cambiar mi foto de perfil" title="Subir o cambiar mi foto de perfil">
+        <img data-avatar-img alt="" hidden>
+        <span data-avatar-ini aria-hidden="true">?</span>
+      </button>
+      <input type="file" accept="image/*" hidden data-avatar-file aria-label="Elegir foto de perfil">
+    </div>
     <div class="planilla" data-planilla hidden>
       <button type="button" class="planilla-btn" data-planilla-btn aria-haspopup="true" aria-expanded="false">
         <span>Tu Planilla</span><svg viewBox="0 0 12 8" width="12" height="8" aria-hidden="true"><path d="M1 1.5 6 6.5l5-5" fill="none" stroke="currentColor" stroke-width="2"/></svg>
@@ -128,10 +135,6 @@
       <div class="plan-main">
         <div class="plan-header">
           <div class="plan-id">
-            <button type="button" class="avatar" data-avatar aria-label="Cambiar mi foto de perfil" title="Cambiar mi foto de perfil">
-              <img data-avatar-img alt="" hidden>
-              <span data-avatar-ini aria-hidden="true">?</span>
-            </button>
             <div>
               <h1 class="section-title" data-plan-nombre>—</h1>
               <p style="color:var(--mute); font-family:var(--mono); font-size:.85rem;" data-plan-meta></p>
@@ -226,6 +229,6 @@
 </footer>
 
 <script defer src="lib/manifest.js?v=20261009a"></script>
-<script defer src="profile.js?v=20261010l"></script>
+<script defer src="profile.js?v=20261010m"></script>
 </body>
 </html>

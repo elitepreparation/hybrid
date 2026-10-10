@@ -88,6 +88,8 @@
     var conSesion = id === "view-dashboard" || (id === "view-form" && !!getJSON(KEYS.profile));
     var planilla = $("[data-planilla]");
     if (planilla) planilla.hidden = !conSesion;
+    var avatarBtn = $("[data-avatar]");
+    if (avatarBtn) avatarBtn.hidden = !conSesion;
     var salir = $("[data-logout]");
     if (salir) salir.hidden = (id === "view-clave");
     cerrarMenuPlanilla();
@@ -800,12 +802,15 @@
     if (!img || !ini) return;
     ini.textContent = String(p.nombre || "?").trim().charAt(0).toUpperCase() || "?";
     var id = driveId(p.fotoPerfilUrl);
+    var btn = $("[data-avatar]");
     if (id) {
-      img.onerror = function () { img.hidden = true; ini.hidden = false; };
+      img.onerror = function () { img.hidden = true; ini.hidden = false; if (btn) btn.classList.add("no-foto"); };
       img.src = "https://drive.google.com/thumbnail?id=" + id + "&sz=w256";
       img.hidden = false; ini.hidden = true;
+      if (btn) btn.classList.remove("no-foto");
     } else {
       img.hidden = true; ini.hidden = false;
+      if (btn) btn.classList.add("no-foto");
     }
   }
 
@@ -864,9 +869,57 @@
     }).join("") : '<li class="obj-vacio">Todavía no sumaste objetivos. Escribí el primero abajo.</li>';
   }
 
+  // achica y recorta la foto en cuadrado (así sube rápido y queda bien en el círculo)
+  function reducirImagen(file, max) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        URL.revokeObjectURL(url);
+        var lado = Math.min(img.width, img.height);
+        var out = Math.min(max, lado);
+        var c = document.createElement("canvas");
+        c.width = c.height = out;
+        c.getContext("2d").drawImage(img, (img.width - lado) / 2, (img.height - lado) / 2, lado, lado, 0, 0, out, out);
+        c.toBlob(function (b) {
+          if (!b) { reject(new Error("blob")); return; }
+          resolve({ file: new File([b], "foto.jpg", { type: "image/jpeg" }), dataUrl: c.toDataURL("image/jpeg", 0.85) });
+        }, "image/jpeg", 0.85);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error("img")); };
+      img.src = url;
+    });
+  }
+
+  // el círculo de la barra: al tocarlo se elige la foto y se sube directo, sin pasar por el formulario
+  function initAvatar() {
+    var btn = $("[data-avatar]"), input = $("[data-avatar-file]");
+    if (!btn || !input) return;
+    btn.addEventListener("click", function () { if (!btn.classList.contains("is-loading")) input.click(); });
+    input.addEventListener("change", function () {
+      var f = input.files && input.files[0];
+      input.value = "";
+      if (!f) return;
+      if (!/^image\//.test(f.type)) { alert("Elegí una imagen."); return; }
+      btn.classList.add("is-loading");
+      reducirImagen(f, 640).then(function (res) {
+        var img = $("[data-avatar-img]"), ini = $("[data-avatar-ini]");
+        img.src = res.dataUrl; img.hidden = false; ini.hidden = true; btn.classList.remove("no-foto"); // vista previa inmediata
+        return subirArchivoAlumno("fotoPerfil", res.file).then(function (url) {
+          if (!url) throw new Error("subida");
+          var p = getJSON(KEYS.profile) || {};
+          p.fotoPerfilUrl = url;
+          setJSON(KEYS.profile, p);
+          guardarEnServidor({ perfil: p });
+        });
+      }).catch(function () {
+        alert("No se pudo subir la foto. Probá de nuevo en un rato.");
+        renderAvatar();
+      }).then(function () { btn.classList.remove("is-loading"); });
+    });
+  }
+
   function initObjetivos() {
-    var avatar = $("[data-avatar]");
-    if (avatar) avatar.addEventListener("click", function () { irA("perfil"); });
     var form = $("[data-obj-form]");
     if (!form) return;
     form.addEventListener("submit", function (e) {
@@ -1046,6 +1099,7 @@
     initPlanNav();
     initVideos();
     initQuickVideos();
+    initAvatar();
     initObjetivos();
 
     var fab = $("[data-whatsapp-fab]");

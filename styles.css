@@ -817,3 +817,23 @@ ul { list-style: none; }
   .ex-row { grid-template-columns: 88px minmax(0, 1fr) 46px; }
   .ex-plan { align-items: flex-start; text-align: left; }
 }
+
+/* Foto de perfil: círculo chico debajo de la marca, en la barra superior */
+.nav-id { display: flex; flex-direction: column; align-items: flex-start; gap: .3rem; }
+.nav-avatar {
+  position: relative; width: 36px; height: 36px; border-radius: 50%; border: 2px solid #fff; padding: 0;
+  background: var(--accent-2); display: grid; place-items: center; cursor: pointer; overflow: visible;
+  transition: transform .2s var(--ease-out), box-shadow .2s var(--ease-out);
+}
+.nav-avatar[hidden] { display: none; }
+.nav-avatar:hover, .nav-avatar:focus-visible { transform: scale(1.08); box-shadow: 0 0 0 3px var(--accent); }
+.nav-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+.nav-avatar img[hidden], .nav-avatar span[hidden] { display: none; }
+.nav-avatar span { font-family: var(--display); font-size: 1rem; color: #fff; line-height: 1; }
+.nav-avatar.no-foto::after {
+  content: "+"; position: absolute; right: -5px; bottom: -5px; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--accent); color: #fff; font: 700 .8rem/16px var(--mono); text-align: center; border: 1.5px solid var(--ink);
+}
+.nav-avatar.is-loading { opacity: .55; cursor: wait; animation: avatar-pulso 1s ease-in-out infinite; }
+@keyframes avatar-pulso { 50% { transform: scale(.92); } }
+@media (max-width: 640px) { .nav-avatar { width: 30px; height: 30px; } .nav-avatar span { font-size: .85rem; } .nav-id { gap: .2rem; } }
