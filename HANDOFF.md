@@ -214,3 +214,11 @@ Página privada para Gaby: lista a todos los alumnos con **último ingreso**, **
 - **Los registros se guardan hasta que Gaby los borre desde `admin.html`** (botones "Borrar semana", "Borrar este mes" y "Borrar TODOS los registros"). Al borrar, el servidor cambia una marca (columna **M**) y el celular del alumno la detecta al abrir su perfil: adopta la copia del servidor y no vuelve a subir lo borrado.
 - Las claves de registros son semana 1–4 sin mes, así que **al cambiar de mes** el perfil del alumno archiva el mes anterior en la columna **N** (Historial, JSON por mes `AAAA-MM`) y arranca el mes nuevo limpio. El historial se ve y se borra desde el panel. Límite: ~45.000 caracteres por celda; si se llena, el archivo falla y el alumno conserva sus datos locales, así que conviene borrar meses viejos de vez en cuando.
 - Backend desplegado: versión 17.
+
+### Bloques dentro del día (10 oct 2026)
+
+Las planillas de planificación admiten una **columna G opcional, "Bloque"** (ej. Potencia, Fuerza, Core). Columnas: Semana | Dia | Foco | Ejercicio | Series | Reps | Bloque. En el perfil del alumno cada bloque aparece como título arriba de sus ejercicios (los ejercicios consecutivos con el mismo bloque se agrupan). Si la columna está vacía, se usa el **Foco** del día como título. Backend desplegado: versión 19.
+
+### Sección Coach (inicio)
+
+`index.html` tiene la sección `#coach` ("Quién soy") antes de las preguntas; el texto y la foto (`assets/img/galeria-3.jpg`) se editan ahí mismo.
