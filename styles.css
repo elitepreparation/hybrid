@@ -855,3 +855,29 @@ ul { list-style: none; }
   .nav-actions .btn { padding: .5rem .55rem; font-size: .66rem; }
   .nav { padding: .6rem .7rem; gap: .35rem; }
 }
+
+/* Perfil: foto grande (se cambia tocándola) y nombre o apodo debajo */
+.perfil-hero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: .9rem; padding: .5rem 0 1.75rem; }
+.avatar-xl {
+  position: relative; width: 156px; height: 156px; border-radius: 50%; border: 4px solid var(--ink); overflow: hidden; padding: 0;
+  background: var(--accent-2); display: grid; place-items: center; cursor: pointer;
+  transition: transform .2s var(--ease-out), box-shadow .2s var(--ease-out);
+}
+.avatar-xl:hover, .avatar-xl:focus-visible { transform: scale(1.03); box-shadow: 6px 6px 0 var(--accent); }
+.avatar-xl img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.avatar-xl img[hidden], .avatar-xl-ini[hidden] { display: none; }
+.avatar-xl-ini { font-family: var(--display); font-size: 4.2rem; color: #fff; line-height: 1; }
+.avatar-xl-cam {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: .45rem 0 .6rem; color: #fff; text-align: center;
+  background: linear-gradient(180deg, rgba(14,27,48,0), rgba(14,27,48,.85)); font-family: var(--mono); font-size: .68rem;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.avatar-xl.is-loading { opacity: .55; cursor: wait; animation: avatar-pulso 1s ease-in-out infinite; }
+.apodo-input {
+  width: min(100%, 420px); text-align: center; border: 0; border-bottom: 3px solid var(--ink); background: transparent; color: var(--ink);
+  font-family: var(--display); text-transform: uppercase; font-size: clamp(1.7rem, 6vw, 2.4rem); line-height: 1.1; padding: .25rem .5rem; letter-spacing: .02em;
+}
+.apodo-input::placeholder { color: var(--mute); opacity: .6; }
+.apodo-input:focus { outline: none; border-bottom-color: var(--accent); }
+.apodo-hint { color: var(--mute); font-size: .85rem; max-width: 40ch; }
+@media (max-width: 640px) { .avatar-xl { width: 132px; height: 132px; } .avatar-xl-ini { font-size: 3.5rem; } }

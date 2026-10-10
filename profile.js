@@ -250,6 +250,8 @@
       // si no se vuelve a subir un archivo, mantiene el link que ya tenía guardado
       var previo = getJSON(KEYS.profile) || {};
       ["fotoPerfilUrl", "fotoAptoUrl", "metas"].forEach(function (k) { if (previo[k]) profile[k] = previo[k]; });
+      if (fotoPendiente) profile.fotoPerfilUrl = fotoPendiente;
+      profile.apodo = ($("[data-apodo]").value || "").trim();
 
       var grande = archivos.filter(function (a) { return a.file.size > TAMANIO_MAX_ARCHIVO; })[0];
       if (grande) { alert('El archivo "' + grande.file.name + '" pesa más de 8MB, subí uno más liviano.'); return; }
@@ -288,6 +290,8 @@
   function irA(seccion) {
     if (seccion === "perfil") {
       fillForm(getJSON(KEYS.profile));
+      $("[data-apodo]").value = (getJSON(KEYS.profile) || {}).apodo || "";
+      renderAvatar();
       var nivel = getJSON(KEYS.nivel);
       $("[data-registros-card]").hidden = !nivel;
       if (nivel) renderRegistros(nivel);
@@ -800,22 +804,93 @@
   }
 
   // ---- Foto de perfil (opcional) junto al nombre; se sube desde "Perfil" en el menú Tu Planilla ----
+  // nombre que se muestra: el apodo si lo eligió, si no nombre y apellido
+  function nombreVisible(p) {
+    p = p || {};
+    return String(p.apodo || "").trim() || ((p.nombre || "") + " " + (p.apellido || "")).trim();
+  }
+
+  // los dos círculos de foto: el chico de la barra y el grande de "Perfil"
+  var CIRCULOS = [
+    { btn: "[data-avatar]", img: "[data-avatar-img]", ini: "[data-avatar-ini]" },
+    { btn: "[data-avatar-big]", img: "[data-avatar-big-img]", ini: "[data-avatar-big-ini]" }
+  ];
+
   function renderAvatar() {
     var p = getJSON(KEYS.profile) || {};
-    var img = $("[data-avatar-img]"), ini = $("[data-avatar-ini]");
-    if (!img || !ini) return;
-    ini.textContent = String(p.nombre || "?").trim().charAt(0).toUpperCase() || "?";
-    var id = driveId(p.fotoPerfilUrl);
-    var btn = $("[data-avatar]");
-    if (id) {
-      img.onerror = function () { img.hidden = true; ini.hidden = false; if (btn) btn.classList.add("no-foto"); };
-      img.src = "https://drive.google.com/thumbnail?id=" + id + "&sz=w256";
-      img.hidden = false; ini.hidden = true;
-      if (btn) btn.classList.remove("no-foto");
-    } else {
-      img.hidden = true; ini.hidden = false;
-      if (btn) btn.classList.add("no-foto");
-    }
+    var letra = String(p.apodo || p.nombre || "?").trim().charAt(0).toUpperCase() || "?";
+    var id = driveId(p.fotoPerfilUrl || fotoPendiente);
+    CIRCULOS.forEach(function (c) {
+      var btn = $(c.btn), img = $(c.img), ini = $(c.ini);
+      if (!btn || !img || !ini) return;
+      ini.textContent = letra;
+      if (id) {
+        img.onerror = function () { img.hidden = true; ini.hidden = false; btn.classList.add("no-foto"); };
+        img.src = "https://drive.google.com/thumbnail?id=" + id + "&sz=w512";
+        img.hidden = false; ini.hidden = true;
+        btn.classList.remove("no-foto");
+      } else {
+        img.hidden = true; ini.hidden = false;
+        btn.classList.add("no-foto");
+      }
+    });
+  }
+
+  // si todavía no hay perfil guardado (alumno nuevo), la foto subida espera hasta que guarde el formulario
+  var fotoPendiente = "";
+
+  function initAvatar() {
+    var input = $("[data-avatar-file]");
+    if (!input) return;
+    var botones = CIRCULOS.map(function (c) { return $(c.btn); }).filter(Boolean);
+    function ocupado() { return botones.some(function (b) { return b.classList.contains("is-loading"); }); }
+    botones.forEach(function (b) { b.addEventListener("click", function () { if (!ocupado()) input.click(); }); });
+    input.addEventListener("change", function () {
+      var f = input.files && input.files[0];
+      input.value = "";
+      if (!f) return;
+      if (!/^image\//.test(f.type)) { alert("Elegí una imagen."); return; }
+      botones.forEach(function (b) { b.classList.add("is-loading"); });
+      reducirImagen(f, 640).then(function (res) {
+        // vista previa inmediata en los dos círculos
+        CIRCULOS.forEach(function (c) {
+          var btn = $(c.btn), img = $(c.img), ini = $(c.ini);
+          if (!btn || !img || !ini) return;
+          img.src = res.dataUrl; img.hidden = false; ini.hidden = true; btn.classList.remove("no-foto");
+        });
+        return subirArchivoAlumno("fotoPerfil", res.file).then(function (url) {
+          if (!url) throw new Error("subida");
+          var p = getJSON(KEYS.profile);
+          if (p) {
+            p.fotoPerfilUrl = url;
+            setJSON(KEYS.profile, p);
+            guardarEnServidor({ perfil: p });
+          } else {
+            fotoPendiente = url;
+          }
+        });
+      }).catch(function () {
+        alert("No se pudo subir la foto. Probá de nuevo en un rato.");
+        renderAvatar();
+      }).then(function () { botones.forEach(function (b) { b.classList.remove("is-loading"); }); });
+    });
+  }
+
+  // el nombre o apodo que el alumno elige para su perfil (se guarda solo al escribir)
+  function initApodo() {
+    var input = $("[data-apodo]");
+    if (!input) return;
+    var guardar = debounce(function () {
+      var p = getJSON(KEYS.profile);
+      if (!p) return; // alumno nuevo: se guarda junto con el formulario
+      p.apodo = input.value.trim();
+      setJSON(KEYS.profile, p);
+      guardarEnServidor({ perfil: p });
+      var nombre = $("[data-plan-nombre]");
+      if (nombre) nombre.textContent = nombreVisible(p);
+      renderAvatar();
+    }, 700);
+    input.addEventListener("input", guardar);
   }
 
   // ---- "Tu mes": días completados del mes, de la semana y ejercicios hechos ----
@@ -896,32 +971,6 @@
   }
 
   // el círculo de la barra: al tocarlo se elige la foto y se sube directo, sin pasar por el formulario
-  function initAvatar() {
-    var btn = $("[data-avatar]"), input = $("[data-avatar-file]");
-    if (!btn || !input) return;
-    btn.addEventListener("click", function () { if (!btn.classList.contains("is-loading")) input.click(); });
-    input.addEventListener("change", function () {
-      var f = input.files && input.files[0];
-      input.value = "";
-      if (!f) return;
-      if (!/^image\//.test(f.type)) { alert("Elegí una imagen."); return; }
-      btn.classList.add("is-loading");
-      reducirImagen(f, 640).then(function (res) {
-        var img = $("[data-avatar-img]"), ini = $("[data-avatar-ini]");
-        img.src = res.dataUrl; img.hidden = false; ini.hidden = true; btn.classList.remove("no-foto"); // vista previa inmediata
-        return subirArchivoAlumno("fotoPerfil", res.file).then(function (url) {
-          if (!url) throw new Error("subida");
-          var p = getJSON(KEYS.profile) || {};
-          p.fotoPerfilUrl = url;
-          setJSON(KEYS.profile, p);
-          guardarEnServidor({ perfil: p });
-        });
-      }).catch(function () {
-        alert("No se pudo subir la foto. Probá de nuevo en un rato.");
-        renderAvatar();
-      }).then(function () { btn.classList.remove("is-loading"); });
-    });
-  }
 
   function initObjetivos() {
     var form = $("[data-obj-form]");
@@ -956,7 +1005,7 @@
     setJSON(KEYS.nivel, nivel);
     $$("[data-toggle-nivel]").forEach(function (b) { b.classList.toggle("is-active", b.dataset.toggleNivel === nivel); });
     var profile = getJSON(KEYS.profile) || {};
-    $("[data-plan-nombre]").textContent = (profile.nombre || "") + " " + (profile.apellido || "");
+    $("[data-plan-nombre]").textContent = nombreVisible(profile);
     $("[data-plan-meta]").textContent = (NIVEL_LABEL[nivel] || nivel) + (profile.ciudad ? " · " + profile.ciudad : "");
     renderAvatar();
     renderObjetivos();
@@ -1104,6 +1153,7 @@
     initVideos();
     initQuickVideos();
     initAvatar();
+    initApodo();
     initObjetivos();
 
     var fab = $("[data-whatsapp-fab]");

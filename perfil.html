@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261011c">
+<link rel="stylesheet" href="styles.css?v=20261011d">
 </head>
 <body>
 <a href="#main" class="skip-link">Saltar al contenido</a>
@@ -78,8 +78,17 @@
   </section>
 
   <section id="view-form" class="section" style="max-width:920px;">
-    <p class="kicker">Paso 1 · Datos personales</p>
-    <h1 class="section-title" data-form-title>Completá tu perfil</h1>
+    <div class="perfil-hero">
+      <button type="button" class="avatar-xl no-foto" data-avatar-big aria-label="Cambiar mi foto de perfil" title="Cambiar mi foto de perfil">
+        <img data-avatar-big-img alt="" hidden>
+        <span class="avatar-xl-ini" data-avatar-big-ini aria-hidden="true">?</span>
+        <span class="avatar-xl-cam" aria-hidden="true">Cambiar foto</span>
+      </button>
+      <input type="text" class="apodo-input" data-apodo maxlength="30" placeholder="Tu nombre o apodo" aria-label="Nombre o apodo que querés mostrar en tu perfil" autocomplete="nickname">
+      <p class="apodo-hint">Elegí cómo querés que te llamemos: tu nombre o un apodo.</p>
+    </div>
+
+    <p class="kicker">Tus datos</p>
     <p style="color:var(--ink-soft); margin-top:.5rem; max-width:60ch;">Estos datos los completa cada alumno una sola vez. Con esto armamos tu seguimiento y tu ficha de entrenamiento.</p>
 
     <form data-profile-form class="profile-form">
@@ -113,7 +122,6 @@
       <label class="pf-full">Información relevante <span class="pf-opt">(opcional)</span><textarea name="infoExtra" rows="2"></textarea></label>
 
       <div class="pf-grid">
-        <label>Foto de perfil <span class="pf-opt">(opcional)</span><input type="file" name="fotoPerfil" accept="image/*"><small data-file-status="fotoPerfil" class="pf-file-status"></small></label>
         <label>Apto físico <span class="pf-opt">(opcional)</span><input type="file" name="fotoApto" accept="image/*,.pdf"><small data-file-status="fotoApto" class="pf-file-status"></small></label>
       </div>
 
@@ -229,6 +237,6 @@
 </footer>
 
 <script defer src="lib/manifest.js?v=20261009a"></script>
-<script defer src="profile.js?v=20261010n"></script>
+<script defer src="profile.js?v=20261011a"></script>
 </body>
 </html>
