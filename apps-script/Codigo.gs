@@ -30,6 +30,9 @@ function doPost(e) {
   try {
     if (action === "guardarDatos") out = guardarDatosAlumno(e.parameter.email, e.parameter.clave, e.parameter.perfil, e.parameter.registros);
     else if (action === "guardarArchivo") out = guardarArchivoAlumno(e.parameter.email, e.parameter.clave, e.parameter.campo, e.parameter.nombreOriginal, e.parameter.tipo, e.parameter.base64);
+    else if (action === "sesion") out = registrarSesion(e.parameter.email, e.parameter.clave);
+    else if (action === "latido") out = registrarLatido(e.parameter.email, e.parameter.clave, e.parameter.segundos);
+    else if (action === "admin") out = getAdminAlumnos(e.parameter.claveAdmin);
     else out = { ok: false, error: "accion desconocida" };
   } catch (err) {
     out = { ok: false, error: String(err) };
@@ -516,4 +519,101 @@ function reorganizarPlanificaciones() {
     aBorrar.forEach(function (c) { c.setTrashed(true); });
   });
   return "listo";
+}
+
+// =============================================================
+// Panel de administrador (admin.html) — solo para Gaby
+// =============================================================
+// Columnas nuevas en "Alumnos - claves" (la H es el vencimiento, no se toca):
+//   I Último ingreso | J Tiempo total (seg) | K Ingresos | L Última sesión (seg)
+// La clave del panel NO está en el código: se guarda en Configuración del proyecto >
+// Propiedades de la secuencia de comandos > ADMIN_CLAVE (la define Gaby en el editor).
+var COL_ULTIMO = 9, COL_TIEMPO = 10, COL_INGRESOS = 11, COL_ULTSESION = 12;
+
+function asegurarEncabezadosAdmin(hoja) {
+  var enc = ["Último ingreso", "Tiempo total (seg)", "Ingresos", "Última sesión (seg)"];
+  var actual = hoja.getRange(1, COL_ULTIMO, 1, enc.length).getValues()[0];
+  for (var i = 0; i < enc.length; i++) {
+    if (!actual[i]) hoja.getRange(1, COL_ULTIMO + i).setValue(enc[i]).setFontWeight("bold");
+  }
+}
+
+// el alumno abrió su perfil: suma un ingreso y arranca una sesión nueva
+function registrarSesion(email, clave) {
+  var res = buscarFilaAlumno(email, clave);
+  if (!res.ok) return res;
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    asegurarEncabezadosAdmin(res.hoja);
+    var ingresos = Number(res.hoja.getRange(res.fila, COL_INGRESOS).getValue()) || 0;
+    res.hoja.getRange(res.fila, COL_ULTIMO).setValue(new Date());
+    res.hoja.getRange(res.fila, COL_INGRESOS).setValue(ingresos + 1);
+    res.hoja.getRange(res.fila, COL_ULTSESION).setValue(0);
+  } finally { lock.releaseLock(); }
+  return { ok: true };
+}
+
+// "latido": el perfil abierto avisa cada tanto cuántos segundos pasaron desde el aviso anterior
+function registrarLatido(email, clave, segundos) {
+  var seg = Math.max(0, Math.min(300, Math.round(Number(segundos) || 0)));
+  if (!seg) return { ok: true };
+  var res = buscarFilaAlumno(email, clave);
+  if (!res.ok) return res;
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    asegurarEncabezadosAdmin(res.hoja);
+    var total = Number(res.hoja.getRange(res.fila, COL_TIEMPO).getValue()) || 0;
+    var ses = Number(res.hoja.getRange(res.fila, COL_ULTSESION).getValue()) || 0;
+    res.hoja.getRange(res.fila, COL_TIEMPO).setValue(total + seg);
+    res.hoja.getRange(res.fila, COL_ULTSESION).setValue(ses + seg);
+  } finally { lock.releaseLock(); }
+  return { ok: true };
+}
+
+function verificarAdmin(clave) {
+  var esperada = PropertiesService.getScriptProperties().getProperty("ADMIN_CLAVE");
+  if (!esperada) throw new Error("el panel no está configurado (falta ADMIN_CLAVE)");
+  var cache = CacheService.getScriptCache();
+  var fallos = Number(cache.get("admin_fallos")) || 0;
+  if (fallos >= 5) throw new Error("demasiados intentos, esperá 10 minutos");
+  if (String(clave || "") !== esperada) {
+    cache.put("admin_fallos", String(fallos + 1), 600);
+    Utilities.sleep(1000);
+    throw new Error("clave incorrecta");
+  }
+  cache.remove("admin_fallos");
+}
+
+// devuelve a todos los alumnos con su actividad y avances. NUNCA devuelve las claves de los alumnos.
+function getAdminAlumnos(claveAdmin) {
+  verificarAdmin(claveAdmin);
+  var alumnosFolder = subFolder(rootFolder(), "Alumnos");
+  var archivos = alumnosFolder ? alumnosFolder.getFilesByName("Alumnos - claves") : null;
+  if (!archivos || !archivos.hasNext()) throw new Error("no existe la planilla de alumnos");
+  var values = SpreadsheetApp.open(archivos.next()).getSheets()[0].getDataRange().getValues();
+
+  function iso(v) { var d = parseFecha(v); return d ? d.toISOString() : null; }
+  var alumnos = [];
+  for (var i = 1; i < values.length; i++) {
+    var r = values[i];
+    if (!String(r[1] || "").trim()) continue;
+    var pago = parseFecha(r[4]);
+    var nivel = String(r[3] || "").trim().toUpperCase();
+    alumnos.push({
+      nombre: String(r[0] || "").trim(),
+      email: String(r[1] || "").trim(),
+      nivel: nivel,
+      fechaPago: pago ? pago.toISOString() : null,
+      vencimiento: pago ? new Date(pago.getTime() + UN_MES_MS).toISOString() : null,
+      ultimoIngreso: iso(r[COL_ULTIMO - 1]),
+      tiempoTotalSeg: Number(r[COL_TIEMPO - 1]) || 0,
+      ingresos: Number(r[COL_INGRESOS - 1]) || 0,
+      ultimaSesionSeg: Number(r[COL_ULTSESION - 1]) || 0,
+      perfil: parseJSONSeguro(r[5]),
+      registros: parseJSONSeguro(r[6])
+    });
+  }
+  return { ok: true, ahora: new Date().toISOString(), alumnos: alumnos };
 }

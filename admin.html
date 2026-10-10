@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel del coach — Elite Preparation</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/jpeg" href="assets/img/logo.jpg?v=20261009a">
+<meta name="theme-color" content="#1a5fe0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="styles.css?v=20261009s">
+</head>
+<body class="admin-body">
+
+<main id="main">
+
+  <!-- Acceso: la clave se verifica en el servidor, esta página sola no muestra nada -->
+  <section id="admin-login" class="login-gate">
+    <div class="login-card">
+      <div class="login-logo-wrap"><img src="assets/img/logo-transparent.png?v=20261009a" alt="Elite Preparation"></div>
+      <p class="login-tagline">Panel del coach</p>
+      <form data-admin-form class="login-form">
+        <label>Clave de administrador
+          <div class="login-pass-wrap">
+            <input type="password" name="clave" placeholder="Tu clave" required autocomplete="current-password" data-admin-pass>
+          </div>
+        </label>
+        <button type="submit" class="btn btn-accent btn-block login-submit">Entrar</button>
+      </form>
+      <p class="login-msg" data-admin-msg></p>
+    </div>
+  </section>
+
+  <section id="admin-panel" hidden>
+    <div class="dash-toolbar">
+      <strong class="admin-title">Panel del coach</strong>
+      <span class="admin-updated" data-admin-updated></span>
+      <button type="button" class="btn btn-ghost" data-admin-refresh>Actualizar</button>
+      <button type="button" class="btn btn-ghost" data-admin-logout>Salir</button>
+    </div>
+
+    <div class="section" style="max-width:1200px;">
+      <div class="admin-stats" data-admin-stats></div>
+
+      <div class="admin-filters">
+        <input type="search" placeholder="Buscar alumno por nombre o mail…" data-admin-search>
+        <select data-admin-filter aria-label="Filtro">
+          <option value="todos">Todos</option>
+          <option value="inactivos">Sin entrar hace más de 7 días</option>
+          <option value="vencen">Vencen en 7 días o menos</option>
+          <option value="vencidos">Vencidos</option>
+        </select>
+        <select data-admin-sort aria-label="Orden">
+          <option value="ingreso">Último ingreso (más reciente)</option>
+          <option value="inactividad">Más tiempo sin entrar</option>
+          <option value="tiempo">Más tiempo total</option>
+          <option value="nombre">Nombre</option>
+        </select>
+      </div>
+
+      <div class="admin-list" data-admin-list></div>
+    </div>
+  </section>
+
+</main>
+
+<script defer src="lib/manifest.js?v=20261009a"></script>
+<script defer src="admin.js?v=20261009a"></script>
+</body>
+</html>

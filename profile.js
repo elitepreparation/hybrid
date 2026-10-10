@@ -635,11 +635,42 @@
     });
   }
 
+  // ---- Seguimiento de actividad (alimenta el panel del coach): cada ingreso y el tiempo con la pantalla visible ----
+  var seguimientoActivo = false;
+
+  function postAccion(action, extra) {
+    var email = localStorage.getItem(KEYS.email);
+    var clave = localStorage.getItem(KEYS.clave);
+    if (!email || !clave) return;
+    var body = new URLSearchParams({ action: action, email: email, clave: clave });
+    Object.keys(extra || {}).forEach(function (k) { body.set(k, extra[k]); });
+    fetch(API_URL, { method: "POST", body: body, keepalive: true }).catch(function () { /* sin conexión: no se registra */ });
+  }
+
+  function iniciarSeguimiento() {
+    if (seguimientoActivo) return;
+    seguimientoActivo = true;
+    postAccion("sesion");
+    var acumulado = 0;
+    var desde = document.visibilityState === "visible" ? Date.now() : null;
+    function enviar() {
+      if (desde) { acumulado += (Date.now() - desde) / 1000; desde = Date.now(); }
+      var seg = Math.round(acumulado);
+      if (seg >= 5) { acumulado -= seg; postAccion("latido", { segundos: Math.min(seg, 300) }); }
+    }
+    setInterval(function () { if (document.visibilityState === "visible") enviar(); }, 120000);
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "hidden") { enviar(); desde = null; }
+      else desde = Date.now();
+    });
+  }
+
   function renderDashboard() {
     var nivel = getJSON(KEYS.nivel) || "OPEN";
     // solo se ve el nivel pagado — el otro botón ni se muestra, no hay para dónde "cambiarse" gratis
     $$("[data-toggle-nivel]").forEach(function (b) { b.hidden = b.dataset.toggleNivel !== nivel; });
     setNivelActivo(nivel);
+    iniciarSeguimiento();
   }
 
   function boot() {

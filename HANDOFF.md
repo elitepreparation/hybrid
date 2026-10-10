@@ -196,3 +196,13 @@ Con eso, Claude Code se ocupa de chequear/instalar Git, clonar el repo y leer to
 La marca pasó de "Complex 180 — Hybrid Training" a **Elite Preparation**. La cuenta de GitHub se renombró a `elitepreparation`, así que el repo es `elitepreparation/hybrid` y la web está en https://elitepreparation.github.io/hybrid/ (el link viejo `complex180.github.io` ya no existe).
 
 Se dejaron **con el nombre viejo a propósito** (renombrarlos rompería cosas): la carpeta raíz "Complex 180" en Drive (`ROOT_NAME` en `Codigo.gs`), el proyecto de Apps Script "Complex180 API" y las claves de localStorage `complex180_*` (cambiarlas desloguearía a todos los alumnos).
+
+---
+
+## 11. Panel del coach (`admin.html`) — agregado el 9 oct 2026
+
+Página privada para Gaby: lista a todos los alumnos con **último ingreso**, **tiempo de la última sesión y total**, cantidad de ingresos, **avance de la semana** (días marcados como hechos), vencimiento del plan y, al tocar un alumno, sus datos y los pesos que registró. No está enlazada desde ningún lado y tiene `noindex`; la protección real es la **clave de administrador**, que se verifica en el Apps Script (la página sola no muestra datos).
+
+- **Clave:** vive en Apps Script > Configuración del proyecto > Propiedades de la secuencia de comandos > `ADMIN_CLAVE` (no está en el código ni en GitHub). Tras 5 intentos fallidos se bloquea 10 minutos.
+- **Datos de actividad:** el perfil del alumno avisa al backend cada ingreso (`sesion`) y cada ~2 min con la pantalla visible (`latido`). Se guardan en "Alumnos - claves", columnas **I** (Último ingreso), **J** (Tiempo total, seg), **K** (Ingresos), **L** (Última sesión, seg). La columna H sigue siendo el vencimiento.
+- **Despliegue:** requiere pegar `apps-script/Codigo.gs` en el editor y publicar una **Nueva versión** (ver sección 6). Sin eso, el panel no carga y el seguimiento simplemente no registra nada.
