@@ -567,7 +567,7 @@
     }
     var registro = $("[data-whatsapp-register]");
     if (registro && brand.whatsapp) {
-      registro.href = "https://wa.me/" + brand.whatsapp + "?text=" + encodeURIComponent("Hola Gaby, quiero registrarme en Complex 180");
+      registro.href = "https://wa.me/" + brand.whatsapp + "?text=" + encodeURIComponent("Hola Gaby, quiero registrarme en Elite Preparation");
     }
 
     if (!vigente()) { showView("view-clave"); return; }
