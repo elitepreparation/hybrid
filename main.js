@@ -25,20 +25,6 @@
     });
   }
 
-  // Precio: elegís Plan Híbrido o Plan Personalizado, y ahí adentro las 2 opciones de cada uno
-  function initPlanSelector() {
-    const root = $("[data-plan-selector]");
-    if (!root) return;
-    function mostrarPaso(paso) {
-      $$("[data-plan-step]", root).forEach(el => { el.hidden = el.dataset.planStep !== paso; });
-    }
-    root.addEventListener("click", e => {
-      const abrir = e.target.closest("[data-open-plan]");
-      if (abrir) { mostrarPaso(abrir.dataset.openPlan); return; }
-      if (e.target.closest("[data-plan-back]")) mostrarPaso("inicio");
-    });
-  }
-
   function initReveals() {
     const targets = $$(".reveal");
     if (!targets.length) return;
@@ -108,7 +94,6 @@
 
   function boot() {
     safe(initWhatsApp, "initWhatsApp");
-    safe(initPlanSelector, "initPlanSelector");
     safe(initReveals, "initReveals");
     safe(initCountUp, "initCountUp");
     safe(initSmoothAnchors, "initSmoothAnchors");
