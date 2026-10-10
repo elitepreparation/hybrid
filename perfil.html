@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261011h">
+<link rel="stylesheet" href="styles.css?v=20261011i">
 </head>
 <body>
 <a href="#main" class="skip-link">Saltar al contenido</a>
@@ -94,6 +94,15 @@
       <form data-registro-form class="login-form">
         <label>Nombre<input type="text" name="nombre" placeholder="Tu nombre" required maxlength="60" autocomplete="given-name"></label>
         <label>Email<input type="email" name="email" placeholder="tu@email.com" required maxlength="120" autocomplete="email"></label>
+        <label>¿Qué plan te interesa?
+          <select name="plan" required>
+            <option value="">Elegí una opción</option>
+            <option value="Open">Open</option>
+            <option value="Pro">Pro</option>
+            <option value="Personalizado">Personalizado</option>
+            <option value="Todavía no sé">Todavía no sé</option>
+          </select>
+        </label>
         <button type="submit" class="btn btn-accent btn-block login-submit">Continuar</button>
       </form>
       <p data-registro-msg class="login-msg"></p>
@@ -282,6 +291,6 @@
 </footer>
 
 <script defer src="lib/manifest.js?v=20261009a"></script>
-<script defer src="profile.js?v=20261011d"></script>
+<script defer src="profile.js?v=20261011e"></script>
 </body>
 </html>

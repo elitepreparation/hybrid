@@ -102,7 +102,8 @@
   function mostrarPendiente(datos) {
     $("[data-pend-nombre]").textContent = datos.nombre || "bienvenido";
     var brand = window.__BRAND__ || {};
-    var txt = "Hola Gaby, soy " + (datos.nombre || "un alumno nuevo") + ". Me registré en Elite Preparation con el mail " + datos.email + ". Quiero activar mi plan.";
+    var interes = !datos.plan ? "" : (datos.plan === "Todavía no sé" ? " Todavía no sé qué plan me conviene, ¿me asesorás?" : " Me interesa el plan " + datos.plan + ".");
+    var txt = "Hola Gaby, soy " + (datos.nombre || "un alumno nuevo") + ". Me registré en Elite Preparation con el mail " + datos.email + "." + interes + " Quiero activar mi acceso.";
     $("[data-pend-wa]").href = "https://wa.me/" + (brand.whatsapp || "") + "?text=" + encodeURIComponent(txt);
     showView("view-pendiente");
     window.scrollTo(0, 0);
@@ -112,7 +113,8 @@
     var btn = form.querySelector("[data-form-submit]");
     var textoOriginal = btn ? btn.textContent : "";
     if (btn) { btn.disabled = true; btn.textContent = "Enviando…"; }
-    var datos = { nombre: (profile.apodo || profile.nombre || modoRegistro.nombre), email: modoRegistro.email };
+    profile.planInteres = modoRegistro.plan;
+    var datos = { nombre: (profile.apodo || profile.nombre || modoRegistro.nombre), email: modoRegistro.email, plan: modoRegistro.plan };
     var body = new URLSearchParams({ action: "registrar", nombre: profile.nombre || modoRegistro.nombre, email: modoRegistro.email, perfil: JSON.stringify(profile) });
     fetch(API_URL, { method: "POST", body: body })
       .then(function (r) { return r.json(); })
@@ -133,8 +135,10 @@
       e.preventDefault();
       var nombre = form.elements.nombre.value.trim();
       var email = form.elements.email.value.trim().toLowerCase();
+      var plan = form.elements.plan.value;
       var msg = $("[data-registro-msg]");
       if (nombre.length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { msg.textContent = "Revisá tu nombre y tu email."; return; }
+      if (!plan) { msg.textContent = "Elegí qué plan te interesa."; return; }
       msg.textContent = "";
       var f = $("[data-profile-form]");
       f.reset();
@@ -142,7 +146,7 @@
       if (f.elements.mail) f.elements.mail.value = email;
       $("[data-apodo]").value = "";
       showView("view-form");            // showView limpia el modo registro: se activa recién después
-      modoRegistro = { nombre: nombre, email: email };
+      modoRegistro = { nombre: nombre, email: email, plan: plan };
       $("#view-form").classList.add("is-registro");
       window.scrollTo(0, 0);
     });

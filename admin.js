@@ -102,7 +102,7 @@
   // ---- render ----
   function estadoVenc(a) {
     var d = diasHastaVencer(a);
-    if (!a.vencimiento) return { cls: "is-warn", txt: "pendiente de activación" };
+    if (!a.vencimiento) return { cls: "is-warn", txt: "pendiente de activación" + (a.perfil && a.perfil.planInteres ? " · quiere " + a.perfil.planInteres : "") };
     if (d < 0) return { cls: "is-bad", txt: "vencido " + fmtDia(a.vencimiento) };
     if (d <= 7) return { cls: "is-warn", txt: "vence " + fmtDia(a.vencimiento) + " (" + Math.ceil(d) + " d)" };
     return { cls: "is-ok", txt: "vigente hasta " + fmtDia(a.vencimiento) };
@@ -147,7 +147,7 @@
       : '<li class="admin-muted">Todavía no marcó ningún día como hecho.</li>';
     var perfil = a.perfil || {};
     var datos = [
-      ["Mail", a.email], ["Ciudad", perfil.ciudad], ["WhatsApp", perfil.whatsapp], ["Objetivos", perfil.objetivos], ["Lesiones", perfil.historialLesiones], ["Patologías", perfil.patologias], ["Instagram", perfil.instagram], ["Pagó el", fmtDia(a.fechaPago)]
+      ["Mail", a.email], ["Plan que le interesa", perfil.planInteres], ["Ciudad", perfil.ciudad], ["WhatsApp", perfil.whatsapp], ["Objetivos", perfil.objetivos], ["Lesiones", perfil.historialLesiones], ["Patologías", perfil.patologias], ["Instagram", perfil.instagram], ["Pagó el", fmtDia(a.fechaPago)]
     ].filter(function (d) { return d[1]; }).map(function (d) { return '<li><b>' + esc(d[0]) + ':</b> ' + esc(d[1]) + '</li>'; }).join("");
     var fotos = [];
     if (perfil.fotoPerfilUrl) fotos.push('<a href="' + esc(perfil.fotoPerfilUrl) + '" target="_blank" rel="noopener">Foto de perfil</a>');
