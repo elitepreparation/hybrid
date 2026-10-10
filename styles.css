@@ -177,7 +177,7 @@ ul { list-style: none; }
   font-family: var(--mono); color: #fff; font-size: .95rem; letter-spacing: .08em;
   text-transform: uppercase; padding: .9rem 2rem; white-space: nowrap;
 }
-.marquee-item::after { content: "•"; margin-left: 2rem; color: var(--accent); }
+.marquee-item::after { content: "â¢"; margin-left: 2rem; color: var(--accent); }
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
 /* =============================================================
@@ -188,7 +188,7 @@ ul { list-style: none; }
 .section-head { max-width: 56ch; margin-bottom: 2.5rem; }
 .section-title { font-size: clamp(1.9rem, 4.5vw, 2.8rem); }
 
-/* Método */
+/* MÃ©todo */
 .metodo-grid { display: grid; gap: 2rem; }
 .metodo-num { font-family: var(--mono); font-size: 4rem; color: var(--accent); font-weight: 700; line-height: 1; }
 .metodo-text { font-size: 1.15rem; color: var(--ink-soft); max-width: 60ch; }
@@ -206,7 +206,7 @@ ul { list-style: none; }
 .nivel-detalle { margin-top: 1.25rem; color: var(--ink-soft); }
 .nivel-items { margin-top: 1.5rem; display: flex; flex-direction: column; gap: .7rem; flex: 1; }
 .nivel-items li { padding-left: 1.4rem; position: relative; font-size: .95rem; }
-.nivel-items li::before { content: "→"; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+.nivel-items li::before { content: "â"; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
 .nivel-card .btn { margin-top: 2rem; }
 @media (min-width: 720px) { .niveles-grid { grid-template-columns: 1fr 1fr; } }
 @media (min-width: 1100px) { .niveles-grid { grid-template-columns: repeat(3, 1fr); } }
@@ -221,7 +221,7 @@ ul { list-style: none; }
 @media (min-width: 720px) { .pasos-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 1280px) { .pasos-grid { grid-template-columns: repeat(4, 1fr); } }
 
-/* Galería mini */
+/* GalerÃ­a mini */
 .galeria { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; margin-top: 2.5rem; }
 .galeria img { width: 100%; aspect-ratio: 3/4; object-fit: cover; filter: saturate(1.05); transition: transform .4s var(--ease-out); }
 .galeria a:hover img { transform: scale(1.04); }
@@ -251,7 +251,7 @@ ul { list-style: none; }
 }
 .faq-item summary::-webkit-details-marker { display: none; }
 .faq-item summary::after { content: "+"; font-family: var(--mono); color: var(--accent); font-size: 1.4rem; }
-.faq-item[open] summary::after { content: "–"; }
+.faq-item[open] summary::after { content: "â"; }
 .faq-item p { padding-bottom: 1.25rem; color: var(--ink-soft); max-width: 60ch; }
 
 /* Footer */
@@ -262,7 +262,7 @@ ul { list-style: none; }
 .footer-links a:hover { color: var(--accent); }
 
 /* =============================================================
-   9. Modal (área de alumnos — demo)
+   9. Modal (Ã¡rea de alumnos â demo)
    ============================================================= */
 .modal-backdrop {
   position: fixed; inset: 0; background: rgba(14,27,48,.6); z-index: 200;
@@ -276,7 +276,7 @@ ul { list-style: none; }
 .modal-close { position: absolute; top: 1rem; right: 1rem; font-family: var(--mono); font-size: 1rem; }
 
 /* =============================================================
-   9a. Login gate (perfil.html — pantalla de mail + clave)
+   9a. Login gate (perfil.html â pantalla de mail + clave)
    ============================================================= */
 .login-gate {
   background: var(--bg);
@@ -348,7 +348,7 @@ ul { list-style: none; }
 @media (min-width: 720px) { .pf-grid { grid-template-columns: repeat(2, 1fr); } }
 
 /* =============================================================
-   9c. Dashboard (perfil.html — planificación / videos)
+   9c. Dashboard (perfil.html â planificaciÃ³n / videos)
    ============================================================= */
 .dash-toolbar {
   display: flex; align-items: center; justify-content: space-between; gap: 1rem;
@@ -383,6 +383,50 @@ ul { list-style: none; }
 }
 .log-table input:focus { outline: none; border-color: var(--accent); }
 .log-readonly { color: var(--ink-soft); font-size: .92rem; margin-top: .5rem; }
+
+/* Planificación semanal: semana → día, un día a la vez */
+.week-panel[hidden] { display: none; }
+.week-nav { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: 1.75rem; }
+.week-chip {
+  font-family: var(--mono); font-size: .78rem; text-transform: uppercase; letter-spacing: .04em;
+  padding: .55rem 1rem; border: 2px solid var(--ink); color: var(--ink); display: inline-flex; align-items: center; gap: .5rem;
+}
+.week-chip small { font-size: .62rem; background: var(--accent); color: #fff; padding: .1rem .4rem; letter-spacing: .06em; }
+.week-chip.is-active { background: var(--ink); color: #fff; }
+.week-progress { margin-top: 1.25rem; }
+.week-progress-text { font-size: .9rem; color: var(--ink-soft); }
+.week-progress-text strong { color: var(--accent); font-family: var(--mono); }
+.week-progress-bar { height: 8px; background: var(--line); margin-top: .5rem; }
+.week-progress-bar span { display: block; height: 100%; background: var(--accent); transition: width .4s var(--ease-out); }
+.day-nav { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: .6rem; margin-top: 1.25rem; }
+.day-chip {
+  text-align: left; border: 2px solid var(--ink); padding: .75rem .9rem; color: var(--ink);
+  display: flex; flex-direction: column; gap: .15rem; background: var(--bg);
+  transition: transform .2s var(--ease-out), box-shadow .2s var(--ease-out);
+}
+.day-chip b { font-family: var(--display); text-transform: uppercase; font-size: 1rem; }
+.day-chip small { font-family: var(--mono); font-size: .68rem; text-transform: uppercase; color: var(--mute); line-height: 1.25; }
+.day-chip:hover { transform: translateY(-2px); box-shadow: 4px 4px 0 var(--accent); }
+.day-chip.is-active { background: var(--ink); color: #fff; }
+.day-chip.is-active small { color: rgba(255,255,255,.75); }
+.day-chip.is-done:not(.is-active) { border-color: var(--accent); }
+.day-chip.is-done b { color: var(--accent); }
+.day-chip.is-active.is-done b { color: #fff; }
+.day-view { margin-top: 1.25rem; }
+.day-card.is-done, .log-day.is-done { border-color: var(--accent); }
+.ex-list { list-style: none; margin: 1.25rem 0 0; padding: 0; }
+.ex-row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1rem; padding: .85rem 0; border-top: 1px solid var(--line);
+}
+.ex-name { flex: 1 1 180px; font-weight: 600; }
+.ex-sets { font-family: var(--mono); font-weight: 700; color: var(--accent); }
+.ex-peso { font-family: var(--mono); font-size: .8rem; color: var(--mute); }
+.ex-video {
+  font-family: var(--mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .04em;
+  border: 2px solid var(--ink); padding: .35rem .7rem; color: var(--ink);
+}
+.ex-video:hover { background: var(--ink); color: #fff; }
+.day-done { margin-top: 1.25rem; }
 .plan-archivo {
   background: var(--bg-2); border-left: 3px solid var(--accent); padding: .9rem 1.1rem;
   margin-top: 1rem; font-size: .9rem;
@@ -404,7 +448,7 @@ ul { list-style: none; }
 .video-item small { color: var(--mute); font-family: var(--mono); font-size: .75rem; text-transform: uppercase; }
 .video-badge { font-family: var(--mono); font-size: .78rem; color: var(--mute); white-space: nowrap; }
 
-/* Tarjetas de carpeta — pantalla inicial de Videos, una fila por grupo de Drive */
+/* Tarjetas de carpeta â pantalla inicial de Videos, una fila por grupo de Drive */
 .folder-grid { display: flex; flex-direction: column; gap: .75rem; }
 .folder-card {
   border: 2px solid var(--ink); background: #fff; padding: 1.1rem 1.25rem; width: 100%; text-align: left;
@@ -446,11 +490,11 @@ ul { list-style: none; }
 .video-frame-wrap { position: relative; aspect-ratio: 9 / 16; margin-top: 1rem; background: #000; }
 .video-frame-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
-/* PDF de planificación embebido */
+/* PDF de planificaciÃ³n embebido */
 .plan-pdf { margin-top: 1rem; border: 2px solid var(--ink); }
 .plan-pdf iframe { display: block; width: 100%; height: min(75vh, 900px); border: 0; }
 
-/* Botón flotante de WhatsApp */
+/* BotÃ³n flotante de WhatsApp */
 .wa-fab {
   position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 150;
   width: 58px; height: 58px; border-radius: 50%; background: #25d366; color: #fff;
@@ -460,7 +504,7 @@ ul { list-style: none; }
 .wa-fab:hover { transform: scale(1.08); }
 
 /* =============================================================
-   10. Reduced motion — only intrusive
+   10. Reduced motion â only intrusive
    ============================================================= */
 @media (prefers-reduced-motion: reduce) {
   .marquee-track { animation: none; }

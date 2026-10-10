@@ -20,9 +20,6 @@
       ]},
       { dia: "Día 4", foco: "Híbrido", ejercicios: [
         { nombre: "Kettlebell swings", series: 4, reps: 15 }, { nombre: "Burpees", series: 4, reps: 12 }
-      ]},
-      { dia: "Día 5", foco: "Resistencia + movilidad", ejercicios: [
-        { nombre: "Running ritmo suave", series: 1, reps: 25 }, { nombre: "Movilidad general", series: 1, reps: 10 }
       ]}
     ],
     PRO: [
@@ -40,7 +37,10 @@
       { dia: "Día 4", foco: "Híbrido", ejercicios: [
         { nombre: "Clean & press", series: 5, reps: 5 }, { nombre: "Burpees", series: 5, reps: 15 }, { nombre: "Sprint 20m", series: 6, reps: 1 }
       ]},
-      { dia: "Día 5", foco: "Resistencia + movilidad", ejercicios: [
+      { dia: "Día 5", foco: "Fuerza cuerpo completo", ejercicios: [
+        { nombre: "Peso muerto rumano", series: 4, reps: 8 }, { nombre: "Press militar", series: 4, reps: 8 }, { nombre: "Zancadas", series: 3, reps: 12 }
+      ]},
+      { dia: "Día 6", foco: "Resistencia + movilidad", ejercicios: [
         { nombre: "Running cambios de ritmo", series: 1, reps: 35 }, { nombre: "Movilidad general", series: 1, reps: 10 }
       ]}
     ],
@@ -306,15 +306,105 @@
       var reps = saved.reps != null ? saved.reps : ej.reps;
       return ej.nombre + " — " + series + "x" + reps + peso;
     }).join(" · ");
-    return '<div class="log-day"><div class="log-day-head"><h3>' + dia.dia + '</h3><span>' + dia.foco + '</span></div>' +
+    return '<div class="log-day' + (diaHecho(log, semana, dia.dia) ? ' is-done' : '') + '"><div class="log-day-head"><h3>' + dia.dia + (diaHecho(log, semana, dia.dia) ? ' ✓' : '') + '</h3><span>' + dia.foco + '</span></div>' +
       '<p class="log-readonly">' + items + '</p></div>';
+  }
+
+  // ---- Vista semanal: semana → día, un día a la vez, con progreso ----
+  var vista = { nivel: null, semana: null, dia: null };
+
+  function hechoKey(semana, dia) { return "hecho|" + semana + "|" + dia; }
+  function diaHecho(log, semana, dia) { var h = log[hechoKey(semana, dia)]; return !!(h && h.hecho === "1"); }
+
+  // busca un video de la biblioteca cuyo nombre coincida con el del ejercicio
+  function videoDe(nombre) {
+    var n = String(nombre || "").trim().toLowerCase();
+    if (n.length < 3) return null;
+    return videosCache.filter(function (v) {
+      if (!(v.id || driveId(v.url))) return false;
+      var vn = String(v.nombre || "").trim().toLowerCase();
+      return vn === n || (vn.length >= 4 && (n.indexOf(vn) > -1 || vn.indexOf(n) > -1));
+    })[0] || null;
+  }
+
+  function diaDetalleHTML(semana, dia, log) {
+    var items = dia.ejercicios.map(function (ej) {
+      var saved = log[semana + "|" + dia.dia + "|" + ej.nombre] || {};
+      var series = saved.series != null && saved.series !== "" ? saved.series : ej.series;
+      var reps = saved.reps != null && saved.reps !== "" ? saved.reps : ej.reps;
+      var v = videoDe(ej.nombre);
+      var id = v && (v.id || driveId(v.url));
+      return '<li class="ex-row"><span class="ex-name">' + ej.nombre + '</span>' +
+        '<span class="ex-sets">' + series + ' × ' + reps + '</span>' +
+        (saved.peso ? '<span class="ex-peso">' + saved.peso + ' kg</span>' : '') +
+        (id ? '<button type="button" class="ex-video" data-play-id="' + id + '" data-play-nombre="' + ej.nombre.replace(/"/g, "&quot;") + '">▶ Técnica</button>' : '') +
+        '</li>';
+    }).join("");
+    var hecho = diaHecho(log, semana, dia.dia);
+    return '<div class="log-day day-card' + (hecho ? ' is-done' : '') + '">' +
+      '<div class="log-day-head"><h3>' + dia.dia + '</h3><span>' + dia.foco + '</span></div>' +
+      '<ul class="ex-list">' + items + '</ul>' +
+      '<button type="button" class="btn ' + (hecho ? 'btn-ghost' : 'btn-primary') + ' day-done" data-toggle-hecho data-semana="' + semana + '" data-dia="' + dia.dia + '">' +
+      (hecho ? '✓ Día hecho — deshacer' : 'Marcar día como hecho') + '</button></div>';
   }
 
   function renderWeekly(nivel) {
     var log = getJSON(KEYS.log) || {};
-    var n = semanaActual();
-    $("[data-week-label]").textContent = "Semana " + n + " de 4";
-    $("[data-week-dias]").innerHTML = diasDeSemana(nivel, n).map(function (d) { return diaCardReadOnly(n, d, log); }).join("");
+    var semanas = semanasFor(nivel);
+    var hoy = semanaActual();
+    if (vista.nivel !== nivel) { vista.nivel = nivel; vista.semana = hoy; vista.dia = null; }
+    var dias = diasDeSemana(nivel, vista.semana);
+    var panel = $("[data-week-panel]");
+    if (!dias.length) { panel.hidden = true; return; }
+    panel.hidden = false;
+
+    if (!dias.some(function (d) { return d.dia === vista.dia; })) {
+      var pendiente = dias.filter(function (d) { return !diaHecho(log, vista.semana, d.dia); })[0];
+      vista.dia = (pendiente || dias[0]).dia;
+    }
+
+    $("[data-week-nav]").innerHTML = semanas.map(function (s) {
+      var on = s.semana === vista.semana;
+      return '<button type="button" role="tab" aria-selected="' + on + '" class="week-chip' + (on ? ' is-active' : '') + '" data-semana-chip="' + s.semana + '">' +
+        'Semana ' + s.semana + (s.semana === hoy ? '<small>actual</small>' : '') + '</button>';
+    }).join("");
+
+    var hechos = dias.filter(function (d) { return diaHecho(log, vista.semana, d.dia); }).length;
+    $("[data-week-progress]").innerHTML = '<div class="week-progress-text"><strong>' + hechos + ' de ' + dias.length + '</strong> días hechos esta semana</div>' +
+      '<div class="week-progress-bar"><span style="width:' + Math.round(hechos / dias.length * 100) + '%"></span></div>';
+
+    $("[data-day-nav]").innerHTML = dias.map(function (d) {
+      var on = d.dia === vista.dia, ok = diaHecho(log, vista.semana, d.dia);
+      return '<button type="button" role="tab" aria-selected="' + on + '" class="day-chip' + (on ? ' is-active' : '') + (ok ? ' is-done' : '') + '" data-dia-chip="' + d.dia + '">' +
+        '<b>' + d.dia + (ok ? ' ✓' : '') + '</b><small>' + d.foco + '</small></button>';
+    }).join("");
+
+    var dia = dias.filter(function (d) { return d.dia === vista.dia; })[0];
+    $("[data-week-dias]").innerHTML = diaDetalleHTML(vista.semana, dia, log);
+  }
+
+  function initPlanNav() {
+    var panel = $("[data-week-panel]");
+    panel.addEventListener("click", function (e) {
+      var nivel = getJSON(KEYS.nivel) || "OPEN";
+      var sem = e.target.closest("[data-semana-chip]");
+      if (sem) { vista.semana = Number(sem.dataset.semanaChip); vista.dia = null; renderWeekly(nivel); return; }
+      var dia = e.target.closest("[data-dia-chip]");
+      if (dia) { vista.dia = dia.dataset.diaChip; renderWeekly(nivel); return; }
+      var toggle = e.target.closest("[data-toggle-hecho]");
+      if (toggle) {
+        var log = getJSON(KEYS.log) || {};
+        var key = hechoKey(toggle.dataset.semana, toggle.dataset.dia);
+        log[key] = { hecho: diaHecho(log, toggle.dataset.semana, toggle.dataset.dia) ? "0" : "1" };
+        setJSON(KEYS.log, log);
+        guardarRegistrosServidor(log);
+        renderWeekly(nivel);
+        renderMonthly(nivel);
+        return;
+      }
+      var play = e.target.closest("[data-play-id]");
+      if (play) openVideo(play.dataset.playId, play.dataset.playNombre);
+    });
   }
 
   function renderMonthly(nivel) {
@@ -468,6 +558,7 @@
     fetch(API_URL + "?action=videos").then(function (r) { return r.json(); }).then(function (data) {
       if (data.ok && data.videos.length) {
         videosCache = data.videos;
+        var nv = getJSON(KEYS.nivel); if (nv && !$("#view-dashboard").hidden) renderWeekly(nv);
         renderVideoList($("[data-video-search]").value);
       }
     }).catch(function () { /* sin conexión: se queda con la lista de muestra */ });
@@ -515,8 +606,7 @@
         }
       } else if (hayPdf && getJSON(KEYS.nivel) === nivel) {
         // el PDF es la planificación real del mes: no mostramos las tarjetas de muestra
-        $("[data-week-dias]").innerHTML = "";
-        $("[data-week-label]").textContent = "Planificación de " + ((data.mes || "").split(" ")[1] || "este mes");
+        $("[data-week-panel]").hidden = true;
         var monthly = document.querySelector(".monthly-card");
         if (monthly) monthly.hidden = true;
       }
@@ -558,6 +648,7 @@
     initForm();
     initDashToolbar();
     initNivelToggle();
+    initPlanNav();
     initVideos();
 
     var fab = $("[data-whatsapp-fab]");

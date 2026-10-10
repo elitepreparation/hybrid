@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261009q">
+<link rel="stylesheet" href="styles.css?v=20261009r">
 </head>
 <body>
 <a href="#main" class="skip-link">Saltar al contenido</a>
@@ -135,10 +135,16 @@
           </div>
         </div>
 
-        <p class="kicker" data-week-label style="margin-top:1.5rem;">Semana 1</p>
         <div data-plan-archivo class="plan-archivo" hidden></div>
         <div data-plan-pdf class="plan-pdf" hidden></div>
-        <div data-week-dias class="log-dias"></div>
+
+        <div data-week-panel class="week-panel">
+          <div class="week-nav" data-week-nav role="tablist" aria-label="Semanas"></div>
+          <div class="week-progress" data-week-progress></div>
+          <div class="day-nav" data-day-nav role="tablist" aria-label="Días de entrenamiento"></div>
+          <p class="kicker" data-week-label hidden></p>
+          <div data-week-dias class="day-view"></div>
+        </div>
 
         <div class="monthly-card">
           <div>
@@ -184,6 +190,6 @@
 </footer>
 
 <script defer src="lib/manifest.js?v=20261009a"></script>
-<script defer src="profile.js?v=20261009a"></script>
+<script defer src="profile.js?v=20261009b"></script>
 </body>
 </html>
