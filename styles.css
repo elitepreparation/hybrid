@@ -442,6 +442,45 @@ ul { list-style: none; }
 }
 .ex-video:hover { background: var(--ink); color: #fff; }
 .day-done { margin-top: 1.25rem; }
+/* Ejercicio: lo que indica la planilla vs. lo que hizo el alumno */
+.ex-head, .ex-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) 76px 150px 46px; gap: .6rem; align-items: center;
+}
+.ex-head {
+  margin-top: 1rem; padding: 0 0 .4rem; font-family: var(--mono); font-size: .66rem; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--mute); border-bottom: 2px solid var(--ink);
+}
+.ex-head span:nth-child(2), .ex-head span:nth-child(4) { text-align: center; }
+.ex-progress { margin-top: .75rem; font-family: var(--mono); font-size: .78rem; color: var(--accent); }
+.ex-list { margin-top: 0; }
+.ex-row { padding: .7rem 0; border-top: 0; border-bottom: 1px solid var(--line); }
+.ex-row .ex-name { flex: none; }
+.ex-plan { font-family: var(--mono); font-weight: 700; color: var(--accent); text-align: center; }
+.ex-did {
+  width: 100%; border: 2px solid var(--ink); padding: .5rem .55rem; font-family: var(--mono); font-size: .85rem;
+  background: var(--bg); color: var(--ink); min-width: 0;
+}
+.ex-did:focus { outline: none; border-color: var(--accent); background: var(--bg-2); }
+.ex-did::placeholder { color: var(--mute); opacity: .7; }
+.ex-check { display: grid; place-items: center; cursor: pointer; }
+.ex-check input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.ex-check span {
+  width: 32px; height: 32px; border: 2px solid var(--ink); background: var(--bg); display: grid; place-items: center;
+  transition: background .15s, border-color .15s;
+}
+.ex-check span::after { content: "✓"; color: #fff; font-weight: 700; font-size: 1.1rem; opacity: 0; transform: scale(.6); transition: opacity .15s, transform .15s; }
+.ex-check input:checked + span { background: var(--accent); border-color: var(--accent); }
+.ex-check input:checked + span::after { opacity: 1; transform: scale(1); }
+.ex-check input:focus-visible + span { outline: 3px solid var(--accent-2); outline-offset: 2px; }
+.ex-row.is-ok .ex-name { text-decoration: line-through; color: var(--mute); }
+.ex-row.is-ok .ex-did { border-color: var(--accent); }
+@media (max-width: 640px) {
+  .ex-head { display: none; }
+  .ex-row { grid-template-columns: 64px minmax(0, 1fr) 46px; gap: .5rem .6rem; }
+  .ex-row .ex-name { grid-column: 1 / -1; }
+  .ex-plan { text-align: left; font-size: .9rem; }
+  .ex-plan::before { content: attr(data-label) ": "; display: block; font-size: .6rem; font-weight: 400; text-transform: uppercase; color: var(--mute); letter-spacing: .05em; }
+}
 .plan-archivo {
   background: var(--bg-2); border-left: 3px solid var(--accent); padding: .9rem 1.1rem;
   margin-top: 1rem; font-size: .9rem;

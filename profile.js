@@ -363,22 +363,32 @@
     })[0] || null;
   }
 
+  function exKey(semana, dia, ejercicio) { return semana + "|" + dia + "|" + ejercicio; }
+  function attr(v) { return String(v).replace(/&/g, "&amp;").replace(/"/g, "&quot;"); }
+
   function diaDetalleHTML(semana, dia, log) {
+    var okCount = 0;
     var items = dia.ejercicios.map(function (ej) {
-      var saved = log[semana + "|" + dia.dia + "|" + ej.nombre] || {};
-      var series = saved.series != null && saved.series !== "" ? saved.series : ej.series;
-      var reps = saved.reps != null && saved.reps !== "" ? saved.reps : ej.reps;
+      var key = exKey(semana, dia.dia, ej.nombre);
+      var saved = log[key] || {};
+      var ok = saved.ok === "1";
+      if (ok) okCount++;
       var v = videoDe(ej.nombre);
       var id = v && (v.id || driveId(v.url));
-      return '<li class="ex-row"><span class="ex-name">' + ej.nombre + '</span>' +
-        '<span class="ex-sets">' + series + ' × ' + reps + '</span>' +
-        (saved.peso ? '<span class="ex-peso">' + saved.peso + ' kg</span>' : '') +
-        (id ? '<button type="button" class="ex-video" data-play-id="' + id + '" data-play-nombre="' + ej.nombre.replace(/"/g, "&quot;") + '">▶ Técnica</button>' : '') +
+      return '<li class="ex-row' + (ok ? ' is-ok' : '') + '">' +
+        '<span class="ex-name">' + ej.nombre +
+          (id ? ' <button type="button" class="ex-video" data-play-id="' + id + '" data-play-nombre="' + attr(ej.nombre) + '">▶ Técnica</button>' : '') +
+        '</span>' +
+        '<span class="ex-plan" data-label="A hacer">' + ej.series + ' × ' + ej.reps + '</span>' +
+        '<input type="text" class="ex-did" data-ex-did data-k="' + attr(key) + '" placeholder="ej. ' + ej.series + ' × ' + ej.reps + '" aria-label="Lo que hice en ' + attr(ej.nombre) + '" value="' + attr(saved.hechoTxt || "") + '">' +
+        '<label class="ex-check" title="Marcar como hecho"><input type="checkbox" data-ex-ok data-k="' + attr(key) + '"' + (ok ? ' checked' : '') + ' aria-label="Hecho: ' + attr(ej.nombre) + '"><span aria-hidden="true"></span></label>' +
         '</li>';
     }).join("");
     var hecho = diaHecho(log, semana, dia.dia);
     return '<div class="log-day day-card' + (hecho ? ' is-done' : '') + '">' +
       '<div class="log-day-head"><h3>' + dia.dia + '</h3><span>' + dia.foco + '</span></div>' +
+      '<p class="ex-progress" data-ex-progress>' + okCount + ' de ' + dia.ejercicios.length + ' ejercicios hechos</p>' +
+      '<div class="ex-head" aria-hidden="true"><span>Ejercicio</span><span>A hacer</span><span>Lo que hice</span><span>✓</span></div>' +
       '<ul class="ex-list">' + items + '</ul>' +
       '<button type="button" class="btn ' + (hecho ? 'btn-ghost' : 'btn-primary') + ' day-done" data-toggle-hecho data-semana="' + semana + '" data-dia="' + dia.dia + '">' +
       (hecho ? '✓ Día hecho — deshacer' : 'Marcar día como hecho') + '</button></div>';
@@ -429,6 +439,31 @@
 
   function initPlanNav() {
     var panel = $("[data-week-panel]");
+    // "Lo que hice" y tilde por ejercicio: se guardan en el mismo registro del alumno
+    function guardarEjercicio(k, campos) {
+      var log = getJSON(KEYS.log) || {};
+      log[k] = log[k] || {};
+      Object.keys(campos).forEach(function (c) { log[k][c] = campos[c]; });
+      setJSON(KEYS.log, log);
+      guardarRegistrosServidor(log);
+    }
+    panel.addEventListener("input", function (e) {
+      var inp = e.target.closest("[data-ex-did]");
+      if (inp) guardarEjercicio(inp.dataset.k, { hechoTxt: inp.value });
+    });
+    panel.addEventListener("change", function (e) {
+      var chk = e.target.closest("[data-ex-ok]");
+      if (!chk) return;
+      guardarEjercicio(chk.dataset.k, { ok: chk.checked ? "1" : "0" });
+      var row = chk.closest(".ex-row");
+      if (row) row.classList.toggle("is-ok", chk.checked);
+      var card = chk.closest(".day-card");
+      if (card) {
+        var total = $$("[data-ex-ok]", card).length;
+        var hechos = $$("[data-ex-ok]", card).filter(function (c) { return c.checked; }).length;
+        $("[data-ex-progress]", card).textContent = hechos + " de " + total + " ejercicios hechos";
+      }
+    });
     panel.addEventListener("click", function (e) {
       var nivel = getJSON(KEYS.nivel) || "OPEN";
       var sem = e.target.closest("[data-semana-chip]");
