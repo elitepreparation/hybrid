@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap">
 
 <link rel="preload" as="image" href="assets/img/gaby-hero.jpg" fetchpriority="high">
-<link rel="stylesheet" href="styles.css?v=20261009o">
+<link rel="stylesheet" href="styles.css?v=20261009p">
 </head>
 <body>
 <a href="#main" class="skip-link">Saltar al contenido</a>
@@ -53,7 +53,7 @@
       <p class="hero-sub">Elegí el Plan Híbrido (niveles OPEN y PRO) o un Plan Personalizado 100% a tu medida. Entrenás con guía en video y registrás tu progreso en tu propio perfil.</p>
       <div class="hero-actions">
         <a class="btn btn-primary" data-whatsapp href="#" target="_blank" rel="noopener">Escribir por WhatsApp</a>
-        <a class="btn btn-ghost" href="#precio">Ver planes y precios</a>
+        <a class="btn btn-ghost" href="#precio">Ver planes</a>
       </div>
     </div>
     <div class="hero-figure reveal">
@@ -155,21 +155,16 @@
       <h2 class="section-title">Elegí tu plan...</h2>
     </div>
 
-    <div class="plan-grid reveal">
-      <div class="plan-option">
-        <span class="plan-card-name">Open</span>
-        <span class="plan-card-price">$40.000<small>/mes</small></span>
-        <a class="btn btn-primary" data-whatsapp data-nivel="OPEN" href="#" target="_blank" rel="noopener">Quiero el nivel Open</a>
+    <div class="plan-picker reveal" data-plan-picker>
+      <div class="plan-grid">
+        <button type="button" class="plan-pick" data-plan="OPEN" data-price="$40.000" aria-pressed="false">Open</button>
+        <button type="button" class="plan-pick" data-plan="PRO" data-price="$50.000" aria-pressed="false">Pro</button>
+        <button type="button" class="plan-pick" data-plan="PERSONALIZADO" data-price="$60.000" data-mensaje="Hola Gaby, quiero mi Plan Personalizado" aria-pressed="false">Personalizado</button>
       </div>
-      <div class="plan-option">
-        <span class="plan-card-name">Pro</span>
-        <span class="plan-card-price">$50.000<small>/mes</small></span>
-        <a class="btn btn-primary" data-whatsapp data-nivel="PRO" href="#" target="_blank" rel="noopener">Quiero el nivel Pro</a>
-      </div>
-      <div class="plan-option">
-        <span class="plan-card-name">Personalizado</span>
-        <span class="plan-card-price">$60.000<small>/mes</small></span>
-        <a class="btn btn-primary" data-whatsapp data-mensaje="Hola Gaby, quiero mi Plan Personalizado" href="#" target="_blank" rel="noopener">Quiero mi plan personalizado</a>
+      <div class="plan-detail" data-plan-detail hidden aria-live="polite">
+        <span class="plan-card-name" data-plan-detail-name></span>
+        <span class="plan-card-price"><span data-plan-detail-price></span><small>/mes</small></span>
+        <a class="btn btn-primary" data-plan-detail-cta href="#" target="_blank" rel="noopener">Quiero este plan</a>
       </div>
     </div>
   </section>
@@ -231,7 +226,7 @@
 
 <script defer src="lib/gsap.min.js"></script>
 <script defer src="lib/ScrollTrigger.min.js"></script>
-<script defer src="lib/manifest.js"></script>
-<script defer src="main.js?v=20261009b"></script>
+<script defer src="lib/manifest.js?v=20261009a"></script>
+<script defer src="main.js?v=20261009c"></script>
 </body>
 </html>

@@ -25,6 +25,23 @@
     });
   }
 
+  // Precios: se muestran recién cuando el alumno elige un plan
+  function initPlanPicker() {
+    const root = $("[data-plan-picker]");
+    if (!root) return;
+    const detail = $("[data-plan-detail]", root);
+    const picks = $$(".plan-pick", root);
+    root.addEventListener("click", e => {
+      const btn = e.target.closest(".plan-pick");
+      if (!btn) return;
+      picks.forEach(p => { const on = p === btn; p.classList.toggle("is-active", on); p.setAttribute("aria-pressed", on); });
+      $("[data-plan-detail-name]", detail).textContent = btn.textContent;
+      $("[data-plan-detail-price]", detail).textContent = btn.dataset.price;
+      $("[data-plan-detail-cta]", detail).href = waLink(btn.dataset.plan === "PERSONALIZADO" ? "" : btn.dataset.plan, btn.dataset.mensaje || "");
+      detail.hidden = false;
+    });
+  }
+
   function initReveals() {
     const targets = $$(".reveal");
     if (!targets.length) return;
@@ -94,6 +111,7 @@
 
   function boot() {
     safe(initWhatsApp, "initWhatsApp");
+    safe(initPlanPicker, "initPlanPicker");
     safe(initReveals, "initReveals");
     safe(initCountUp, "initCountUp");
     safe(initSmoothAnchors, "initSmoothAnchors");
