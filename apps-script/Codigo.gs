@@ -63,7 +63,7 @@ function linkShare(file) {
 // organizó en Movilidad Tren Superior/Inferior/Zona Media), entra en cada una también
 // — a cualquier profundidad. "grupo" queda con el nombre de la carpeta que contiene
 // directamente al archivo, así los sub-grupos de Movilidad aparecen separados.
-function listarVideos(carpeta, videos) {
+function listarVideos(carpeta, videos, categoria) {
   var files = carpeta.getFiles();
   while (files.hasNext()) {
     var f = files.next();
@@ -73,25 +73,28 @@ function listarVideos(carpeta, videos) {
       nombre: f.getName().replace(/\.[^.]+$/, ""),
       url: f.getUrl(),
       tipo: f.getMimeType(),
-      grupo: carpeta.getName()
+      grupo: carpeta.getName(),
+      categoria: categoria // carpeta de primer nivel dentro de "Videos ejercicios" (Movilidad agrupa sus 3 subcarpetas)
     });
   }
   var subcarpetas = carpeta.getFolders();
   while (subcarpetas.hasNext()) {
-    listarVideos(subcarpetas.next(), videos);
+    listarVideos(subcarpetas.next(), videos, categoria);
   }
 }
 
 function getVideos() {
   var carpeta = subFolder(rootFolder(), "Videos ejercicios");
-  var videos = [];
+  var videos = [], categorias = [];
   if (carpeta) {
     var grupos = carpeta.getFolders();
     while (grupos.hasNext()) {
-      listarVideos(grupos.next(), videos);
+      var g = grupos.next();
+      categorias.push(g.getName()); // también las carpetas vacías, para que aparezcan como bloque
+      listarVideos(g, videos, g.getName());
     }
   }
-  return { ok: true, videos: videos };
+  return { ok: true, videos: videos, categorias: categorias };
 }
 
 var MESES_ES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
@@ -693,4 +696,15 @@ function adminBorrarRegistros(claveAdmin, email, alcance) {
     hoja.getRange(fila, COL_REINICIO).setValue(String(new Date().getTime()));
   } finally { lock.releaseLock(); }
   return { ok: true };
+}
+
+// correr una sola vez desde el editor (idempotente): crea las carpetas nuevas de videos dentro de
+// Drive > Complex 180 > Videos ejercicios, si todavía no existen.
+function crearCarpetasVideos() {
+  var base = subFolder(rootFolder(), "Videos ejercicios");
+  if (!base) throw new Error('No existe la carpeta "Videos ejercicios"');
+  ["Elongación", "Ejercicios de fuerza", "Técnica de carrera"].forEach(function (n) {
+    if (!subFolder(base, n)) base.createFolder(n);
+  });
+  return "listo";
 }

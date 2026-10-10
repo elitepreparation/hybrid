@@ -548,6 +548,36 @@
       : '<div class="video-card">' + thumb + body + '</div>';
   }
 
+  // quita tildes/mayúsculas para comparar nombres de carpetas ("Elongación" = "elongacion")
+  function normNombre(s) {
+    return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+  }
+
+  // bloques que siempre aparecen en Videos, aunque todavía no tengan videos cargados
+  var CATEGORIAS_FIJAS = ["Movilidad", "Elongación", "Ejercicios de fuerza", "Técnica de carrera"];
+  var categoriasServidor = []; // carpetas de primer nivel de "Videos ejercicios" (incluye las vacías)
+
+  // bloque al que pertenece un video: la carpeta de primer nivel; "Movilidad Tren Superior/Inferior/Zona Media"
+  // quedan dentro de "Movilidad" aunque el servidor todavía no mande la categoría
+  function categoriaDe(v) {
+    if (v.categoria) return v.categoria;
+    return normNombre(v.grupo).indexOf("movilidad") === 0 ? "Movilidad" : v.grupo;
+  }
+
+  function listaCategorias() {
+    var out = [], vistos = {};
+    function agregar(n) { var k = normNombre(n); if (!k || vistos[k]) return; vistos[k] = true; out.push(n); }
+    CATEGORIAS_FIJAS.forEach(agregar);
+    categoriasServidor.forEach(agregar);
+    videosCache.forEach(function (v) { agregar(categoriaDe(v)); });
+    return out;
+  }
+
+  function videosDeCategoria(cat) {
+    var k = normNombre(cat);
+    return videosCache.filter(function (v) { return normNombre(categoriaDe(v)) === k; });
+  }
+
   // agrupa por "grupo" (la carpeta de Drive), en el mismo orden en que Drive fue
   // devolviendo las carpetas
   function agruparPorCarpeta(items) {
@@ -559,17 +589,15 @@
     return { grupos: grupos, porGrupo: porGrupo };
   }
 
-  // pantalla inicial: una tarjeta por carpeta, como en el Drive — hay que tocarla para
-  // entrar y ver los videos de adentro
+  // pantalla inicial: un bloque grande por categoría — hay que tocarlo para entrar y ver los videos
   function renderCarpetasVideo() {
     var list = $("[data-video-list]");
     list.className = "folder-grid";
-    var agrupado = agruparPorCarpeta(videosCache);
-    list.innerHTML = agrupado.grupos.map(function (g) {
-      var cant = agrupado.porGrupo[g].length;
-      return '<button type="button" class="folder-card" data-open-folder="' + g.replace(/"/g, "&quot;") + '">' +
-        '<strong>' + g + '</strong><small>' + cant + (cant === 1 ? " video" : " videos") + '</small></button>';
-    }).join("") || '<p style="color:var(--mute);">Todavía no hay videos cargados.</p>';
+    list.innerHTML = listaCategorias().map(function (c) {
+      var cant = videosDeCategoria(c).filter(function (v) { return v.id || driveId(v.url); }).length;
+      return '<button type="button" class="folder-card' + (cant ? '' : ' is-empty') + '" data-open-folder="' + c.replace(/"/g, "&quot;") + '">' +
+        '<strong>' + c + '</strong><small>' + (cant ? cant + (cant === 1 ? " video" : " videos") : "Próximamente") + '</small></button>';
+    }).join("");
   }
 
   var volverCarpetasHTML = '<button type="button" class="video-back" data-video-back>← Volver a las carpetas</button>';
@@ -600,10 +628,16 @@
       return;
     }
 
-    // adentro de una carpeta puntual
-    var deLaCarpeta = videosCache.filter(function (e) { return e.grupo === carpetaVideoActual; });
-    list.innerHTML = volverCarpetasHTML + '<div class="video-group"><p>' + carpetaVideoActual + '</p><div class="video-grid">' +
-      deLaCarpeta.map(videoCard).join("") + '</div></div>';
+    // adentro de un bloque: sus videos, separados por carpeta (Movilidad muestra sus 3 subcarpetas)
+    var deLaCategoria = videosDeCategoria(carpetaVideoActual);
+    if (!deLaCategoria.length) {
+      list.innerHTML = volverCarpetasHTML + '<div class="video-group"><p>' + carpetaVideoActual + '</p><p class="quick-hint">Todavía no hay videos en este bloque.</p></div>';
+      return;
+    }
+    var porCarpeta = agruparPorCarpeta(deLaCategoria);
+    list.innerHTML = volverCarpetasHTML + porCarpeta.grupos.map(function (g) {
+      return '<div class="video-group"><p>' + g + '</p><div class="video-grid">' + porCarpeta.porGrupo[g].map(videoCard).join("") + '</div></div>';
+    }).join("");
   }
 
   function openVideo(id, nombre) {
@@ -641,6 +675,7 @@
     fetch(API_URL + "?action=videos").then(function (r) { return r.json(); }).then(function (data) {
       if (data.ok && data.videos.length) {
         videosCache = data.videos;
+        categoriasServidor = data.categorias || [];
         var nv = getJSON(KEYS.nivel); if (nv && !$("#view-dashboard").hidden) renderWeekly(nv);
         renderVideoList($("[data-video-search]").value);
         renderQuickVideos();
