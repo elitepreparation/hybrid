@@ -34,6 +34,7 @@ function doPost(e) {
     else if (action === "sesion") out = registrarSesion(e.parameter.email, e.parameter.clave);
     else if (action === "latido") out = registrarLatido(e.parameter.email, e.parameter.clave, e.parameter.segundos);
     else if (action === "admin") out = getAdminAlumnos(e.parameter.claveAdmin);
+    else if (action === "registrar") out = registrarAlumno(e.parameter.nombre, e.parameter.email, e.parameter.perfil);
     else if (action === "archivarMes") out = archivarMes(e.parameter.email, e.parameter.clave, e.parameter.mes, e.parameter.datos);
     else if (action === "adminBorrar") out = adminBorrarRegistros(e.parameter.claveAdmin, e.parameter.email, e.parameter.alcance);
     else out = { ok: false, error: "accion desconocida" };
@@ -731,4 +732,47 @@ function getStatsPublicas() {
   }
   cache.put("stats_activos", String(n), 600);
   return { ok: true, alumnos: n };
+}
+
+// Alta de una persona nueva desde "Ingresar > Soy nuevo": nombre + mail + los datos del formulario.
+// Queda como PENDIENTE: sin clave ni fecha de pago, así que no puede entrar al plan hasta que Gaby la active
+// (completando Clave, Nivel y Fecha de pago en "Alumnos - claves"). Si el mail ya existe no se toca nada.
+function registrarAlumno(nombre, email, perfilJson) {
+  var nom = String(nombre || "").trim().slice(0, 60);
+  var mail = String(email || "").trim().toLowerCase();
+  if (nom.length < 2) return { ok: false, error: "nombre invalido" };
+  if (mail.length > 120 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail)) return { ok: false, error: "email invalido" };
+  var perfil = null;
+  if (perfilJson) {
+    if (String(perfilJson).length > 8000) return { ok: false, error: "datos invalidos" };
+    perfil = parseJSONSeguro(perfilJson);
+    if (!perfil || typeof perfil !== "object") return { ok: false, error: "datos invalidos" };
+    // por seguridad no se aceptan links de archivos ni objetivos cargados desde afuera
+    delete perfil.fotoPerfilUrl; delete perfil.fotoAptoUrl; delete perfil.metas;
+  }
+  var cache = CacheService.getScriptCache();
+  var porHora = Number(cache.get("reg_hora")) || 0;
+  if (porHora >= 40) return { ok: false, error: "demasiados registros, probá más tarde" };
+
+  var alumnosFolder = subFolder(rootFolder(), "Alumnos");
+  var archivos = alumnosFolder ? alumnosFolder.getFilesByName("Alumnos - claves") : null;
+  if (!archivos || !archivos.hasNext()) return { ok: false, error: "no configurado" };
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var hoja = SpreadsheetApp.open(archivos.next()).getSheets()[0];
+    var values = hoja.getDataRange().getValues();
+    var ultima = 1; // fila (1-based) del último alumno cargado
+    for (var i = 1; i < values.length; i++) {
+      var m = String(values[i][1] || "").trim().toLowerCase();
+      if (m) ultima = i + 1;
+      if (m === mail) return { ok: true, existente: true };
+    }
+    // se escribe en la fila siguiente al último alumno (no se usa appendRow para no pisar columnas con fórmulas)
+    hoja.getRange(ultima + 1, 1, 1, 7).setValues([[nom, mail, "", "", "", perfil ? JSON.stringify(perfil) : "", ""]]);
+    cache.put("reg_hora", String(porHora + 1), 3600);
+    cache.remove("stats_activos");
+  } finally { lock.releaseLock(); }
+  return { ok: true };
 }

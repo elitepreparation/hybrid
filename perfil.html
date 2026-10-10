@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261011f">
+<link rel="stylesheet" href="styles.css?v=20261011h">
 </head>
 <body>
 <a href="#main" class="skip-link">Saltar al contenido</a>
@@ -60,6 +60,11 @@
         <li>Registrá tus avances</li>
       </ul>
 
+      <div class="login-tabs" role="tablist" aria-label="Ingreso">
+        <button type="button" role="tab" aria-selected="true" class="login-tab is-active">Ya tengo clave</button>
+        <button type="button" role="tab" aria-selected="false" class="login-tab" data-ir-registro>Soy nuevo</button>
+      </div>
+
       <form data-clave-form class="login-form">
         <label>Email<input type="email" name="email" placeholder="tu@email.com" required autocomplete="email"></label>
         <label>Contraseña
@@ -73,7 +78,37 @@
         <button type="submit" class="btn btn-accent btn-block login-submit">Entrar</button>
       </form>
       <p data-clave-msg class="login-msg"></p>
-      <p class="login-hint">¿No tenés clave? <a class="login-register" data-whatsapp-register href="#" target="_blank" rel="noopener">Registrate</a></p>
+      <p class="login-hint">¿Todavía no sos alumno? <button type="button" class="login-register" data-ir-registro>Registrate</button></p>
+    </div>
+  </section>
+
+  <!-- Registro: nombre y mail, y enseguida el formulario -->
+  <section id="view-registro" class="login-gate" hidden>
+    <div class="login-card">
+      <div class="login-logo-wrap"><img src="assets/img/logo-transparent.png?v=20261009a" alt="Elite Preparation"></div>
+      <p class="login-tagline">Creá tu cuenta</p>
+      <div class="login-tabs" role="tablist" aria-label="Ingreso">
+        <button type="button" role="tab" aria-selected="false" class="login-tab" data-ir-login>Ya tengo clave</button>
+        <button type="button" role="tab" aria-selected="true" class="login-tab is-active">Soy nuevo</button>
+      </div>
+      <form data-registro-form class="login-form">
+        <label>Nombre<input type="text" name="nombre" placeholder="Tu nombre" required maxlength="60" autocomplete="given-name"></label>
+        <label>Email<input type="email" name="email" placeholder="tu@email.com" required maxlength="120" autocomplete="email"></label>
+        <button type="submit" class="btn btn-accent btn-block login-submit">Continuar</button>
+      </form>
+      <p data-registro-msg class="login-msg"></p>
+      <p class="login-hint">Después completás tus datos y Gaby te activa el acceso.</p>
+    </div>
+  </section>
+
+  <!-- Registro enviado: queda pendiente de activación -->
+  <section id="view-pendiente" class="login-gate" hidden>
+    <div class="login-card">
+      <div class="login-logo-wrap"><img src="assets/img/logo-transparent.png?v=20261009a" alt="Elite Preparation"></div>
+      <p class="login-tagline">¡Listo, <span data-pend-nombre>bienvenido</span>!</p>
+      <p class="pend-texto">Recibimos tus datos. Para activar tu acceso y tu plan, escribile a Gaby por WhatsApp: apenas confirme tu pago vas a poder entrar con tu mail y tu clave.</p>
+      <a class="btn btn-accent btn-block login-submit" data-pend-wa href="#" target="_blank" rel="noopener">Escribirle a Gaby</a>
+      <p class="login-hint"><a class="login-register" href="index.html">Volver al inicio</a></p>
     </div>
   </section>
 
@@ -121,7 +156,7 @@
 
       <label class="pf-full">Información relevante <span class="pf-opt">(opcional)</span><textarea name="infoExtra" rows="2"></textarea></label>
 
-      <div class="pf-grid">
+      <div class="pf-grid pf-solo-alumnos">
         <label>Apto físico <span class="pf-opt">(opcional)</span><input type="file" name="fotoApto" accept="image/*,.pdf"><small data-file-status="fotoApto" class="pf-file-status"></small></label>
       </div>
 
@@ -247,6 +282,6 @@
 </footer>
 
 <script defer src="lib/manifest.js?v=20261009a"></script>
-<script defer src="profile.js?v=20261011c"></script>
+<script defer src="profile.js?v=20261011d"></script>
 </body>
 </html>

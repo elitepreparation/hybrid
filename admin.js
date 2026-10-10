@@ -102,7 +102,7 @@
   // ---- render ----
   function estadoVenc(a) {
     var d = diasHastaVencer(a);
-    if (!a.vencimiento) return { cls: "is-warn", txt: "sin fecha de pago" };
+    if (!a.vencimiento) return { cls: "is-warn", txt: "pendiente de activación" };
     if (d < 0) return { cls: "is-bad", txt: "vencido " + fmtDia(a.vencimiento) };
     if (d <= 7) return { cls: "is-warn", txt: "vence " + fmtDia(a.vencimiento) + " (" + Math.ceil(d) + " d)" };
     return { cls: "is-ok", txt: "vigente hasta " + fmtDia(a.vencimiento) };
@@ -116,6 +116,7 @@
       ["Alumnos", alumnos.length],
       ["Entraron en 7 días", activos],
       ["Vencen en 7 días", vencen],
+      ["Por activar", alumnos.filter(function (a) { return !a.vencimiento; }).length],
       ["Nunca entraron", nunca]
     ];
     $("[data-admin-stats]").innerHTML = items.map(function (it) {

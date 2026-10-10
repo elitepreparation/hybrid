@@ -84,15 +84,68 @@
   }
 
   function showView(id) {
-    ["view-clave", "view-form", "view-dashboard"].forEach(function (v) { $("#" + v).hidden = (v !== id); });
+    ["view-clave", "view-registro", "view-pendiente", "view-form", "view-dashboard"].forEach(function (v) { var el = $("#" + v); if (el) el.hidden = (v !== id); });
+    if (id !== "view-form") { modoRegistro = null; $("#view-form").classList.remove("is-registro"); }
     var conSesion = id === "view-dashboard" || (id === "view-form" && !!getJSON(KEYS.profile));
     var planilla = $("[data-planilla]");
     if (planilla) planilla.hidden = !conSesion;
     var avatarBtn = $("[data-avatar]");
     if (avatarBtn) avatarBtn.hidden = !conSesion;
     var salir = $("[data-logout]");
-    if (salir) salir.hidden = (id === "view-clave");
+    if (salir) salir.hidden = (id === "view-clave" || id === "view-registro" || id === "view-pendiente" || (id === "view-form" && !getJSON(KEYS.profile)));
     cerrarMenuPlanilla();
+  }
+
+  // registro de una persona nueva: nombre y mail primero, después el formulario; queda pendiente hasta que Gaby la active
+  var modoRegistro = null;
+
+  function mostrarPendiente(datos) {
+    $("[data-pend-nombre]").textContent = datos.nombre || "bienvenido";
+    var brand = window.__BRAND__ || {};
+    var txt = "Hola Gaby, soy " + (datos.nombre || "un alumno nuevo") + ". Me registré en Elite Preparation con el mail " + datos.email + ". Quiero activar mi plan.";
+    $("[data-pend-wa]").href = "https://wa.me/" + (brand.whatsapp || "") + "?text=" + encodeURIComponent(txt);
+    showView("view-pendiente");
+    window.scrollTo(0, 0);
+  }
+
+  function enviarRegistro(profile, form) {
+    var btn = form.querySelector("[data-form-submit]");
+    var textoOriginal = btn ? btn.textContent : "";
+    if (btn) { btn.disabled = true; btn.textContent = "Enviando…"; }
+    var datos = { nombre: (profile.apodo || profile.nombre || modoRegistro.nombre), email: modoRegistro.email };
+    var body = new URLSearchParams({ action: "registrar", nombre: profile.nombre || modoRegistro.nombre, email: modoRegistro.email, perfil: JSON.stringify(profile) });
+    fetch(API_URL, { method: "POST", body: body })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d && d.ok) { mostrarPendiente(datos); return; }
+        alert(d && d.error === "email invalido" ? "Revisá tu email." : "No pudimos enviar tus datos. Probá de nuevo en un rato.");
+      })
+      .catch(function () { alert("No hay conexión. Probá de nuevo en un rato."); })
+      .then(function () { if (btn) { btn.disabled = false; btn.textContent = textoOriginal; } });
+  }
+
+  function initRegistro() {
+    $$("[data-ir-registro]").forEach(function (b) { b.addEventListener("click", function () { showView("view-registro"); window.scrollTo(0, 0); }); });
+    $$("[data-ir-login]").forEach(function (b) { b.addEventListener("click", function () { showView("view-clave"); window.scrollTo(0, 0); }); });
+    var form = $("[data-registro-form]");
+    if (!form) return;
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var nombre = form.elements.nombre.value.trim();
+      var email = form.elements.email.value.trim().toLowerCase();
+      var msg = $("[data-registro-msg]");
+      if (nombre.length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { msg.textContent = "Revisá tu nombre y tu email."; return; }
+      msg.textContent = "";
+      var f = $("[data-profile-form]");
+      f.reset();
+      f.elements.nombre.value = nombre;
+      if (f.elements.mail) f.elements.mail.value = email;
+      $("[data-apodo]").value = "";
+      showView("view-form");            // showView limpia el modo registro: se activa recién después
+      modoRegistro = { nombre: nombre, email: email };
+      $("#view-form").classList.add("is-registro");
+      window.scrollTo(0, 0);
+    });
   }
 
   // el pago habilita los DOS planes (OPEN y PRO) por 1 mes — el vencimiento lo calcula
@@ -252,6 +305,7 @@
       ["fotoPerfilUrl", "fotoAptoUrl", "metas"].forEach(function (k) { if (previo[k]) profile[k] = previo[k]; });
       if (fotoPendiente) profile.fotoPerfilUrl = fotoPendiente;
       profile.apodo = ($("[data-apodo]").value || "").trim();
+      if (modoRegistro) { enviarRegistro(profile, form); return; }
 
       var grande = archivos.filter(function (a) { return a.file.size > TAMANIO_MAX_ARCHIVO; })[0];
       if (grande) { alert('El archivo "' + grande.file.name + '" pesa más de 8MB, subí uno más liviano.'); return; }
@@ -1263,6 +1317,7 @@
     initVideos();
     initQuickVideos();
     initAvatar();
+    initRegistro();
     initApodo();
     initObjetivos();
 
@@ -1270,10 +1325,6 @@
     var brand = window.__BRAND__ || {};
     if (fab && brand.whatsapp) {
       fab.href = "https://wa.me/" + brand.whatsapp + "?text=" + encodeURIComponent(brand.whatsappText || "Hola");
-    }
-    var registro = $("[data-whatsapp-register]");
-    if (registro && brand.whatsapp) {
-      registro.href = "https://wa.me/" + brand.whatsapp + "?text=" + encodeURIComponent("Hola Gaby, quiero registrarme en Elite Preparation");
     }
 
     if (!vigente()) { showView("view-clave"); return; }
