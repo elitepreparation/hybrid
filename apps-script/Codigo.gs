@@ -15,6 +15,7 @@ function doGet(e) {
       out = (nivelPedido === "PERSONALIZADO") ? getPlanPersonalizado(e.parameter.nombre) : getPlan(nivelPedido);
     }
     else if (action === "login") out = getAlumnoLogin(e.parameter.email, e.parameter.clave);
+    else if (action === "stats") out = getStatsPublicas();
     else out = { ok: false, error: "accion desconocida" };
   } catch (err) {
     out = { ok: false, error: String(err) };
@@ -709,4 +710,23 @@ function crearCarpetasVideos() {
     if (!subFolder(base, n)) base.createFolder(n);
   });
   return "listo";
+}
+
+// dato público de la página de inicio: cuántos alumnos usan o usaron la plataforma.
+// Devuelve SOLO el número (sin nombres ni mails) y lo guarda 10 minutos para no leer la planilla en cada visita.
+function getStatsPublicas() {
+  var cache = CacheService.getScriptCache();
+  var guardado = cache.get("stats_alumnos");
+  if (guardado) return { ok: true, alumnos: Number(guardado) };
+  var alumnosFolder = subFolder(rootFolder(), "Alumnos");
+  var archivos = alumnosFolder ? alumnosFolder.getFilesByName("Alumnos - claves") : null;
+  var n = 0;
+  if (archivos && archivos.hasNext()) {
+    var values = SpreadsheetApp.open(archivos.next()).getSheets()[0].getDataRange().getValues();
+    for (var i = 1; i < values.length; i++) {
+      if (String(values[i][1] || "").trim()) n++;
+    }
+  }
+  cache.put("stats_alumnos", String(n), 600);
+  return { ok: true, alumnos: n };
 }

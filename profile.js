@@ -668,6 +668,10 @@
   }
 
   function initVideos() {
+    // si Drive no entrega una miniatura (límite de pedidos, red lenta), queda el fondo oscuro con el ▶ en vez de una imagen rota
+    $("[data-video-list]").addEventListener("error", function (e) {
+      if (e.target && e.target.tagName === "IMG") e.target.remove();
+    }, true);
     renderVideoList("");
     $("[data-video-search]").addEventListener("input", function (e) { renderVideoList(e.target.value); });
 

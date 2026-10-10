@@ -2,6 +2,7 @@
   "use strict";
 
   const data = window.__BRAND__ || {};
+  const API_URL = "https://script.google.com/macros/s/AKfycby9c2jdl19l7tZBwxHG8Dpw6fz_bT_Chhc_WEydQAW1tiFPYtulxbaAk-MmYtMWlexrTw/exec";
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const $ = (sel, scope) => (scope || document).querySelector(sel);
@@ -69,6 +70,20 @@
     }, 6000);
   }
 
+  // anima un número de 0 a "target" (respeta "reducir movimiento")
+  function animarNumero(el, target, suffix) {
+    suffix = suffix || "";
+    if (reduced) { el.textContent = target + suffix; return; }
+    const dur = 900;
+    const start = performance.now();
+    function tick(now) {
+      const p = Math.min(1, (now - start) / dur);
+      el.textContent = Math.round(target * p) + suffix;
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
   function initCountUp() {
     const els = $$("[data-count]");
     if (!els.length) return;
@@ -77,20 +92,31 @@
         if (!e.isIntersecting) return;
         io.unobserve(e.target);
         const el = e.target;
-        const target = parseInt(el.dataset.count, 10) || 0;
-        const suffix = el.dataset.suffix || "";
-        if (reduced) { el.textContent = target + suffix; return; }
-        const dur = 900;
-        const start = performance.now();
-        function tick(now) {
-          const p = Math.min(1, (now - start) / dur);
-          el.textContent = Math.round(target * p) + suffix;
-          if (p < 1) requestAnimationFrame(tick);
-        }
-        requestAnimationFrame(tick);
+        animarNumero(el, parseInt(el.dataset.count, 10) || 0, el.dataset.suffix || "");
       });
     }, { threshold: 0.2 });
     els.forEach(el => io.observe(el));
+  }
+
+  // cantidad de alumnos que usan o usaron la plataforma: viene del servidor (solo el número, sin datos personales);
+  // si no se puede cargar, el bloque queda oculto en vez de mostrar un valor roto
+  function initAlumnosStat() {
+    const card = $("[data-stat-alumnos]");
+    const el = $("[data-alumnos-count]");
+    if (!card || !el) return;
+    fetch(API_URL + "?action=stats").then(r => r.json()).then(d => {
+      const n = d && d.ok ? parseInt(d.alumnos, 10) : 0;
+      if (!(n > 0)) return;
+      card.hidden = false;
+      const io = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (!e.isIntersecting) return;
+          io.unobserve(e.target);
+          animarNumero(el, n, "");
+        });
+      }, { threshold: 0.2 });
+      io.observe(card);
+    }).catch(() => {});
   }
 
   function initSmoothAnchors() {
@@ -119,6 +145,7 @@
     safe(initPlanPicker, "initPlanPicker");
     safe(initReveals, "initReveals");
     safe(initCountUp, "initCountUp");
+    safe(initAlumnosStat, "initAlumnosStat");
     safe(initSmoothAnchors, "initSmoothAnchors");
     safe(initServiceWorker, "initServiceWorker");
     document.documentElement.classList.add("is-ready");
