@@ -292,6 +292,7 @@
       var field = form.elements[k];
       if (field && field.type !== "file") field.value = profile[k];
     });
+    if (form.elements.cumple && form.elements.cumple.value) form.elements.cumple.dispatchEvent(new Event("input"));
     ["fotoPerfil", "fotoApto"].forEach(function (campo) {
       var status = $('[data-file-status="' + campo + '"]', form);
       var url = profile && profile[campo + "Url"];
@@ -301,8 +302,21 @@
 
   function initForm() {
     var form = $("[data-profile-form]");
+    // la edad sale de la fecha de nacimiento, así siempre coinciden
+    var campoCumple = form.elements.cumple, campoEdad = form.elements.edad;
+    function edadDe(f) {
+      var m = /^(d{4})-(d{2})-(d{2})$/.exec(String(f || ""));
+      if (!m) return "";
+      var h = new Date(), e = h.getFullYear() - Number(m[1]);
+      if (h.getMonth() + 1 < Number(m[2]) || (h.getMonth() + 1 === Number(m[2]) && h.getDate() < Number(m[3]))) e--;
+      return e > 0 && e < 120 ? String(e) : "";
+    }
+    function sincEdad() { if (campoCumple && campoEdad) campoEdad.value = edadDe(campoCumple.value); }
+    if (campoCumple) { campoCumple.addEventListener("input", sincEdad); campoCumple.addEventListener("change", sincEdad); }
+    form.addEventListener("reset", function () { setTimeout(sincEdad, 0); });
     form.addEventListener("submit", function (e) {
       e.preventDefault();
+      if (campoCumple) { sincEdad(); if (!campoEdad.value) { alert("Revisá tu fecha de nacimiento."); return; } }
       var fd = new FormData(form);
       var profile = {};
       var archivos = [];
@@ -1323,6 +1337,8 @@
   }
 
   function renderDashboard() {
+    var avisoApto = $("[data-apto-aviso]");
+    if (avisoApto) avisoApto.hidden = !!(getJSON(KEYS.profile) || {}).fotoAptoUrl;
     var nivel = getJSON(KEYS.nivel) || "OPEN";
     // solo se ve el nivel pagado — el otro botón ni se muestra, no hay para dónde "cambiarse" gratis
     $$("[data-toggle-nivel]").forEach(function (b) { b.hidden = b.dataset.toggleNivel !== nivel; });
@@ -1345,6 +1361,8 @@
     initRegistro();
     initApodo();
     initObjetivos();
+    var aptoIr = $("[data-apto-ir]");
+    if (aptoIr) aptoIr.addEventListener("click", function () { irA("perfil"); var f = $("[name=fotoApto]"); if (f) f.scrollIntoView({ behavior: "smooth", block: "center" }); });
 
     var fab = $("[data-whatsapp-fab]");
     var brand = window.__BRAND__ || {};

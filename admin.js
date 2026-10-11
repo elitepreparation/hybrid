@@ -116,6 +116,13 @@
     return Math.round((prox - hoy) / DIA_MS);
   }
 
+  // marca en la lista si el alumno ya subió el apto físico (solo para quienes ya están activos)
+  function etiquetaApto(a) {
+    if (!a.vencimiento) return "";
+    var ok = a.perfil && a.perfil.fotoAptoUrl;
+    return ok ? '<small class="admin-apto is-ok">✓ apto físico</small>' : '<small class="admin-apto">sin apto físico</small>';
+  }
+
   function etiquetaCumple(a) {
     var d = diasParaCumple(a);
     if (d === null || d > 7) return "";
@@ -169,7 +176,7 @@
       : '<li class="admin-muted">Todavía no marcó ningún día como hecho.</li>';
     var perfil = a.perfil || {};
     var datos = [
-      ["Mail", a.email], ["Plan que le interesa", perfil.planInteres], ["Fecha de nacimiento", fechaLarga(perfil.cumple)], ["Se registró el", perfil.registrado ? fmtDia(perfil.registrado) : ""], ["Ciudad", perfil.ciudad], ["WhatsApp", perfil.whatsapp], ["Objetivos", perfil.objetivos], ["Lesiones", perfil.historialLesiones], ["Patologías", perfil.patologias], ["Instagram", perfil.instagram], ["Pagó el", fmtDia(a.fechaPago)]
+      ["Mail", a.email], ["Apto físico", perfil.fotoAptoUrl ? "✓ Subido" : "✗ Todavía no lo subió"], ["Plan que le interesa", perfil.planInteres], ["Fecha de nacimiento", fechaLarga(perfil.cumple)], ["Se registró el", perfil.registrado ? fmtDia(perfil.registrado) : ""], ["Ciudad", perfil.ciudad], ["WhatsApp", perfil.whatsapp], ["Objetivos", perfil.objetivos], ["Lesiones", perfil.historialLesiones], ["Patologías", perfil.patologias], ["Instagram", perfil.instagram], ["Pagó el", fmtDia(a.fechaPago)]
     ].filter(function (d) { return d[1]; }).map(function (d) { return '<li><b>' + esc(d[0]) + ':</b> ' + esc(d[1]) + '</li>'; }).join("");
     var fotos = [];
     if (perfil.fotoPerfilUrl) fotos.push('<a href="' + esc(perfil.fotoPerfilUrl) + '" target="_blank" rel="noopener">Foto de perfil</a>');
@@ -212,7 +219,7 @@
     var abre = abierto === a.email;
     return '<article class="admin-row' + (abre ? ' is-open' : '') + '">' +
       '<button type="button" class="admin-row-main" data-toggle="' + esc(a.email) + '" aria-expanded="' + abre + '">' +
-        '<span class="admin-cell admin-name"><strong>' + esc(a.nombre || a.email) + '</strong><small>' + esc(a.nivel || "sin nivel") + '</small>' + etiquetaCumple(a) + '</span>' +
+        '<span class="admin-cell admin-name"><strong>' + esc(a.nombre || a.email) + '</strong><small>' + esc(a.nivel || "sin nivel") + '</small>' + etiquetaCumple(a) + etiquetaApto(a) + '</span>' +
         '<span class="admin-cell"><em>Último ingreso</em><b class="' + (inactivo ? 'is-bad-txt' : '') + '">' + esc(haceCuanto(a.ultimoIngreso)) + '</b><small>' + esc(fmtFecha(a.ultimoIngreso)) + '</small></span>' +
         '<span class="admin-cell"><em>Tiempo</em><b>' + esc(fmtTiempo(a.ultimaSesionSeg)) + '</b><small>total ' + esc(fmtTiempo(a.tiempoTotalSeg)) + ' · ' + a.ingresos + (a.ingresos === 1 ? ' ingreso' : ' ingresos') + '</small></span>' +
         '<span class="admin-cell"><em>Avance</em><b>' + prog + '</b>' + (av.esperados ? '<span class="week-progress-bar"><span style="width:' + pct + '%"></span></span>' : '') + '</span>' +

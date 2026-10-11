@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261011q">
+<link rel="stylesheet" href="styles.css?v=20261011t">
 </head>
 <body>
 <a href="#main" class="skip-link">Saltar al contenido</a>
@@ -141,8 +141,8 @@
       <div class="pf-grid">
         <label>Nombre<input type="text" name="nombre" required></label>
         <label>Apellido<input type="text" name="apellido" required></label>
-        <label>Edad<input type="number" name="edad" min="12" max="90" required></label>
-        <label>Fecha de nacimiento <span class="pf-opt">(opcional)</span><input type="date" name="cumple" min="1930-01-01" max="2015-12-31"></label>
+        <label>Edad <span class="pf-opt">(se calcula sola)</span><input type="number" name="edad" min="12" max="90" required readonly tabindex="-1"></label>
+        <label>Fecha de nacimiento<input type="date" name="cumple" min="1930-01-01" max="2015-12-31" required></label>
         <label>Sexo
           <select name="sexo" required>
             <option value="">Elegir…</option>
@@ -161,15 +161,16 @@
       <label class="pf-full">Patologías<textarea name="patologias" rows="2" required placeholder="Escribí 'Ninguna' si no tenés"></textarea></label>
 
       <div class="pf-grid">
-        <label>Instagram <span class="pf-opt">(opcional)</span><input type="text" name="instagram" placeholder="@usuario"></label>
         <label>Mail<input type="email" name="mail" required></label>
         <label>WhatsApp<input type="tel" name="whatsapp" required></label>
+        <label>Instagram <span class="pf-opt">(opcional)</span><input type="text" name="instagram" placeholder="@usuario"></label>
       </div>
 
       <label class="pf-full">Información relevante <span class="pf-opt">(opcional)</span><textarea name="infoExtra" rows="2"></textarea></label>
 
       <div class="pf-grid pf-solo-alumnos">
-        <label>Apto físico <span class="pf-opt">(opcional)</span><input type="file" name="fotoApto" accept="image/*,.pdf"><small data-file-status="fotoApto" class="pf-file-status"></small></label>
+        <p class="apto-nota pf-full">Para poder entrenar vas a tener que subir tu <b>apto físico</b> (foto o PDF). Podés hacerlo ahora o más tarde desde tu perfil; mientras no lo subas te lo vamos a recordar.</p>
+        <label>Apto físico<input type="file" name="fotoApto" accept="image/*,.pdf"><small data-file-status="fotoApto" class="pf-file-status"></small></label>
       </div>
 
       <button type="submit" class="btn btn-primary" data-form-submit style="margin-top:1.5rem;">Guardar y continuar</button>
@@ -188,6 +189,10 @@
 
       <div data-dash-panel="plan" class="plan-layout">
       <div class="plan-main">
+        <div class="apto-aviso" data-apto-aviso hidden>
+          <span><b>Falta tu apto físico.</b> Subilo desde tu perfil para poder entrenar.</span>
+          <button type="button" class="btn btn-primary" data-apto-ir>Subir apto físico</button>
+        </div>
         <div class="plan-header">
           <div class="plan-id">
             <div>
@@ -296,6 +301,6 @@
 </footer>
 
 <script defer src="lib/manifest.js?v=20261009a"></script>
-<script defer src="profile.js?v=20261011s"></script>
+<script defer src="profile.js?v=20261011t"></script>
 </body>
 </html>

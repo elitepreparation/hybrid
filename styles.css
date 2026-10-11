@@ -979,3 +979,11 @@ ul { list-style: none; }
   .ex-row { grid-template-columns: 130px minmax(0, 1fr) 46px; }
   .ex-plan { justify-content: flex-start; }
 }
+
+/* edad automática, aviso del apto físico y su marca en el panel */
+.profile-form input[readonly] { background: var(--bg-2); color: var(--ink-soft); cursor: default; }
+.apto-nota { grid-column: 1 / -1; padding: .75rem .9rem; font-size: .85rem; line-height: 1.45; background: var(--bg-2); border-left: 3px solid var(--accent); color: var(--ink-soft); }
+.apto-aviso { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1rem; margin-bottom: 1.25rem; padding: .9rem 1.1rem; border: 2px solid var(--accent); background: var(--bg-2); }
+.apto-aviso[hidden] { display: none; }
+.admin-apto { display: block; color: #b42318 !important; font-weight: 600; }
+.admin-apto.is-ok { color: #067647 !important; }
