@@ -109,7 +109,7 @@
     var link = "https://wa.me/" + (brand.whatsapp || "") + "?text=" + encodeURIComponent(txt);
     $("[data-pend-wa]").href = link;
     showView("view-pendiente");
-    // te lleva solo al WhatsApp de Gaby con el mensaje armado; el botón queda por si el celular no lo abre
+    // abre solo el WhatsApp de Gaby con el aviso armado; el botón queda por si el celular no lo abre
     clearTimeout(mostrarPendiente.t);
     mostrarPendiente.t = setTimeout(function () { window.location.href = link; }, 2500);
     window.scrollTo(0, 0);
