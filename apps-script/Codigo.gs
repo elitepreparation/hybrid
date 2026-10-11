@@ -152,6 +152,14 @@ function getPlan(nivel) {
 function parsePlanificacion(hoja) {
   var values = hoja.getDataRange().getValues();
   var semanas = [], porSemana = {};
+  // columnas opcionales a partir de la G, según el título de la fila 1: "Bloque" y "Cargas"/"Peso"
+  var colBloque = -1, colCarga = -1;
+  (values[0] || []).forEach(function (t, c) {
+    var n = String(t || "").trim().toLowerCase();
+    if (c >= 6 && n === "bloque") colBloque = c;
+    else if (c >= 6 && /^(carga|cargas|peso|pesos|kg)$/.test(n)) colCarga = c;
+  });
+  if (colBloque < 0 && colCarga < 0) colBloque = 6; // sin títulos reconocidos: la G es el bloque, como antes
   for (var i = 1; i < values.length; i++) {
     var r = values[i];
     var sem = parseInt(r[0], 10);
@@ -163,8 +171,11 @@ function parsePlanificacion(hoja) {
     var s = porSemana[sem];
     if (!s.porDia[dia]) { s.porDia[dia] = { dia: dia, foco: String(r[2] || "").trim(), ejercicios: [] }; s.dias.push(s.porDia[dia]); }
     s.porDia[dia].ejercicios.push({ nombre: nombreEj, series: Number(r[4]) || 0, reps: Number(r[5]) || 0 });
-    var bloque = String(r[6] || "").trim(); // columna G opcional: "Bloque" (ej. Potencia)
-    if (bloque) s.porDia[dia].ejercicios[s.porDia[dia].ejercicios.length - 1].bloque = bloque;
+    var ult = s.porDia[dia].ejercicios[s.porDia[dia].ejercicios.length - 1];
+    var bloque = colBloque >= 0 ? String(r[colBloque] || "").trim() : ""; // opcional: "Bloque" (ej. Potencia)
+    if (bloque) ult.bloque = bloque;
+    var carga = colCarga >= 0 ? String(r[colCarga] || "").trim() : ""; // opcional: "Cargas" (ej. 80kg)
+    if (carga) ult.carga = carga;
   }
   semanas.forEach(function (s) { delete s.porDia; });
   return semanas;
