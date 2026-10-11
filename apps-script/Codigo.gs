@@ -194,12 +194,19 @@ function getPlanPersonalizado(nombreAlumno) {
   var personalFolder = plan ? subFolder(plan, "PERSONALIZADO") : null;
   if (!personalFolder) return vacio;
 
-  var archivos = personalFolder.getFilesByName("Planificacion Personalizada");
-  if (!archivos.hasNext()) return vacio;
+  // el archivo puede llamarse como quiera: se usa "Planificacion Personalizada" si existe, y si no, la primera Hoja de Google de la carpeta
+  var archivo = null;
+  var exactos = personalFolder.getFilesByName("Planificacion Personalizada");
+  if (exactos.hasNext()) archivo = exactos.next();
+  else {
+    var todos = personalFolder.getFilesByType(MimeType.GOOGLE_SHEETS);
+    if (todos.hasNext()) archivo = todos.next();
+  }
+  if (!archivo) return vacio;
 
   var semanas = [];
   try {
-    var libro = SpreadsheetApp.open(archivos.next());
+    var libro = SpreadsheetApp.open(archivo);
     var hoja = buscarHojaPorNombre(libro, nombreAlumno);
     if (hoja) semanas = parsePlanificacion(hoja);
   } catch (err) { semanas = []; }
