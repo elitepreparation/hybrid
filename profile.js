@@ -485,8 +485,8 @@
         '<span class="ex-name">' + ej.nombre +
           (id ? ' <button type="button" class="ex-video" data-play-id="' + id + '" data-play-nombre="' + attr(ej.nombre) + '">▶ Técnica</button>' : '') +
         '</span>' +
-        '<span class="ex-plan" data-label="A hacer"><span><b>' + ej.series + '</b> series</span><span><b>' + ej.reps + '</b> reps</span></span>' +
-        '<input type="text" class="ex-did" data-ex-did data-k="' + attr(key) + '" placeholder="ej. ' + ej.series + ' × ' + ej.reps + '" aria-label="Lo que hice en ' + attr(ej.nombre) + '" value="' + attr(saved.hechoTxt || "") + '">' +
+        '<span class="ex-plan" data-label="Realizar"><span><b>' + ej.series + '</b> series</span><span><b>' + ej.reps + '</b> reps</span></span>' +
+        '<input type="text" class="ex-did" data-ex-did data-k="' + attr(key) + '" placeholder="ej. ' + ej.series + ' x ' + ej.reps + ' - 20kg" aria-label="Lo que hice en ' + attr(ej.nombre) + '" value="' + attr(saved.hechoTxt || "") + '">' +
         '<label class="ex-check" title="Marcar como hecho"><input type="checkbox" data-ex-ok data-k="' + attr(key) + '"' + (ok ? ' checked' : '') + ' aria-label="Hecho: ' + attr(ej.nombre) + '"><span aria-hidden="true"></span></label>' +
         '</li>';
     }
@@ -512,7 +512,7 @@
     return '<div class="log-day day-card' + (hecho ? ' is-done' : '') + '">' +
       '<div class="log-day-head"><h3>' + dia.dia + '</h3></div>' +
       '<p class="ex-progress" data-ex-progress>' + okCount + ' de ' + dia.ejercicios.length + ' ejercicios hechos</p>' +
-      '<div class="ex-head" aria-hidden="true"><span>Ejercicio</span><span>A hacer</span><span>Lo que hice</span><span>✓</span></div>' +
+      '<div class="ex-head" aria-hidden="true"><span>Ejercicio</span><span>Realizar</span><span>Lo que hice</span><span>✓</span></div>' +
       bloques + rpeHtml +
       '<div class="day-acciones">' +
       '<button type="button" class="btn ' + (hecho ? 'btn-ghost' : 'btn-primary') + ' day-done" data-toggle-hecho data-semana="' + semana + '" data-dia="' + dia.dia + '">' +
