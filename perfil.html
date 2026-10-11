@@ -142,15 +142,15 @@
         <label>Nombre<input type="text" name="nombre" required></label>
         <label>Apellido<input type="text" name="apellido" required></label>
         <label>Edad<input type="number" name="edad" min="12" max="90" required></label>
-        <label>Fecha de cumpleaños <span class="pf-opt">(opcional)</span><input type="date" name="cumple" min="1930-01-01"></label>
+        <label>Fecha de nacimiento <span class="pf-opt">(opcional)</span><input type="date" name="cumple" min="1930-01-01" max="2015-12-31"></label>
         <label>Sexo
           <select name="sexo" required>
             <option value="">Elegir…</option>
             <option>Femenino</option><option>Masculino</option><option>Otro</option>
           </select>
         </label>
-        <label>Altura (cm)<input type="number" name="altura" min="120" max="230" required></label>
-        <label>Peso (kg)<input type="number" name="peso" min="30" max="250" required></label>
+        <label>Altura (en cm)<input type="text" inputmode="decimal" name="altura" placeholder="Ej: 175" required maxlength="6" autocomplete="off"></label>
+        <label>Peso (en kg)<input type="text" inputmode="decimal" name="peso" placeholder="Ej: 72,5" required maxlength="6" autocomplete="off"></label>
         <label>Ciudad<input type="text" name="ciudad" required></label>
         <label>Nacionalidad<input type="text" name="nacionalidad" required></label>
       </div>
@@ -296,6 +296,6 @@
 </footer>
 
 <script defer src="lib/manifest.js?v=20261009a"></script>
-<script defer src="profile.js?v=20261011q"></script>
+<script defer src="profile.js?v=20261011r"></script>
 </body>
 </html>

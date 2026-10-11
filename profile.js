@@ -309,6 +309,14 @@
       ["fotoPerfilUrl", "fotoAptoUrl", "metas"].forEach(function (k) { if (previo[k]) profile[k] = previo[k]; });
       if (fotoPendiente) profile.fotoPerfilUrl = fotoPendiente;
       profile.apodo = ($("[data-apodo]").value || "").trim();
+      // altura (cm) y peso (kg) se aceptan con coma o punto; una altura como 1,75 se entiende en metros
+      var alt = parseFloat(String(profile.altura || "").replace(",", "."));
+      if (alt > 0 && alt < 3) alt = alt * 100;
+      if (!(alt >= 120 && alt <= 230)) { alert("Revisá la altura: escribila en centímetros, por ejemplo 175."); return; }
+      profile.altura = String(Math.round(alt));
+      var pes = parseFloat(String(profile.peso || "").replace(",", "."));
+      if (!(pes >= 30 && pes <= 250)) { alert("Revisá el peso: escribilo en kilos, por ejemplo 72,5."); return; }
+      profile.peso = String(Math.round(pes * 10) / 10);
       if (modoRegistro) { enviarRegistro(profile, form); return; }
 
       var grande = archivos.filter(function (a) { return a.file.size > TAMANIO_MAX_ARCHIVO; })[0];
