@@ -169,7 +169,7 @@
       : '<li class="admin-muted">Todavía no marcó ningún día como hecho.</li>';
     var perfil = a.perfil || {};
     var datos = [
-      ["Mail", a.email], ["Plan que le interesa", perfil.planInteres], ["Cumpleaños", fechaLarga(perfil.cumple)], ["Se registró el", perfil.registrado ? fmtDia(perfil.registrado) : ""], ["Ciudad", perfil.ciudad], ["WhatsApp", perfil.whatsapp], ["Objetivos", perfil.objetivos], ["Lesiones", perfil.historialLesiones], ["Patologías", perfil.patologias], ["Instagram", perfil.instagram], ["Pagó el", fmtDia(a.fechaPago)]
+      ["Mail", a.email], ["Plan que le interesa", perfil.planInteres], ["Fecha de nacimiento", fechaLarga(perfil.cumple)], ["Se registró el", perfil.registrado ? fmtDia(perfil.registrado) : ""], ["Ciudad", perfil.ciudad], ["WhatsApp", perfil.whatsapp], ["Objetivos", perfil.objetivos], ["Lesiones", perfil.historialLesiones], ["Patologías", perfil.patologias], ["Instagram", perfil.instagram], ["Pagó el", fmtDia(a.fechaPago)]
     ].filter(function (d) { return d[1]; }).map(function (d) { return '<li><b>' + esc(d[0]) + ':</b> ' + esc(d[1]) + '</li>'; }).join("");
     var fotos = [];
     if (perfil.fotoPerfilUrl) fotos.push('<a href="' + esc(perfil.fotoPerfilUrl) + '" target="_blank" rel="noopener">Foto de perfil</a>');
