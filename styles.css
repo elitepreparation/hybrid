@@ -959,3 +959,12 @@ ul { list-style: none; }
 .mes-card:not(.obj-card) { padding: 1.5rem 1.75rem; }
 .mes-card:not(.obj-card) .mes-numeros { gap: 1rem 3rem; }
 .plan-aside .obj-card { margin-top: 1.5rem; padding: 1.25rem 0 0; border: 0; border-top: 2px solid var(--ink); }
+
+/* títulos de la columna lateral sobre cuadro azul, para que se vean enseguida */
+.plan-aside > .kicker { display: none; }
+.plan-aside-title, .plan-aside .obj-card > .kicker {
+  display: block; margin: 0 0 .9rem; padding: .7rem .9rem; background: var(--accent); color: #fff;
+  font-family: var(--display); text-transform: uppercase; font-size: 1.15rem; letter-spacing: .04em; line-height: 1.1;
+}
+.plan-aside .obj-card > .kicker::before { display: none; }
+.plan-aside .obj-card { border-top: 0; padding-top: 0; margin-top: 1.75rem; }
