@@ -305,7 +305,7 @@
     // la edad sale de la fecha de nacimiento, así siempre coinciden
     var campoCumple = form.elements.cumple, campoEdad = form.elements.edad;
     function edadDe(f) {
-      var m = /^(d{4})-(d{2})-(d{2})$/.exec(String(f || ""));
+      var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(f || ""));
       if (!m) return "";
       var h = new Date(), e = h.getFullYear() - Number(m[1]);
       if (h.getMonth() + 1 < Number(m[2]) || (h.getMonth() + 1 === Number(m[2]) && h.getDate() < Number(m[3]))) e--;
