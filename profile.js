@@ -246,7 +246,7 @@
             if (data.perfil) setJSON(KEYS.profile, data.perfil);
             if (data.registros) setJSON(KEYS.log, data.registros);
             if (data.reinicio) localStorage.setItem(KEYS.reinicio, data.reinicio);
-            if (getJSON(KEYS.profile)) { renderDashboard(); showView("view-dashboard"); }
+            if (getJSON(KEYS.profile)) { renderDashboard(); irA("plan"); }
             else { showView("view-form"); }
           } else if (data.error === "vencido") {
             msg.textContent = "Tu acceso venció. Pagá de nuevo y Gaby te lo renueva.";
@@ -325,8 +325,7 @@
         guardarEnServidor({ perfil: profile });
         if (btn) { btn.disabled = false; btn.textContent = textoOriginal; }
         renderDashboard();
-        marcarSeccion("plan");
-        showView("view-dashboard");
+        irA("plan");
       });
     });
   }
@@ -360,6 +359,8 @@
     }
     marcarSeccion(seccion);
     window.scrollTo(0, 0);
+    // el botón "atrás" del navegador también vuelve a la planificación
+    try { if (seccion !== "plan" && !(history.state && history.state.sec)) history.pushState({ sec: seccion }, ""); } catch (err) {}
   }
 
   function initDashToolbar() {
@@ -383,6 +384,14 @@
       e.target.textContent = box.hidden ? "Ver planificación mensual" : "Ocultar planificación mensual";
     });
     $("[data-logout]").addEventListener("click", cerrarSesion);
+    var salirMenu = $("[data-logout-menu]");
+    if (salirMenu) salirMenu.addEventListener("click", cerrarSesion);
+    $$("[data-volver]").forEach(function (b) { b.addEventListener("click", function () { irA("plan"); }); });
+    window.addEventListener("popstate", function () {
+      var enPerfil = !$("#view-form").hidden;
+      var enVideos = !$("#view-dashboard").hidden && !$('[data-dash-panel="videos"]').hidden;
+      if ((enPerfil || enVideos) && getJSON(KEYS.profile)) irA("plan");
+    });
   }
 
   // borra todo lo guardado en este dispositivo (perfil, registros, mail/clave) y

@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261011k">
+<link rel="stylesheet" href="styles.css?v=20261011l">
 </head>
 <body>
 <a href="#main" class="skip-link">Saltar al contenido</a>
@@ -39,6 +39,7 @@
         <button type="button" role="menuitem" data-ir="perfil"><b>Perfil</b><small>Tus datos</small></button>
         <button type="button" role="menuitem" data-ir="plan"><b>Planificación</b><small>Entrenamientos por día</small></button>
         <button type="button" role="menuitem" data-ir="videos"><b>Videos</b><small>Biblioteca de ejercicios</small></button>
+        <button type="button" role="menuitem" class="planilla-salir" data-logout-menu><b>Cerrar sesión</b><small>Salir de mi cuenta</small></button>
       </div>
     </div>
   </div>
@@ -123,6 +124,7 @@
   </section>
 
   <section id="view-form" class="section" style="max-width:920px;">
+    <button type="button" class="volver-plan" data-volver>&larr; Volver a mi planificación</button>
     <div class="perfil-hero">
       <button type="button" class="avatar-xl no-foto" data-avatar-big aria-label="Cambiar mi foto de perfil" title="Cambiar mi foto de perfil">
         <img data-avatar-big-img alt="" hidden>
@@ -260,6 +262,7 @@
       </div>
 
       <div data-dash-panel="videos" hidden>
+        <button type="button" class="volver-plan" data-volver>&larr; Volver a mi planificación</button>
         <p class="kicker">Videos explicativos</p>
         <h1 class="section-title">Buscá un ejercicio</h1>
         <input type="text" data-video-search placeholder="Ej: sentadilla, remo, kettlebell…" style="margin-top:1.5rem; width:100%; max-width:420px; border:2px solid var(--ink); padding:.85rem 1rem; font-family:var(--sans);">
@@ -293,6 +296,6 @@
 </footer>
 
 <script defer src="lib/manifest.js?v=20261009a"></script>
-<script defer src="profile.js?v=20261011e"></script>
+<script defer src="profile.js?v=20261011l"></script>
 </body>
 </html>

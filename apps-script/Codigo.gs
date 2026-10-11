@@ -776,5 +776,24 @@ function registrarAlumno(nombre, email, perfilJson) {
     cache.put("reg_hora", String(porHora + 1), 3600);
     cache.remove("stats_activos");
   } finally { lock.releaseLock(); }
+  avisarRegistro(nom, mail, perfil);
   return { ok: true };
+}
+
+// Mail a Gaby cuando alguien se registra. Si falta autorizar el envío o falla, no pasa nada: el registro ya quedó guardado.
+function avisarRegistro(nombre, email, perfil) {
+  try {
+    var destino = Session.getEffectiveUser().getEmail();
+    if (!destino) return;
+    var plan = (perfil && perfil.planInteres) || "sin elegir";
+    MailApp.sendEmail(destino, "Nuevo registro en Elite Preparation: " + nombre,
+      "Se registró una persona nueva y está pendiente de activación.\n\n" +
+      "Nombre: " + nombre + "\nMail: " + email + "\nPlan que le interesa: " + plan + "\n\n" +
+      "Para activarla, completá Clave, Nivel y Fecha de pago en la hoja \"Alumnos - claves\".");
+  } catch (err) {}
+}
+
+// Ejecutá esta función UNA vez desde el editor (botón Ejecutar) para autorizar el envío de mails.
+function autorizarMails() {
+  MailApp.sendEmail(Session.getEffectiveUser().getEmail(), "Elite Preparation: avisos activados", "Listo, desde ahora te llega un mail por cada registro nuevo.");
 }
