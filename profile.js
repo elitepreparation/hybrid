@@ -102,10 +102,16 @@
   function mostrarPendiente(datos) {
     $("[data-pend-nombre]").textContent = datos.nombre || "bienvenido";
     var brand = window.__BRAND__ || {};
-    var interes = !datos.plan ? "" : (datos.plan === "Todavía no sé" ? " Todavía no sé qué plan me conviene, ¿me asesorás?" : " Me interesa el plan " + datos.plan + ".");
-    var txt = "Hola Gaby, soy " + (datos.nombre || "un alumno nuevo") + ". Me registré en Elite Preparation con el mail " + datos.email + "." + interes + " Quiero activar mi acceso.";
-    $("[data-pend-wa]").href = "https://wa.me/" + (brand.whatsapp || "") + "?text=" + encodeURIComponent(txt);
+    var nom = datos.nombre || "un alumno nuevo";
+    var plan = datos.plan;
+    var quiero = !plan || plan === "Todavía no sé" ? "quiero información sobre los planes" : plan === "Personalizado" ? "quiero el plan Personalizado" : "quiero el plan " + plan + " de híbrido";
+    var txt = "Soy " + nom + ", " + quiero + ", tengo muchas ganas de entrenar. Ya me registré en la web con el mail " + datos.email + ".";
+    var link = "https://wa.me/" + (brand.whatsapp || "") + "?text=" + encodeURIComponent(txt);
+    $("[data-pend-wa]").href = link;
     showView("view-pendiente");
+    // te lleva solo al WhatsApp de Gaby con el mensaje armado; el botón queda por si el celular no lo abre
+    clearTimeout(mostrarPendiente.t);
+    mostrarPendiente.t = setTimeout(function () { window.location.href = link; }, 2500);
     window.scrollTo(0, 0);
   }
 
