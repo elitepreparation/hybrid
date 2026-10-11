@@ -3,6 +3,7 @@
 // Si se cambia esto, hay que pegarlo en el editor y crear una implementación con "Nueva versión".
 // Necesita el servicio avanzado "Drive API" (v3) habilitado para convertir Excel a Hoja de Google.
 
+var MAIL_AVISOS = "fomiczfitness@gmail.com"; // a dónde llegan los avisos de registro
 var ROOT_NAME = "Complex 180";
 
 function doGet(e) {
@@ -783,8 +784,7 @@ function registrarAlumno(nombre, email, perfilJson) {
 // Mail a Gaby cuando alguien se registra. Si falta autorizar el envío o falla, no pasa nada: el registro ya quedó guardado.
 function avisarRegistro(nombre, email, perfil) {
   try {
-    var destino = Session.getEffectiveUser().getEmail();
-    if (!destino) return;
+    var destino = MAIL_AVISOS;
     var plan = (perfil && perfil.planInteres) || "sin elegir";
     MailApp.sendEmail(destino, "Nuevo registro en Elite Preparation: " + nombre,
       "Se registró una persona nueva y está pendiente de activación.\n\n" +
@@ -795,5 +795,5 @@ function avisarRegistro(nombre, email, perfil) {
 
 // Ejecutá esta función UNA vez desde el editor (botón Ejecutar) para autorizar el envío de mails.
 function autorizarMails() {
-  MailApp.sendEmail(Session.getEffectiveUser().getEmail(), "Elite Preparation: avisos activados", "Listo, desde ahora te llega un mail por cada registro nuevo.");
+  MailApp.sendEmail(MAIL_AVISOS, "Elite Preparation: avisos activados", "Listo, desde ahora te llega un mail por cada registro nuevo.");
 }
