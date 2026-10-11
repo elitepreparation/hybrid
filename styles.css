@@ -968,3 +968,14 @@ ul { list-style: none; }
 }
 .plan-aside .obj-card > .kicker::before { display: none; }
 .plan-aside .obj-card { border-top: 0; padding-top: 0; margin-top: 1.75rem; }
+
+/* series y reps una debajo de la otra, y el peso (Cargas) al costado */
+.ex-head, .ex-row { grid-template-columns: minmax(0, 1fr) 150px 150px 46px; }
+.ex-plan { flex-direction: row; justify-content: center; align-items: center; gap: .9rem; }
+.ex-plan .ex-sr { display: flex; flex-direction: column; align-items: center; gap: .1rem; }
+.ex-plan .ex-carga { padding-left: .9rem; border-left: 2px solid var(--line); }
+.ex-plan .ex-carga b { font-size: 1.15rem; }
+@media (max-width: 640px) {
+  .ex-row { grid-template-columns: 130px minmax(0, 1fr) 46px; }
+  .ex-plan { justify-content: flex-start; }
+}
