@@ -809,12 +809,33 @@ function registrarAlumno(nombre, email, perfilJson) {
 // Mail a Gaby cuando alguien se registra. Si falta autorizar el envío o falla, no pasa nada: el registro ya quedó guardado.
 function avisarRegistro(nombre, email, perfil) {
   try {
-    var destino = MAIL_AVISOS;
-    var plan = (perfil && perfil.planInteres) || "sin elegir";
-    MailApp.sendEmail(destino, "Nuevo registro en Elite Preparation: " + nombre,
-      "Se registró una persona nueva y está pendiente de activación.\n\n" +
-      "Nombre: " + nombre + "\nMail: " + email + "\nPlan que le interesa: " + plan + "\n\n" +
-      "Para activarla, completá Clave, Nivel y Fecha de pago en la hoja \"Alumnos - claves\".");
+    var p = perfil || {};
+    var plan = p.planInteres || "sin elegir";
+    var dato = function (etq, v) { return String(v == null ? "" : v).trim() ? etq + ": " + String(v).trim() + "\n" : ""; };
+    // link directo a su WhatsApp (si el número viene sin código de país se asume Argentina: 54 9)
+    var num = String(p.whatsapp || "").replace(/\D/g, "").replace(/^0+/, "");
+    if (num && !/^54/.test(num)) num = "549" + num.replace(/^(\d{2,4})15/, "$1");
+    var wa = num ? "https://wa.me/" + num : "";
+    var cuerpo =
+      "Se registró una persona nueva en Elite Preparation y está pendiente de alta.\n\n" +
+      "== PARA CONTACTARLA ==\n" +
+      dato("Nombre", ((p.nombre || nombre) + " " + (p.apellido || "")).trim()) +
+      dato("WhatsApp", p.whatsapp) + (wa ? "Abrir chat: " + wa + "\n" : "") +
+      dato("Mail de ingreso (usar este para el alta)", email) +
+      dato("Instagram", p.instagram) +
+      "\n== PLAN ==\n" + dato("Plan que le interesa", plan) +
+      "\n== DATOS ==\n" +
+      dato("Edad", p.edad) + dato("Fecha de nacimiento", p.cumple) + dato("Sexo", p.sexo) +
+      dato("Altura (cm)", p.altura) + dato("Peso (kg)", p.peso) +
+      dato("Ciudad", p.ciudad) + dato("Nacionalidad", p.nacionalidad) +
+      "\n== SALUD Y OBJETIVOS ==\n" +
+      dato("Historial de entrenamiento", p.historialEntrenamiento) + dato("Lesiones", p.historialLesiones) +
+      dato("Patologías", p.patologias) + dato("Objetivos", p.objetivos) + dato("Información extra", p.infoExtra) +
+      "\n== QUÉ HACER ==\n" +
+      "1) Escribile por WhatsApp (te llega también un mensaje suyo con el plan que quiere).\n" +
+      "2) Pedile el comprobante de pago.\n" +
+      "3) Dale el alta en la hoja \"Alumnos - claves\": completá Clave, Nivel (Open, Pro o Personalizado) y Fecha de pago en su fila.\n";
+    MailApp.sendEmail(MAIL_AVISOS, "Nuevo registro: " + nombre + " quiere " + plan, cuerpo);
   } catch (err) {}
 }
 
