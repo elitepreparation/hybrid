@@ -160,12 +160,19 @@ function parsePlanificacion(hoja) {
     else if (c >= 6 && /^(carga|cargas|peso|pesos|kg)$/.test(n)) colCarga = c;
   });
   if (colBloque < 0 && colCarga < 0) colBloque = 6; // sin títulos reconocidos: la G es el bloque, como antes
+  var ultSem = 0, ultDia = "";
   for (var i = 1; i < values.length; i++) {
     var r = values[i];
-    var sem = parseInt(r[0], 10);
+    // la semana puede venir como 1 o como "Semana 1"; si una fila la deja vacía, repite la de arriba
+    var mSem = /\d+/.exec(String(r[0] == null ? "" : r[0]));
+    var sem = mSem ? parseInt(mSem[0], 10) : ultSem;
     var nombreEj = String(r[3] || "").trim();
     if (!sem || !nombreEj) continue;
     var diaRaw = String(r[1] || "").trim();
+    if (sem !== ultSem) ultDia = "";
+    if (!diaRaw) diaRaw = ultDia; // día vacío = sigue el día de la fila anterior
+    if (!diaRaw) continue;
+    ultSem = sem; ultDia = diaRaw;
     var dia = /^\d+$/.test(diaRaw) ? "Día " + diaRaw : diaRaw;
     if (!porSemana[sem]) { porSemana[sem] = { semana: sem, dias: [], porDia: {} }; semanas.push(porSemana[sem]); }
     var s = porSemana[sem];
