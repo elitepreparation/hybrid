@@ -953,3 +953,9 @@ ul { list-style: none; }
 .volver-plan:hover { background: var(--ink); color: #fff; }
 #view-form.is-registro .volver-plan { display: none; }
 .planilla-menu .planilla-salir { border-top: 2px solid var(--ink); }
+
+/* Tu mes: tarjeta alargada a todo el ancho; objetivos en la columna lateral, debajo de los videos */
+.mes-grid { grid-template-columns: 1fr !important; }
+.mes-card:not(.obj-card) { padding: 1.5rem 1.75rem; }
+.mes-card:not(.obj-card) .mes-numeros { gap: 1rem 3rem; }
+.plan-aside .obj-card { margin-top: 1.5rem; padding: 1.25rem 0 0; border: 0; border-top: 2px solid var(--ink); }
