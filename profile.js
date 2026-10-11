@@ -384,8 +384,6 @@
       e.target.textContent = box.hidden ? "Ver planificación mensual" : "Ocultar planificación mensual";
     });
     $("[data-logout]").addEventListener("click", cerrarSesion);
-    var salirMenu = $("[data-logout-menu]");
-    if (salirMenu) salirMenu.addEventListener("click", cerrarSesion);
     $$("[data-volver]").forEach(function (b) { b.addEventListener("click", function () { irA("plan"); }); });
     window.addEventListener("popstate", function () {
       var enPerfil = !$("#view-form").hidden;
