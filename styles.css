@@ -991,3 +991,6 @@ ul { list-style: none; }
 /* sector "Qué vas a aprender": dos bloques a todo el ancho */
 @media (min-width: 720px) { .pasos-grid.pasos-grid--dos { grid-template-columns: repeat(2, 1fr); } }
 .pasos-grid--dos .paso { padding: 2.25rem 2rem; }
+
+/* Cómo funciona: los títulos reservan dos líneas para que las descripciones queden alineadas entre los cuatro pasos */
+@media (min-width: 1280px) { #como-funciona .paso-title { min-height: 2.6em; } }
