@@ -987,3 +987,7 @@ ul { list-style: none; }
 .apto-aviso[hidden] { display: none; }
 .admin-apto { display: block; color: #b42318 !important; font-weight: 600; }
 .admin-apto.is-ok { color: #067647 !important; }
+
+/* sector "Qué vas a aprender": dos bloques a todo el ancho */
+@media (min-width: 720px) { .pasos-grid.pasos-grid--dos { grid-template-columns: repeat(2, 1fr); } }
+.pasos-grid--dos .paso { padding: 2.25rem 2rem; }
