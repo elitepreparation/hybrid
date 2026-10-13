@@ -1017,3 +1017,7 @@ ul { list-style: none; }
   .ex-row { grid-template-columns: 130px minmax(0, 1fr) 46px; }
   .set-row { grid-template-columns: 1.8rem minmax(0, 1fr) .9rem minmax(0, 1fr) auto; }
 }
+
+/* sin tilde por ejercicio: la fila queda en tres columnas */
+.ex-head, .ex-row { grid-template-columns: minmax(0, 1fr) 150px 210px; }
+@media (max-width: 640px) { .ex-row { grid-template-columns: 130px minmax(0, 1fr); } }
