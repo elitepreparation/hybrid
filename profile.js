@@ -584,7 +584,7 @@
     s = s || {};
     return '<div class="set-row" data-set-row><span class="set-n">S' + n + '</span>' +
       '<input type="text" inputmode="decimal" maxlength="5" class="set-in" data-set-r placeholder="reps" aria-label="Repeticiones de la serie ' + n + '" value="' + attr(s.r || "") + '">' +
-      '<span class="set-x" aria-hidden="true">&times;</span>' +
+      '<span class="set-x" aria-hidden="true">-</span>' +
       '<input type="text" inputmode="decimal" maxlength="5" class="set-in" data-set-k placeholder="kg" aria-label="Kilos de la serie ' + n + '" value="' + attr(s.k || "") + '">' +
       (quitable ? '<button type="button" class="set-del" data-set-del aria-label="Quitar la serie ' + n + '">&times;</button>' : '') + '</div>';
   }
@@ -595,8 +595,7 @@
     var n = guardadas ? guardadas.length : plan;
     var filas = "";
     for (var i = 0; i < n; i++) filas += setRowHTML(i + 1, guardadas ? guardadas[i] : null, i >= plan);
-    var viejo = !guardadas && saved.hechoTxt ? '<p class="set-viejo">Anotado antes: ' + escHtml(saved.hechoTxt) + '</p>' : '';
-    return '<div class="ex-sets-box" data-sets data-k="' + attr(key) + '" data-plan="' + plan + '">' + viejo + filas +
+    return '<div class="ex-sets-box" data-sets data-k="' + attr(key) + '" data-plan="' + plan + '">' + filas +
       '<button type="button" class="set-add" data-set-add>+ Agregar serie</button></div>';
   }
 
