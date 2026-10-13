@@ -1021,3 +1021,24 @@ ul { list-style: none; }
 /* sin tilde por ejercicio: la fila queda en tres columnas */
 .ex-head, .ex-row { grid-template-columns: minmax(0, 1fr) 150px 210px; }
 @media (max-width: 640px) { .ex-row { grid-template-columns: 130px minmax(0, 1fr); } }
+
+/* Historial */
+.hist-lista { margin-top: 2rem; display: flex; flex-direction: column; gap: 1rem; }
+.hist-mes { border: 2px solid var(--ink); background: var(--bg); }
+.hist-mes > summary { cursor: pointer; display: flex; flex-wrap: wrap; justify-content: space-between; gap: .4rem 1rem; padding: .9rem 1.1rem; list-style: none; }
+.hist-mes > summary::-webkit-details-marker { display: none; }
+.hist-mes > summary b { font-family: var(--display); text-transform: uppercase; font-size: 1.15rem; }
+.hist-mes > summary span { font-family: var(--mono); font-size: .78rem; color: var(--accent); }
+.hist-mes[open] > summary { border-bottom: 2px solid var(--ink); background: var(--bg-2); }
+.hist-sem { padding: .9rem 1.1rem 0; }
+.hist-sem:last-child { padding-bottom: 1rem; }
+.hist-sem-t { font-family: var(--mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--mute); }
+.hist-dia { margin-top: .6rem; padding: .7rem .9rem; border-left: 4px solid var(--accent); background: var(--bg-2); }
+.hist-ok { color: #067647; font-family: var(--mono); font-size: .75rem; margin-left: .4rem; }
+.hist-parcial { color: var(--mute); font-family: var(--mono); font-size: .75rem; margin-left: .4rem; }
+.hist-rpe { font-family: var(--mono); font-size: .72rem; color: var(--mute); margin-left: .4rem; }
+.hist-ejs { list-style: none; margin: .5rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .25rem; }
+.hist-ejs li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .1rem 1rem; font-size: .88rem; }
+.hist-ejs em { font-style: normal; font-family: var(--mono); font-size: .8rem; color: var(--accent); }
+.hist-vacio, .hist-nota { padding: 1rem 1.1rem; color: var(--mute); font-size: .9rem; }
+.hist-nota { padding-left: 0; }

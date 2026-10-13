@@ -289,6 +289,7 @@ function getAlumnoLogin(email, clave) {
     vencimiento: vencimiento.toISOString(),
     perfil: parseJSONSeguro(r[5]),
     registros: parseJSONSeguro(r[6]),
+    historial: parseJSONSeguro(r[13]), // COL_HISTORIAL: meses anteriores
     reinicio: String(r[12] || "") // COL_REINICIO (se define más abajo en el archivo)
   };
 }
@@ -593,7 +594,7 @@ function registrarSesion(email, clave) {
   } finally { lock.releaseLock(); }
   // devuelve los registros guardados y la marca de reinicio: si Gaby borró algo desde el panel,
   // el celular del alumno adopta esta copia en vez de volver a subir lo viejo
-  return { ok: true, reinicio: String(res.r[COL_REINICIO - 1] || ""), registros: parseJSONSeguro(res.r[6]) };
+  return { ok: true, reinicio: String(res.r[COL_REINICIO - 1] || ""), registros: parseJSONSeguro(res.r[6]), historial: parseJSONSeguro(res.r[COL_HISTORIAL - 1]) };
 }
 
 // "latido": el perfil abierto avisa cada tanto cuántos segundos pasaron desde el aviso anterior

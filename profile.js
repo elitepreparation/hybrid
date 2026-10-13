@@ -61,6 +61,7 @@
   var KEYS = {
     profile: "complex180_profile", nivel: "complex180_nivel", log: "complex180_log",
     vencimiento: "complex180_vencimiento", email: "complex180_email", clave: "complex180_clave",
+    hist: "complex180_hist", // meses anteriores guardados (copia del servidor)
     reinicio: "complex180_reinicio", // marca que cambia cuando Gaby borra registros desde su panel
     nombreCuenta: "complex180_nombre_cuenta" // el "Nombre" que Lucas cargó en Alumnos - claves,
     // no el que el alumno completó en su perfil — es el que usa el Plan Personalizado para
@@ -252,6 +253,7 @@
             if (data.perfil) setJSON(KEYS.profile, data.perfil);
             if (data.registros) setJSON(KEYS.log, data.registros);
             if (data.reinicio) localStorage.setItem(KEYS.reinicio, data.reinicio);
+            if (data.historial) setJSON(KEYS.hist, data.historial);
             if (getJSON(KEYS.profile)) { renderDashboard(); irA("plan"); }
             else { showView("view-form"); }
           } else if (data.error === "vencido") {
@@ -372,6 +374,69 @@
     });
   }
 
+  // ---- Historial: entrenamientos guardados (mes en curso y meses anteriores) ----
+  var MESES_HIST = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+  function etiquetaMes(clave) {
+    var m = /^(\d{4})-(\d{2})$/.exec(String(clave || ""));
+    return m ? MESES_HIST[Number(m[2]) - 1] + " " + m[1] : String(clave || "");
+  }
+
+  // agrupa un registro (mes en curso o archivado) en semanas > días > ejercicios
+  function agruparHistorial(registro) {
+    var semanas = {};
+    function dia(s, d) {
+      var sem = semanas[s] = semanas[s] || {};
+      return sem[d] = sem[d] || { dia: d, hecho: false, fecha: "", rpe: "", ejercicios: [] };
+    }
+    Object.keys(registro || {}).forEach(function (k) {
+      if (k.charAt(0) === "_") return;
+      var v = registro[k] || {};
+      var p = k.split("|");
+      if (p[0] === "hecho") {
+        var x = dia(p[1], p.slice(2).join("|"));
+        if (v.hecho === "1") { x.hecho = true; x.fecha = v.f || ""; }
+        if (v.rpe) x.rpe = v.rpe;
+      } else if (v.hechoTxt || (v.peso !== undefined && v.peso !== "")) {
+        dia(p[0], p[1]).ejercicios.push({ nombre: p.slice(2).join("|"), txt: v.hechoTxt || (v.peso + " kg") });
+      }
+    });
+    return Object.keys(semanas).map(Number).sort(function (a, b) { return b - a; }).map(function (s) {
+      var dias = Object.keys(semanas[s]).sort().map(function (d) { return semanas[s][d]; })
+        .filter(function (d) { return d.hecho || d.ejercicios.length; });
+      return { semana: s, dias: dias };
+    }).filter(function (s) { return s.dias.length; });
+  }
+
+  function historialMesHTML(clave, registro, abierto) {
+    var semanas = agruparHistorial(registro);
+    var hechos = 0;
+    semanas.forEach(function (s) { s.dias.forEach(function (d) { if (d.hecho) hechos++; }); });
+    var cuerpo = semanas.length ? semanas.map(function (s) {
+      return '<div class="hist-sem"><p class="hist-sem-t">Semana ' + s.semana + '</p>' + s.dias.map(function (d) {
+        var cab = '<b>' + escHtml(d.dia) + '</b>' + (d.hecho ? ' <span class="hist-ok">✓ hecho' + (d.fecha ? ' · ' + fechaCorta(d.fecha) : '') + '</span>' : ' <span class="hist-parcial">en curso</span>') +
+          (d.rpe ? ' <span class="hist-rpe">esfuerzo ' + escHtml(String(d.rpe)) + '/10</span>' : '');
+        var ejs = d.ejercicios.length ? '<ul class="hist-ejs">' + d.ejercicios.map(function (e) {
+          return '<li><span>' + escHtml(e.nombre) + '</span><em>' + escHtml(e.txt) + '</em></li>';
+        }).join("") + '</ul>' : '';
+        return '<div class="hist-dia">' + cab + ejs + '</div>';
+      }).join("") + '</div>';
+    }).join("") : '<p class="hist-vacio">Sin entrenamientos guardados este mes.</p>';
+    return '<details class="hist-mes"' + (abierto ? ' open' : '') + '><summary><b>' + escHtml(etiquetaMes(clave)) + '</b><span>' +
+      hechos + (hechos === 1 ? ' día hecho' : ' días hechos') + '</span></summary>' + cuerpo + '</details>';
+  }
+
+  function renderHistorial() {
+    var cont = $("[data-historial-lista]");
+    if (!cont) return;
+    var log = getJSON(KEYS.log) || {};
+    var hist = getJSON(KEYS.hist) || {};
+    var html = historialMesHTML(log._mes || mesClave(), log, true);
+    Object.keys(hist).sort().reverse().forEach(function (m) { html += historialMesHTML(m, hist[m], false); });
+    if (!Object.keys(hist).length) html += '<p class="hist-nota">Acá se van a ir guardando tus meses anteriores.</p>';
+    cont.innerHTML = html;
+  }
+
   function irA(seccion) {
     if (seccion === "perfil") {
       fillForm(getJSON(KEYS.profile));
@@ -383,6 +448,7 @@
       showView("view-form");
     } else {
       $$("[data-dash-panel]").forEach(function (p) { p.hidden = (p.dataset.dashPanel !== seccion); });
+      if (seccion === "historial") { renderHistorial(); renderMes(getJSON(KEYS.nivel) || "OPEN"); }
       showView("view-dashboard");
     }
     marcarSeccion(seccion);
@@ -1314,12 +1380,16 @@
     }
     if (!Object.keys(viejo).length) return Promise.resolve(reiniciar());
     return postAccion("archivarMes", { mes: log._mes, datos: JSON.stringify(viejo) })
-      .then(function (r) { return (r && r.ok) ? reiniciar() : false; });
+      .then(function (r) {
+        if (r && r.ok) { var hh = getJSON(KEYS.hist) || {}; hh[log._mes] = viejo; setJSON(KEYS.hist, hh); }
+        return (r && r.ok) ? reiniciar() : false;
+      });
   }
 
   function sincronizarRegistros(data) {
     if (data && data.ok) {
       var local = localStorage.getItem(KEYS.reinicio) || "";
+      if (data.historial) setJSON(KEYS.hist, data.historial);
       if (data.reinicio && data.reinicio !== local) {
         setJSON(KEYS.log, data.registros || {});
         localStorage.setItem(KEYS.reinicio, data.reinicio);
