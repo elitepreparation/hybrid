@@ -500,6 +500,27 @@
     return "https://wa.me/" + (brand.whatsapp || "") + "?text=" + encodeURIComponent(txt);
   }
 
+  // ---- "Lo que hice": un cuadrito para repeticiones y otro para kilos por cada serie, con botón para sumar series ----
+  function setRowHTML(n, s, quitable) {
+    s = s || {};
+    return '<div class="set-row" data-set-row><span class="set-n">S' + n + '</span>' +
+      '<input type="text" inputmode="decimal" maxlength="5" class="set-in" data-set-r placeholder="reps" aria-label="Repeticiones de la serie ' + n + '" value="' + attr(s.r || "") + '">' +
+      '<span class="set-x" aria-hidden="true">&times;</span>' +
+      '<input type="text" inputmode="decimal" maxlength="5" class="set-in" data-set-k placeholder="kg" aria-label="Kilos de la serie ' + n + '" value="' + attr(s.k || "") + '">' +
+      (quitable ? '<button type="button" class="set-del" data-set-del aria-label="Quitar la serie ' + n + '">&times;</button>' : '') + '</div>';
+  }
+
+  function setsHTML(key, ej, saved) {
+    var guardadas = Array.isArray(saved.sets) && saved.sets.length ? saved.sets : null;
+    var plan = Math.max(1, Math.min(10, Number(ej.series) || 1));
+    var n = guardadas ? guardadas.length : plan;
+    var filas = "";
+    for (var i = 0; i < n; i++) filas += setRowHTML(i + 1, guardadas ? guardadas[i] : null, i >= plan);
+    var viejo = !guardadas && saved.hechoTxt ? '<p class="set-viejo">Anotado antes: ' + escHtml(saved.hechoTxt) + '</p>' : '';
+    return '<div class="ex-sets-box" data-sets data-k="' + attr(key) + '" data-plan="' + plan + '">' + viejo + filas +
+      '<button type="button" class="set-add" data-set-add>+ Agregar serie</button></div>';
+  }
+
   function diaDetalleHTML(semana, dia, log) {
     var okCount = 0;
     function fila(ej) {
@@ -514,7 +535,7 @@
           (id ? ' <button type="button" class="ex-video" data-play-id="' + id + '" data-play-nombre="' + attr(ej.nombre) + '">▶ Técnica</button>' : '') +
         '</span>' +
         '<span class="ex-plan" data-label="Realizar"><span class="ex-sr"><span><b>' + ej.series + '</b> series</span><span><b>' + ej.reps + '</b> reps</span></span>' + (ej.carga ? '<span class="ex-carga"><b>' + ej.carga + '</b></span>' : '') + '</span>' +
-        '<input type="text" class="ex-did" data-ex-did data-k="' + attr(key) + '" placeholder="ej. ' + ej.series + ' x ' + ej.reps + ' - 20kg" aria-label="Lo que hice en ' + attr(ej.nombre) + '" value="' + attr(saved.hechoTxt || "") + '">' +
+        setsHTML(key, ej, saved) +
         '<label class="ex-check" title="Marcar como hecho"><input type="checkbox" data-ex-ok data-k="' + attr(key) + '"' + (ok ? ' checked' : '') + ' aria-label="Hecho: ' + attr(ej.nombre) + '"><span aria-hidden="true"></span></label>' +
         '</li>';
     }
@@ -612,9 +633,41 @@
       setJSON(KEYS.log, log);
       guardarRegistrosServidor(log);
     }
+    function guardarSets(box) {
+      var sets = $$("[data-set-row]", box).map(function (row) {
+        return { r: (row.querySelector("[data-set-r]").value || "").trim(), k: (row.querySelector("[data-set-k]").value || "").trim() };
+      });
+      var resumen = sets.map(function (s, i) {
+        if (!s.r && !s.k) return "";
+        return "S" + (i + 1) + " " + (s.r || "?") + (s.k ? " x " + s.k + "kg" : "");
+      }).filter(Boolean).join(" · ");
+      guardarEjercicio(box.dataset.k, { sets: sets, hechoTxt: resumen });
+    }
     panel.addEventListener("input", function (e) {
-      var inp = e.target.closest("[data-ex-did]");
-      if (inp) guardarEjercicio(inp.dataset.k, { hechoTxt: inp.value });
+      var inp = e.target.closest(".set-in");
+      if (!inp) return;
+      var limpio = inp.value.replace(/[^0-9.,]/g, "");
+      if (limpio !== inp.value) inp.value = limpio;
+      guardarSets(inp.closest("[data-sets]"));
+    });
+    panel.addEventListener("click", function (e) {
+      var add = e.target.closest("[data-set-add]");
+      if (add) {
+        var box = add.closest("[data-sets]");
+        var n = $$("[data-set-row]", box).length;
+        add.insertAdjacentHTML("beforebegin", setRowHTML(n + 1, null, true));
+        var ult = $$("[data-set-r]", box).pop();
+        if (ult) ult.focus();
+        guardarSets(box);
+        return;
+      }
+      var del = e.target.closest("[data-set-del]");
+      if (del) {
+        var caja = del.closest("[data-sets]");
+        del.closest("[data-set-row]").remove();
+        $$("[data-set-row]", caja).forEach(function (row, i) { var nn = row.querySelector(".set-n"); if (nn) nn.textContent = "S" + (i + 1); });
+        guardarSets(caja);
+      }
     });
     panel.addEventListener("change", function (e) {
       var chk = e.target.closest("[data-ex-ok]");
