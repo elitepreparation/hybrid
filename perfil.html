@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261013g">
+<link rel="stylesheet" href="styles.css?v=20261013h">
 </head>
 <body>
 <a href="#main" class="skip-link">Saltar al contenido</a>
@@ -144,7 +144,7 @@
       <div class="pf-grid">
         <label>Nombre<input type="text" name="nombre" required></label>
         <label>Apellido<input type="text" name="apellido" required></label>
-        <label>Edad <span class="pf-opt">(se calcula sola)</span><input type="number" name="edad" min="12" max="90" required readonly tabindex="-1"></label>
+        <label>Edad<input type="number" name="edad" min="12" max="90" required readonly tabindex="-1"></label>
         <label>Fecha de nacimiento<input type="date" name="cumple" min="1930-01-01" max="2015-12-31" required></label>
         <label>Sexo
           <select name="sexo" required>
@@ -152,8 +152,8 @@
             <option>Femenino</option><option>Masculino</option><option>Otro</option>
           </select>
         </label>
-        <label>Altura (en cm)<input type="text" inputmode="decimal" name="altura" placeholder="Ej: 175" required maxlength="6" autocomplete="off"></label>
-        <label>Peso (en kg)<input type="text" inputmode="decimal" name="peso" placeholder="Ej: 72,5" required maxlength="6" autocomplete="off"></label>
+        <label>Altura<input type="text" inputmode="decimal" name="altura" placeholder="Ej: 175 cm" required maxlength="6" autocomplete="off"></label>
+        <label>Peso<input type="text" inputmode="decimal" name="peso" placeholder="Ej: 72,5 kg" required maxlength="6" autocomplete="off"></label>
         <label>Ciudad<input type="text" name="ciudad" required></label>
         <label>Nacionalidad<input type="text" name="nacionalidad" required></label>
       </div>
@@ -166,13 +166,13 @@
       <div class="pf-grid">
         <label>Mail<input type="email" name="mail" required></label>
         <label>WhatsApp<input type="tel" name="whatsapp" required></label>
-        <label>Instagram <span class="pf-opt">(opcional)</span><input type="text" name="instagram" placeholder="@usuario"></label>
+        <label>Instagram<input type="text" name="instagram" placeholder="@usuario"></label>
       </div>
 
-      <label class="pf-full">Información relevante <span class="pf-opt">(opcional)</span><textarea name="infoExtra" rows="2"></textarea></label>
+      <label class="pf-full">Información relevante<textarea name="infoExtra" rows="2"></textarea></label>
 
       <div class="pf-grid pf-solo-alumnos">
-        <p class="apto-nota pf-full">Para poder entrenar vas a tener que subir tu <b>apto físico</b> (foto o PDF). Podés hacerlo ahora o más tarde desde tu perfil; mientras no lo subas te lo vamos a recordar.</p>
+        <p class="apto-nota pf-full">Para poder entrenar vas a tener que subir tu <b>apto físico</b>, en foto o PDF. Podés hacerlo ahora o más tarde desde tu perfil; mientras no lo subas te lo vamos a recordar.</p>
         <label>Apto físico<input type="file" name="fotoApto" accept="image/*,.pdf"><small data-file-status="fotoApto" class="pf-file-status"></small></label>
       </div>
 
