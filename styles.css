@@ -1064,3 +1064,6 @@ ul { list-style: none; }
 #view-dashboard .week-chip.is-active, #view-dashboard .nivel-btn.is-active { background: var(--accent); border-color: var(--accent); color: #fff; }
 #view-dashboard .week-chip small { background: #fff; color: var(--ink); }
 #view-dashboard .btn:disabled, #view-form .btn:disabled { opacity: .6; }
+/* sobre la tarjeta oscura "Hoy te toca" el botón va en azul vivo, para que se vea */
+#view-dashboard .hoy-card .hoy-cta { background: var(--accent); border-color: var(--accent); color: #fff; }
+#view-dashboard .hoy-card .hoy-cta:hover { background: #fff; border-color: #fff; color: var(--ink); }
