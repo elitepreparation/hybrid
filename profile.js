@@ -455,9 +455,6 @@
       fillForm(getJSON(KEYS.profile));
       $("[data-apodo]").value = (getJSON(KEYS.profile) || {}).apodo || "";
       renderAvatar();
-      var nivel = getJSON(KEYS.nivel);
-      $("[data-registros-card]").hidden = !nivel;
-      if (nivel) renderRegistros(nivel);
       showView("view-form");
     } else {
       $$("[data-dash-panel]").forEach(function (p) { p.hidden = (p.dataset.dashPanel !== seccion); });
@@ -795,39 +792,6 @@
     }).join("");
   }
 
-  // ---- "Mis registros" (editable, dentro de Perfil — semana actual) ----
-  function renderRegistros(nivel) {
-    var log = getJSON(KEYS.log) || {};
-    var host = $("[data-registros-dias]");
-    $("[data-registros-card]").hidden = false;
-    var n = semanaActual();
-    host.innerHTML = diasDeSemana(nivel, n).map(function (dia) {
-      var rows = dia.ejercicios.map(function (ej) {
-        var key = n + "|" + dia.dia + "|" + ej.nombre;
-        var saved = log[key] || {};
-        return '<tr>' +
-          '<td>' + ej.nombre + '</td>' +
-          '<td><input type="number" min="0" data-log-input data-key="' + key + '" data-field="series" value="' + (saved.series != null ? saved.series : ej.series) + '"></td>' +
-          '<td><input type="number" min="0" data-log-input data-key="' + key + '" data-field="reps" value="' + (saved.reps != null ? saved.reps : ej.reps) + '"></td>' +
-          '<td><input type="number" min="0" step="0.5" data-log-input data-key="' + key + '" data-field="peso" placeholder="kg" value="' + (saved.peso != null ? saved.peso : "") + '"></td>' +
-          '</tr>';
-      }).join("");
-      return '<div class="log-day"><div class="log-day-head"><h3>' + dia.dia + '</h3><span>' + dia.foco + '</span></div>' +
-        '<table class="log-table"><thead><tr><th>Ejercicio</th><th>Series</th><th>Reps</th><th>Peso</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
-    }).join("");
-
-    $$("[data-log-input]", host).forEach(function (input) {
-      input.addEventListener("input", function () {
-        var log = getJSON(KEYS.log) || {};
-        var key = input.dataset.key;
-        log[key] = log[key] || {};
-        log[key][input.dataset.field] = input.value;
-        setJSON(KEYS.log, log);
-        guardarRegistrosServidor(log);
-      });
-    });
-  }
-
   // ---- Videos (lee la carpeta "Videos ejercicios" del Drive vía Apps Script) ----
   var videosCache = EJERCICIOS; // arranca con la lista de muestra hasta que llegue la real
   var carpetaVideoActual = null; // null = viendo las carpetas; si no, el nombre del grupo abierto
@@ -1059,7 +1023,6 @@
         if (getJSON(KEYS.nivel) === nivel) {
           renderWeekly(nivel);
           renderMonthly(nivel);
-          if (!$("#view-form").hidden) renderRegistros(nivel);
         }
       } else if (hayPdf && getJSON(KEYS.nivel) === nivel) {
         // el PDF es la planificación real del mes: no mostramos las tarjetas de muestra
