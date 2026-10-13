@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261013d">
+<link rel="stylesheet" href="styles.css?v=20261013e">
 </head>
 <body>
 <a href="#main" class="skip-link">Saltar al contenido</a>
@@ -107,6 +107,7 @@
         </label>
         <button type="submit" class="btn btn-accent btn-block login-submit">Continuar</button>
       </form>
+      <p class="pf-req-nota">Los campos con <span class="req">*</span> son obligatorios.</p>
       <p data-registro-msg class="login-msg"></p>
       <p class="alta-aviso">Para usar el servicio de Elite Preparation debe ser dado de alta como miembro por el coach.</p>
     </div>
@@ -139,6 +140,7 @@
     <p style="color:var(--ink-soft); margin-top:.5rem; max-width:60ch;">Estos datos los completa cada alumno una sola vez. Con esto armamos tu seguimiento y tu ficha de entrenamiento.</p>
 
     <form data-profile-form class="profile-form">
+      <p class="pf-req-nota">Los campos con <span class="req">*</span> son obligatorios.</p>
       <div class="pf-grid">
         <label>Nombre<input type="text" name="nombre" required></label>
         <label>Apellido<input type="text" name="apellido" required></label>
@@ -308,6 +310,6 @@
 </footer>
 
 <script defer src="lib/manifest.js?v=20261009a"></script>
-<script defer src="profile.js?v=20261013d"></script>
+<script defer src="profile.js?v=20261013e"></script>
 </body>
 </html>

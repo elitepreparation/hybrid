@@ -133,6 +133,19 @@
       .then(function () { if (btn) { btn.disabled = false; btn.textContent = textoOriginal; } });
   }
 
+  // asterisco (*) en todos los campos obligatorios de los formularios de alta y de perfil
+  function marcarObligatorios() {
+    $$("[data-profile-form] [required], [data-registro-form] [required]").forEach(function (campo) {
+      var label = campo.closest("label");
+      if (!label || label.querySelector(".req")) return;
+      var marca = document.createElement("span");
+      marca.className = "req";
+      marca.setAttribute("aria-hidden", "true");
+      marca.textContent = " *";
+      label.insertBefore(marca, campo);
+    });
+  }
+
   function initRegistro() {
     $$("[data-ir-registro]").forEach(function (b) { b.addEventListener("click", function () { showView("view-registro"); window.scrollTo(0, 0); }); });
     $$("[data-ir-login]").forEach(function (b) { b.addEventListener("click", function () { showView("view-clave"); window.scrollTo(0, 0); }); });
@@ -1466,6 +1479,7 @@
     initQuickVideos();
     initAvatar();
     initRegistro();
+    marcarObligatorios();
     initApodo();
     initObjetivos();
     var aptoIr = $("[data-apto-ir]");

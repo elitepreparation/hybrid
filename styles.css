@@ -1042,3 +1042,7 @@ ul { list-style: none; }
 .hist-ejs em { font-style: normal; font-family: var(--mono); font-size: .8rem; color: var(--accent); }
 .hist-vacio, .hist-nota { padding: 1rem 1.1rem; color: var(--mute); font-size: .9rem; }
 .hist-nota { padding-left: 0; }
+
+/* asterisco de los campos obligatorios */
+.req { color: #b42318; font-weight: 700; }
+.pf-req-nota { font-family: var(--mono); font-size: .75rem; color: var(--mute); margin: 0 0 .75rem; }
