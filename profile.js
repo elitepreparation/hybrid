@@ -536,7 +536,6 @@
         '</span>' +
         '<span class="ex-plan" data-label="Realizar"><span class="ex-sr"><span><b>' + ej.series + '</b> series</span><span><b>' + ej.reps + '</b> reps</span></span>' + (ej.carga ? '<span class="ex-carga"><b>' + ej.carga + '</b></span>' : '') + '</span>' +
         setsHTML(key, ej, saved) +
-        '<label class="ex-check" title="Marcar como hecho"><input type="checkbox" data-ex-ok data-k="' + attr(key) + '"' + (ok ? ' checked' : '') + ' aria-label="Hecho: ' + attr(ej.nombre) + '"><span aria-hidden="true"></span></label>' +
         '</li>';
     }
     // bloques (ej. "Potencia") arriba de sus ejercicios; si la planilla no trae columna "Bloque", se usa el foco del día
@@ -560,8 +559,7 @@
     var hecho = diaHecho(log, semana, dia.dia);
     return '<div class="log-day day-card' + (hecho ? ' is-done' : '') + '">' +
       '<div class="log-day-head"><h3>' + dia.dia + '</h3></div>' +
-      '<p class="ex-progress" data-ex-progress>' + okCount + ' de ' + dia.ejercicios.length + ' ejercicios hechos</p>' +
-      '<div class="ex-head" aria-hidden="true"><span>Ejercicio</span><span>Realizar</span><span>Lo que hice</span><span>✓</span></div>' +
+      '<div class="ex-head" aria-hidden="true"><span>Ejercicio</span><span>Realizar</span><span>Lo que hice</span></div>' +
       bloques + rpeHtml +
       '<div class="day-acciones">' +
       '<button type="button" class="btn ' + (hecho ? 'btn-ghost' : 'btn-primary') + ' day-done" data-toggle-hecho data-semana="' + semana + '" data-dia="' + dia.dia + '">' +
@@ -668,20 +666,6 @@
         $$("[data-set-row]", caja).forEach(function (row, i) { var nn = row.querySelector(".set-n"); if (nn) nn.textContent = "S" + (i + 1); });
         guardarSets(caja);
       }
-    });
-    panel.addEventListener("change", function (e) {
-      var chk = e.target.closest("[data-ex-ok]");
-      if (!chk) return;
-      guardarEjercicio(chk.dataset.k, { ok: chk.checked ? "1" : "0" });
-      var row = chk.closest(".ex-row");
-      if (row) row.classList.toggle("is-ok", chk.checked);
-      var card = chk.closest(".day-card");
-      if (card) {
-        var total = $$("[data-ex-ok]", card).length;
-        var hechos = $$("[data-ex-ok]", card).filter(function (c) { return c.checked; }).length;
-        $("[data-ex-progress]", card).textContent = hechos + " de " + total + " ejercicios hechos";
-      }
-      renderMes(getJSON(KEYS.nivel) || "OPEN");
     });
     panel.addEventListener("click", function (e) {
       var nivel = getJSON(KEYS.nivel) || "OPEN";
