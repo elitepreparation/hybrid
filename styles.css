@@ -1046,3 +1046,21 @@ ul { list-style: none; }
 /* asterisco de los campos obligatorios */
 .req { color: #b42318; font-weight: 700; }
 .pf-req-nota { font-family: var(--mono); font-size: .75rem; color: var(--mute); margin: 0 0 .75rem; }
+
+/* Perfil del alumno: los botones para hacer clic (día hecho, consultar, agregar serie, técnica, volver, semanas, esfuerzo...)
+   van en azul oscuro, como la barra de arriba; el azul vivo queda para el elemento seleccionado y para el hover */
+#view-dashboard .btn-ghost, #view-form .btn-ghost,
+#view-dashboard .btn-primary, #view-form .btn-primary,
+#view-dashboard .set-add, #view-dashboard .ex-video, #view-dashboard .volver-plan, #view-form .volver-plan,
+#view-dashboard .week-chip:not(.is-active), #view-dashboard .nivel-btn:not(.is-active), #view-dashboard .rpe-btn:not(.is-activo) {
+  background: var(--ink); color: #fff; border: 2px solid var(--ink);
+}
+#view-dashboard .set-add { border-style: solid; }
+#view-dashboard .btn-ghost:hover, #view-form .btn-ghost:hover, #view-dashboard .btn-primary:hover, #view-form .btn-primary:hover,
+#view-dashboard .set-add:hover, #view-dashboard .ex-video:hover, #view-dashboard .volver-plan:hover, #view-form .volver-plan:hover,
+#view-dashboard .week-chip:not(.is-active):hover, #view-dashboard .nivel-btn:not(.is-active):hover, #view-dashboard .rpe-btn:not(.is-activo):hover {
+  background: var(--accent); border-color: var(--accent); color: #fff;
+}
+#view-dashboard .week-chip.is-active, #view-dashboard .nivel-btn.is-active { background: var(--accent); border-color: var(--accent); color: #fff; }
+#view-dashboard .week-chip small { background: #fff; color: var(--ink); }
+#view-dashboard .btn:disabled, #view-form .btn:disabled { opacity: .6; }
