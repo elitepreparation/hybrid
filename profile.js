@@ -252,7 +252,7 @@
       var btn = form.querySelector("button[type=submit]");
       msg.textContent = "Verificando…";
       btn.disabled = true;
-      fetch(API_URL + "?action=login&email=" + encodeURIComponent(email) + "&clave=" + encodeURIComponent(clave))
+      fetch(API_URL, { method: "POST", body: new URLSearchParams({ action: "login", email: email, clave: clave }) })
         .then(function (r) { return r.json(); })
         .then(function (data) {
           btn.disabled = false;
