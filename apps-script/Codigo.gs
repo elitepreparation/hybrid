@@ -868,3 +868,40 @@ function avisarRegistro(nombre, email, perfil) {
 function autorizarMails() {
   MailApp.sendEmail(MAIL_AVISOS, "Elite Preparation: avisos activados", "Listo, desde ahora te llega un mail por cada registro nuevo.");
 }
+
+// ---- Copia de seguridad semanal ----
+// Copia "Alumnos - claves" y las planificaciones (OPEN, PRO, Personalizada) a Complex 180 > Copias de seguridad,
+// con la fecha en el nombre. Se conservan las últimas 8 copias de cada archivo (las más viejas van a la papelera).
+// Se instala una sola vez con instalarCopiaSemanal() y corre sola los domingos de madrugada.
+function copiaDeSeguridad() {
+  var raiz = rootFolder();
+  var carpeta = subFolder(raiz, "Copias de seguridad") || raiz.createFolder("Copias de seguridad");
+  var fecha = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd");
+  var archivos = [];
+  var alumnos = subFolder(raiz, "Alumnos");
+  if (alumnos) { var it = alumnos.getFilesByName("Alumnos - claves"); if (it.hasNext()) archivos.push(it.next()); }
+  var plan = subFolder(raiz, "Planificaciones");
+  if (plan) {
+    ["OPEN", "PRO", "PERSONALIZADO"].forEach(function (n) {
+      var c = subFolder(plan, n);
+      if (!c) return;
+      var fs = c.getFilesByType(MimeType.GOOGLE_SHEETS);
+      while (fs.hasNext()) { var f = fs.next(); if (f.getName().indexOf("(auto)") < 0) archivos.push(f); }
+    });
+  }
+  archivos.forEach(function (f) {
+    var base = f.getName();
+    f.makeCopy(base + " - copia " + fecha, carpeta);
+    var copias = [], it2 = carpeta.getFiles();
+    while (it2.hasNext()) { var c2 = it2.next(); if (c2.getName().indexOf(base + " - copia ") === 0) copias.push(c2); }
+    copias.sort(function (a, b) { return b.getDateCreated() - a.getDateCreated(); });
+    copias.slice(8).forEach(function (c3) { c3.setTrashed(true); });
+  });
+  Logger.log("Copias de seguridad hechas: " + archivos.length);
+}
+
+function instalarCopiaSemanal() {
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === "copiaDeSeguridad") ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger("copiaDeSeguridad").timeBased().onWeekDay(ScriptApp.WeekDay.SUNDAY).atHour(3).create();
+  Logger.log("Copia semanal instalada: domingos a las 3 de la madrugada.");
+}
