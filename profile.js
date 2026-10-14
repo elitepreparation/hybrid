@@ -580,22 +580,54 @@
   }
 
   // ---- "Lo que hice": un cuadrito para repeticiones y otro para kilos por cada serie, con botón para sumar series ----
-  function setRowHTML(n, s, quitable) {
+  function setRowHTML(n, s, quitable, prev) {
     s = s || {};
+    prev = prev || {};
     return '<div class="set-row" data-set-row><span class="set-n">S' + n + '</span>' +
-      '<input type="text" inputmode="decimal" maxlength="5" class="set-in" data-set-r placeholder="reps" aria-label="Repeticiones de la serie ' + n + '" value="' + attr(s.r || "") + '">' +
+      '<input type="text" inputmode="decimal" maxlength="5" class="set-in" data-set-r placeholder="' + attr(prev.r || "reps") + '" aria-label="Repeticiones de la serie ' + n + '" value="' + attr(s.r || "") + '">' +
       '<span class="set-x" aria-hidden="true">-</span>' +
-      '<input type="text" inputmode="decimal" maxlength="5" class="set-in" data-set-k placeholder="kg" aria-label="Kilos de la serie ' + n + '" value="' + attr(s.k || "") + '">' +
+      '<input type="text" inputmode="decimal" maxlength="5" class="set-in" data-set-k placeholder="' + attr(prev.k || "kg") + '" aria-label="Kilos de la serie ' + n + '" value="' + attr(s.k || "") + '">' +
       (quitable ? '<button type="button" class="set-del" data-set-del aria-label="Quitar la serie ' + n + '">&times;</button>' : '') + '</div>';
   }
 
-  function setsHTML(key, ej, saved) {
+  // lo que anotó el alumno la última vez en este mismo ejercicio (semana anterior; si no hay, meses archivados)
+  function previoEjercicio(semana, dia, ejercicio, log) {
+    for (var s = Number(semana) - 1; s >= 1; s--) {
+      var v = (log || {})[exKey(s, dia, ejercicio)];
+      if (v && ((Array.isArray(v.sets) && v.sets.some(function (x) { return x.r || x.k; })) || v.hechoTxt)) return v;
+    }
+    var hist = getJSON(KEYS.hist) || {};
+    var meses = Object.keys(hist).sort().reverse();
+    for (var m = 0; m < meses.length; m++) {
+      for (var w = 4; w >= 1; w--) {
+        var h = hist[meses[m]][exKey(w, dia, ejercicio)];
+        if (h && h.hechoTxt) return h;
+      }
+    }
+    return null;
+  }
+
+  function resumenPrevio(p) {
+    if (!p) return "";
+    if (Array.isArray(p.sets) && p.sets.some(function (x) { return x.r || x.k; })) {
+      return p.sets.map(function (x, i) {
+        if (!x.r && !x.k) return "";
+        return "S" + (i + 1) + " " + (x.r || "?") + (x.k ? " - " + x.k + "kg" : "");
+      }).filter(Boolean).join(" · ");
+    }
+    return p.hechoTxt || "";
+  }
+
+  function setsHTML(key, ej, saved, previo) {
     var guardadas = Array.isArray(saved.sets) && saved.sets.length ? saved.sets : null;
     var plan = Math.max(1, Math.min(10, Number(ej.series) || 1));
     var n = guardadas ? guardadas.length : plan;
     var filas = "";
-    for (var i = 0; i < n; i++) filas += setRowHTML(i + 1, guardadas ? guardadas[i] : null, i >= plan);
-    return '<div class="ex-sets-box" data-sets data-k="' + attr(key) + '" data-plan="' + plan + '">' + filas +
+    var psets = previo && Array.isArray(previo.sets) ? previo.sets : [];
+    for (var i = 0; i < n; i++) filas += setRowHTML(i + 1, guardadas ? guardadas[i] : null, i >= plan, psets[i]);
+    var ult = resumenPrevio(previo);
+    var capt = ult ? '<p class="set-prev">Última vez: ' + escHtml(ult) + '</p>' : '';
+    return '<div class="ex-sets-box" data-sets data-k="' + attr(key) + '" data-plan="' + plan + '">' + capt + filas +
       '<button type="button" class="set-add" data-set-add>+ Agregar serie</button></div>';
   }
 
@@ -613,7 +645,7 @@
           (id ? ' <button type="button" class="ex-video" data-play-id="' + id + '" data-play-nombre="' + attr(ej.nombre) + '">▶ Técnica</button>' : '') +
         '</span>' +
         '<span class="ex-plan" data-label="Realizar"><span class="ex-sr"><span><b>' + ej.series + '</b> series</span><span><b>' + ej.reps + '</b> reps</span></span>' + (ej.carga ? '<span class="ex-carga"><b>' + ej.carga + '</b></span>' : '') + '</span>' +
-        setsHTML(key, ej, saved) +
+        setsHTML(key, ej, saved, previoEjercicio(semana, dia.dia, ej.nombre, log)) +
         '</li>';
     }
     // bloques (ej. "Potencia") arriba de sus ejercicios; si la planilla no trae columna "Bloque", se usa el foco del día
