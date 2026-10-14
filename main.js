@@ -136,6 +136,21 @@
     });
   }
 
+  // Estadísticas anónimas: solo suma un contador por día en el servidor (sin datos personales)
+  function evento(nombre) {
+    try { new Image().src = API_URL + "?action=evento&e=" + encodeURIComponent(nombre) + "&_=" + Date.now(); } catch (e) {}
+  }
+
+  function initEventos() {
+    try {
+      if (!sessionStorage.getItem("ev_visita")) { sessionStorage.setItem("ev_visita", "1"); evento("visita"); }
+    } catch (e) { evento("visita"); }
+    document.addEventListener("click", function (e) {
+      if (e.target.closest("[data-whatsapp]")) evento("whatsapp");
+      else if (e.target.closest(".nivel-card--pick")) evento("plan");
+    });
+  }
+
   function initServiceWorker() {
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () {});
   }
@@ -148,6 +163,7 @@
     safe(initAlumnosStat, "initAlumnosStat");
     safe(initSmoothAnchors, "initSmoothAnchors");
     safe(initServiceWorker, "initServiceWorker");
+    safe(initEventos, "initEventos");
     document.documentElement.classList.add("is-ready");
   }
 

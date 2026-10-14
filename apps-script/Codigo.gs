@@ -17,6 +17,7 @@ function doGet(e) {
     }
     else if (action === "login") out = getAlumnoLogin(e.parameter.email, e.parameter.clave);
     else if (action === "stats") out = getStatsPublicas();
+    else if (action === "evento") out = registrarEvento(e.parameter.e);
     else out = { ok: false, error: "accion desconocida" };
   } catch (err) {
     out = { ok: false, error: String(err) };
@@ -30,7 +31,8 @@ function doPost(e) {
   var action = (e && e.parameter && e.parameter.action) || "";
   var out;
   try {
-    if (action === "guardarDatos") out = guardarDatosAlumno(e.parameter.email, e.parameter.clave, e.parameter.perfil, e.parameter.registros);
+    if (action === "login") out = getAlumnoLogin(e.parameter.email, e.parameter.clave); // por POST: la clave no queda en la dirección
+    else if (action === "guardarDatos") out = guardarDatosAlumno(e.parameter.email, e.parameter.clave, e.parameter.perfil, e.parameter.registros);
     else if (action === "guardarArchivo") out = guardarArchivoAlumno(e.parameter.email, e.parameter.clave, e.parameter.campo, e.parameter.nombreOriginal, e.parameter.tipo, e.parameter.base64);
     else if (action === "sesion") out = registrarSesion(e.parameter.email, e.parameter.clave);
     else if (action === "latido") out = registrarLatido(e.parameter.email, e.parameter.clave, e.parameter.segundos);
@@ -659,7 +661,7 @@ function getAdminAlumnos(claveAdmin) {
       historial: parseJSONSeguro(r[COL_HISTORIAL - 1])
     });
   }
-  return { ok: true, ahora: new Date().toISOString(), alumnos: alumnos };
+  return { ok: true, ahora: new Date().toISOString(), alumnos: alumnos, eventos: parseJSONSeguro(PropertiesService.getScriptProperties().getProperty("EVENTOS")) || {} };
 }
 
 // el perfil del alumno, al cambiar de mes, manda acá el mes que cierra para no mezclarlo con el nuevo.
@@ -804,6 +806,28 @@ function registrarAlumno(nombre, email, perfilJson) {
     cache.remove("stats_activos");
   } finally { lock.releaseLock(); }
   avisarRegistro(nom, mail, perfil);
+  registrarEvento("registro");
+  return { ok: true };
+}
+
+// Estadísticas anónimas de uso de la web: solo contadores por día (visitas, toques en "Unirme", clics a WhatsApp, registros).
+// No guarda ningún dato personal. Se conservan los últimos 90 días y se ven en el panel del coach.
+var EVENTOS_OK = ["visita", "unirme", "whatsapp", "plan", "registro"];
+function registrarEvento(nombre) {
+  nombre = String(nombre || "");
+  if (EVENTOS_OK.indexOf(nombre) < 0) return { ok: false };
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(3000)) return { ok: false };
+  try {
+    var props = PropertiesService.getScriptProperties();
+    var data = parseJSONSeguro(props.getProperty("EVENTOS")) || {};
+    var hoy = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd");
+    data[hoy] = data[hoy] || {};
+    data[hoy][nombre] = (data[hoy][nombre] || 0) + 1;
+    var dias = Object.keys(data).sort();
+    while (dias.length > 90) delete data[dias.shift()];
+    props.setProperty("EVENTOS", JSON.stringify(data));
+  } finally { lock.releaseLock(); }
   return { ok: true };
 }
 

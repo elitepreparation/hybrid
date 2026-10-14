@@ -14,6 +14,7 @@
   var alumnos = [];
   var ahora = new Date();
   var abierto = null; // mail del alumno con el detalle desplegado
+  var eventos = {}; // contadores por día: { "2026-10-14": { visita: 12, unirme: 3, ... } }
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -138,6 +139,7 @@
   }
 
   function renderStats() {
+    renderEventos();
     var activos = alumnos.filter(function (a) { return diasSinEntrar(a) <= 7; }).length;
     var vencen = alumnos.filter(function (a) { var d = diasHastaVencer(a); return d >= 0 && d <= 7; }).length;
     var nunca = alumnos.filter(function (a) { return !a.ultimoIngreso; }).length;
@@ -156,6 +158,21 @@
         ? '<button type="button" class="admin-stat admin-stat--btn' + alerta + '" data-stat-filtro="' + it[2] + '"><b>' + it[1] + '</b><span>' + it[0] + '</span></button>'
         : '<div class="admin-stat"><b>' + it[1] + '</b><span>' + it[0] + '</span></div>';
     }).join("");
+  }
+
+  // visitas y conversión de los últimos 7 y 30 días (contadores anónimos del servidor)
+  function renderEventos() {
+    var cont = $("[data-admin-eventos]");
+    if (!cont) return;
+    var dias = Object.keys(eventos);
+    if (!dias.length) { cont.innerHTML = '<p class="admin-muted">Todavía no hay visitas registradas. Se empiezan a contar desde que se publica la versión nueva.</p>'; return; }
+    function suma(n, ev) {
+      var desde = new Date(Date.now() - n * DIA_MS).toISOString().slice(0, 10);
+      return dias.reduce(function (t, d) { return d >= desde ? t + (Number((eventos[d] || {})[ev]) || 0) : t; }, 0);
+    }
+    var filas = [["visita", "Visitas a la web"], ["plan", "Miraron un plan"], ["whatsapp", "Clics a WhatsApp"], ["unirme", "Tocaron Unirme"], ["registro", "Registros enviados"]];
+    cont.innerHTML = '<p class="admin-sub">Movimiento de la web</p><table class="log-table"><thead><tr><th></th><th>Últimos 7 días</th><th>Últimos 30 días</th></tr></thead><tbody>' +
+      filas.map(function (f) { return '<tr><td>' + f[1] + '</td><td>' + suma(7, f[0]) + '</td><td>' + suma(30, f[0]) + '</td></tr>'; }).join("") + '</tbody></table>';
   }
 
   function btnBorrar(email, alcance, texto) {
@@ -307,6 +324,7 @@
       }
       setClave(clave);
       alumnos = data.alumnos || [];
+      eventos = data.eventos || {};
       ahora = new Date(data.ahora || Date.now());
       $("[data-admin-updated]").textContent = "Actualizado " + ahora.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
       $("#admin-login").hidden = true;

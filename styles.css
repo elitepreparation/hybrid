@@ -1088,3 +1088,7 @@ ul { list-style: none; }
 .admin-stat--btn.is-alerta b { color: #b42318; }
 .admin-wa { display: inline-block; }
 .admin-wa-msg { margin-top: .5rem; font-size: .82rem; font-style: italic; }
+
+/* panel: movimiento de la web */
+.admin-eventos { margin: 1rem 0 1.5rem; max-width: 560px; }
+.admin-eventos .log-table td:not(:first-child), .admin-eventos .log-table th:not(:first-child) { text-align: center; }

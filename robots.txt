@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /hybrid/admin.html
+Disallow: /hybrid/perfil.html
+
+Sitemap: https://elitepreparation.github.io/hybrid/sitemap.xml
