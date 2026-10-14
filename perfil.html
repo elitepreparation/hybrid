@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="styles.css?v=20261013h">
+<link rel="stylesheet" href="styles.css?v=20261014a">
 </head>
 <body>
 <a href="#main" class="skip-link">Saltar al contenido</a>
@@ -176,6 +176,11 @@
         <label>Apto físico<input type="file" name="fotoApto" accept="image/*,.pdf"><small data-file-status="fotoApto" class="pf-file-status"></small></label>
       </div>
 
+      <label class="pf-consent pf-full">
+        <input type="checkbox" name="consentimiento" required>
+        <span><span class="req">*</span> Leí y acepto la <a href="privacidad.html" target="_blank" rel="noopener">política de privacidad</a> y autorizo el tratamiento de mis datos personales, incluidos los de salud, para que me armen mi plan de entrenamiento.</span>
+      </label>
+
       <button type="submit" class="btn btn-primary" data-form-submit style="margin-top:1.5rem;">Guardar y continuar</button>
     </form>
 
@@ -304,6 +309,6 @@
 </footer>
 
 <script defer src="lib/manifest.js?v=20261009a"></script>
-<script defer src="profile.js?v=20261013i"></script>
+<script defer src="profile.js?v=20261014a"></script>
 </body>
 </html>

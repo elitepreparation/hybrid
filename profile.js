@@ -137,7 +137,7 @@
   function marcarObligatorios() {
     $$("[data-profile-form] [required], [data-registro-form] [required]").forEach(function (campo) {
       var label = campo.closest("label");
-      if (!label || label.querySelector(".req")) return;
+      if (!label || label.querySelector(".req") || label.classList.contains("pf-consent")) return;
       var marca = document.createElement("span");
       marca.className = "req";
       marca.setAttribute("aria-hidden", "true");
@@ -308,6 +308,7 @@
       if (field && field.type !== "file") field.value = profile[k];
     });
     if (form.elements.cumple && form.elements.cumple.value) form.elements.cumple.dispatchEvent(new Event("input"));
+    if (form.elements.consentimiento) form.elements.consentimiento.checked = !!(profile && profile.consentimiento);
     ["fotoPerfil", "fotoApto"].forEach(function (campo) {
       var status = $('[data-file-status="' + campo + '"]', form);
       var url = profile && profile[campo + "Url"];
@@ -344,6 +345,8 @@
       ["fotoPerfilUrl", "fotoAptoUrl", "metas"].forEach(function (k) { if (previo[k]) profile[k] = previo[k]; });
       if (fotoPendiente) profile.fotoPerfilUrl = fotoPendiente;
       profile.apodo = ($("[data-apodo]").value || "").trim();
+      if (profile.consentimiento) profile.consentimiento = new Date().toISOString();
+      else if (previo.consentimiento) profile.consentimiento = previo.consentimiento;
       // altura (cm) y peso (kg) se aceptan con coma o punto; una altura como 1,75 se entiende en metros
       var alt = parseFloat(String(profile.altura || "").replace(",", "."));
       if (alt > 0 && alt < 3) alt = alt * 100;
