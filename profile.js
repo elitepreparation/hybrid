@@ -61,6 +61,9 @@
   var KEYS = {
     profile: "complex180_profile", nivel: "complex180_nivel", log: "complex180_log",
     vencimiento: "complex180_vencimiento", email: "complex180_email", clave: "complex180_clave",
+    plan: "complex180_plan", // última planificación recibida de cada nivel (para entrenar sin señal)
+    videos: "complex180_videos", // última lista de videos recibida
+    pend: "complex180_pend", // hay registros sin subir al servidor (se reintenta al volver la señal)
     hist: "complex180_hist", // meses anteriores guardados (copia del servidor)
     reinicio: "complex180_reinicio", // marca que cambia cuando Gaby borra registros desde su panel
     nombreCuenta: "complex180_nombre_cuenta" // el "Nombre" que Lucas cargó en Alumnos - claves,
@@ -197,8 +200,26 @@
     var body = new URLSearchParams({ action: "guardarDatos", email: email, clave: clave });
     if (datos.perfil) body.set("perfil", JSON.stringify(datos.perfil));
     if (datos.registros) body.set("registros", JSON.stringify(datos.registros));
-    fetch(API_URL, { method: "POST", body: body }).catch(function () { /* sin conexión: queda solo local por ahora */ });
+    fetch(API_URL, { method: "POST", body: body })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { if (datos.registros) { if (d && d.ok) localStorage.removeItem(KEYS.pend); else localStorage.setItem(KEYS.pend, "1"); } })
+      .catch(function () { if (datos.registros) localStorage.setItem(KEYS.pend, "1"); /* sin conexión: queda en el celular y se sube después */ });
   }
+  // al volver la señal (o al abrir la web) se suben los registros que quedaron en el celular
+  function sincronizarPendiente() {
+    if (!localStorage.getItem(KEYS.pend) || navigator.onLine === false) return;
+    guardarEnServidor({ registros: getJSON(KEYS.log) || {} });
+  }
+
+  // aviso fijo cuando no hay conexión
+  function initOffline() {
+    var el = $("[data-offline]");
+    function act() { if (el) el.hidden = navigator.onLine !== false; }
+    window.addEventListener("online", function () { act(); sincronizarPendiente(); });
+    window.addEventListener("offline", act);
+    act();
+  }
+
   var guardarRegistrosServidor = debounce(function (log) { guardarEnServidor({ registros: log }); }, 900);
 
   var TAMANIO_MAX_ARCHIVO = 8 * 1024 * 1024; // 8MB — límite razonable para foto/apto físico
@@ -442,12 +463,78 @@
       hechos + (hechos === 1 ? ' día hecho' : ' días hechos') + '</span></summary>' + cuerpo + '</details>';
   }
 
+  // ---- Récords personales: la mejor marca por ejercicio (más kilos; a igualdad, más repeticiones) ----
+  function numero(v) { var n = parseFloat(String(v == null ? "" : v).replace(",", ".")); return isFinite(n) ? n : 0; }
+
+  // series de un registro: las cargadas en cuadritos o, en los meses archivados, las que se leen del resumen "S1 15 x 10kg"
+  function seriesDeEntrada(v) {
+    if (v && Array.isArray(v.sets)) return v.sets.map(function (s) { return { r: numero(s.r), k: numero(s.k) }; });
+    var out = [], re = /S\d+\s+([\d.,]+|\?)\s*(?:x|-)\s*([\d.,]+)\s*kg/gi, m;
+    while (v && v.hechoTxt && (m = re.exec(v.hechoTxt))) out.push({ r: numero(m[1]), k: numero(m[2]) });
+    return out;
+  }
+
+  // todas las marcas guardadas: del mes en curso y de los meses archivados
+  function marcasTodas(excluirKey) {
+    var marcas = [];
+    function recorrer(registro, etiqueta) {
+      Object.keys(registro || {}).forEach(function (k) {
+        if (k.charAt(0) === "_" || k.indexOf("hecho|") === 0 || k === excluirKey) return;
+        var p = k.split("|");
+        var ej = p.slice(2).join("|");
+        var dia = (registro["hecho|" + p[0] + "|" + p[1]] || {});
+        seriesDeEntrada(registro[k]).forEach(function (s) {
+          if (s.k > 0) marcas.push({ ej: ej, kg: s.k, reps: s.r, cuando: dia.f ? fechaCorta(dia.f) : etiqueta });
+        });
+      });
+    }
+    var log = getJSON(KEYS.log) || {};
+    recorrer(log, etiquetaMes(log._mes || mesClave()));
+    var hist = getJSON(KEYS.hist) || {};
+    Object.keys(hist).forEach(function (m) { recorrer(hist[m], etiquetaMes(m)); });
+    return marcas;
+  }
+
+  function mejorMarca(lista) {
+    return lista.reduce(function (b, m) { return !b || m.kg > b.kg || (m.kg === b.kg && m.reps > b.reps) ? m : b; }, null);
+  }
+
+  function recordsHTML() {
+    var porEj = {};
+    marcasTodas().forEach(function (m) { (porEj[m.ej.toLowerCase()] = porEj[m.ej.toLowerCase()] || []).push(m); });
+    var mejores = Object.keys(porEj).map(function (k) { return mejorMarca(porEj[k]); })
+      .sort(function (a, b) { return a.ej.localeCompare(b.ej); });
+    if (!mejores.length) return '<section class="hist-records"><p class="hist-records-t">🏆 Récords personales</p><p class="hist-vacio">Cuando anotes kilos en tus ejercicios, acá aparece tu mejor marca de cada uno.</p></section>';
+    return '<section class="hist-records"><p class="hist-records-t">🏆 Récords personales</p><ul class="hist-records-l">' + mejores.map(function (m) {
+      return '<li><span class="hr-ej">' + escHtml(m.ej) + '</span><b>' + escHtml(String(m.kg).replace(".", ",")) + ' kg' + (m.reps ? ' × ' + m.reps : '') + '</b><em>' + escHtml(m.cuando) + '</em></li>';
+    }).join("") + '</ul></section>';
+  }
+
+  // aviso cuando se supera la mejor marca anterior de un ejercicio
+  var ultimoRecord = {};
+  function avisarRecord(key, fila) {
+    var kg = numero(fila.querySelector("[data-set-k]").value), reps = numero(fila.querySelector("[data-set-r]").value);
+    if (!(kg > 0) || !(reps > 0)) return;
+    var ej = key.split("|").slice(2).join("|");
+    var previas = marcasTodas(key).filter(function (m) { return m.ej.toLowerCase() === ej.toLowerCase(); });
+    var previo = mejorMarca(previas);
+    var otrasSeries = Array.from(document.querySelectorAll('[data-sets][data-k="' + key.replace(/"/g, '\\"') + '"] [data-set-row]')).map(function (r) { return numero(r.querySelector("[data-set-k]").value); });
+    if (!previo || kg <= previo.kg || kg < Math.max.apply(null, otrasSeries) || ultimoRecord[key] === kg) return;
+    ultimoRecord[key] = kg;
+    var t = document.createElement("div");
+    t.className = "toast-record";
+    t.setAttribute("role", "status");
+    t.innerHTML = '🏆 <b>¡Nuevo récord!</b> ' + escHtml(ej) + ': ' + escHtml(String(kg).replace(".", ",")) + ' kg <small>(antes ' + escHtml(String(previo.kg).replace(".", ",")) + ' kg)</small>';
+    document.body.appendChild(t);
+    setTimeout(function () { t.classList.add("is-fuera"); setTimeout(function () { t.remove(); }, 400); }, 4200);
+  }
+
   function renderHistorial() {
     var cont = $("[data-historial-lista]");
     if (!cont) return;
     var log = getJSON(KEYS.log) || {};
     var hist = getJSON(KEYS.hist) || {};
-    var html = historialMesHTML(log._mes || mesClave(), log, true);
+    var html = recordsHTML() + historialMesHTML(log._mes || mesClave(), log, true);
     Object.keys(hist).sort().reverse().forEach(function (m) { html += historialMesHTML(m, hist[m], false); });
     if (!Object.keys(hist).length) html += '<p class="hist-nota">Acá se van a ir guardando tus meses anteriores.</p>';
     cont.innerHTML = html;
@@ -758,6 +845,12 @@
       if (limpio !== inp.value) inp.value = limpio;
       guardarSets(inp.closest("[data-sets]"));
     });
+    panel.addEventListener("change", function (e) {
+      var inp = e.target.closest(".set-in");
+      if (!inp) return;
+      var caja = inp.closest("[data-sets]");
+      avisarRecord(caja.dataset.k, inp.closest("[data-set-row]"));
+    });
     panel.addEventListener("click", function (e) {
       var add = e.target.closest("[data-set-add]");
       if (add) {
@@ -971,8 +1064,8 @@
     modal.addEventListener("mousedown", function (e) { if (e.target === modal) closeVideo(); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeVideo(); });
 
-    fetch(API_URL + "?action=videos").then(function (r) { return r.json(); }).then(function (data) {
-      if (data.ok && data.videos.length) {
+    function usarVideos(data) {
+      if (data && data.ok && data.videos && data.videos.length) {
         // las carpetas de Drive pueden terminar en " CX" (ej. "Movilidad CX"): se muestran sin ese sufijo
         var limpiar = function (n) { return String(n || "").replace(/\s+CX\s*$/i, "").trim(); };
         videosCache = data.videos.map(function (v) {
@@ -986,7 +1079,11 @@
         renderVideoList($("[data-video-search]").value);
         renderQuickVideos();
       }
-    }).catch(function () { /* sin conexión: se queda con la lista de muestra */ });
+    }
+    fetch(API_URL + "?action=videos").then(function (r) { return r.json(); }).then(function (data) {
+      if (data && data.ok) { try { setJSON(KEYS.videos, data); } catch (err) {} }
+      usarVideos(data);
+    }).catch(function () { usarVideos(getJSON(KEYS.videos)); /* sin conexión: última lista guardada, o la de muestra */ });
   }
 
   // ---- Acceso rápido: buscar un video por nombre sin salir de la planificación ----
@@ -1049,8 +1146,7 @@
     // Plan Personalizado: cada alumno tiene su propia hoja en la planilla, buscada por el
     // nombre que Lucas cargó (no hay "mes" ni "OPEN/PRO" acá)
     if (nivel === "PERSONALIZADO") url += "&nombre=" + encodeURIComponent(localStorage.getItem(KEYS.nombreCuenta) || "");
-    fetch(url).then(function (r) { return r.json(); }).then(function (data) {
-      if (!data.ok) return;
+    function aplicar(data) {
       renderPlanArchivo(nivel, data.archivos, data.mes);
       var hayPdf = renderPlanPdf(data.archivos);
       if (data.semanas && data.semanas.length) {
@@ -1065,7 +1161,19 @@
         var monthly = document.querySelector(".monthly-card");
         if (monthly) monthly.hidden = true;
       }
-    }).catch(function () { var box = $("[data-plan-archivo]"); if (box) box.hidden = true; });
+    }
+    fetch(url).then(function (r) { return r.json(); }).then(function (data) {
+      if (!data || !data.ok) throw new Error("plan");
+      // se guarda la última planificación recibida para poder entrenar sin señal
+      var guardados = getJSON(KEYS.plan) || {};
+      guardados[nivel] = data;
+      try { setJSON(KEYS.plan, guardados); } catch (err) {}
+      aplicar(data);
+    }).catch(function () {
+      var copia = (getJSON(KEYS.plan) || {})[nivel];
+      if (copia) aplicar(copia);
+      else { var box = $("[data-plan-archivo]"); if (box) box.hidden = true; }
+    });
   }
 
   // ---- Dashboard: cada alumno tiene UN plan (OPEN, PRO o PERSONALIZADO) y solo ve ese ----
@@ -1476,6 +1584,8 @@
     initQuickVideos();
     initAvatar();
     initRegistro();
+    initOffline();
+    sincronizarPendiente();
     marcarObligatorios();
     initApodo();
     initObjetivos();
