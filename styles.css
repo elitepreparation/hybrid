@@ -1080,3 +1080,11 @@ ul { list-style: none; }
 
 /* referencia de la última vez en cada ejercicio */
 .set-prev { font-family: var(--mono); font-size: .7rem; color: var(--accent); line-height: 1.35; margin-bottom: .1rem; }
+
+/* panel: estadísticas que filtran y botón de WhatsApp */
+.admin-stat--btn { cursor: pointer; text-align: left; font: inherit; color: inherit; background: var(--bg); border: 2px solid var(--ink); }
+.admin-stat--btn:hover { border-color: var(--accent); }
+.admin-stat--btn.is-alerta { border-color: #b42318; }
+.admin-stat--btn.is-alerta b { color: #b42318; }
+.admin-wa { display: inline-block; }
+.admin-wa-msg { margin-top: .5rem; font-size: .82rem; font-style: italic; }

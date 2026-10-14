@@ -141,15 +141,20 @@
     var activos = alumnos.filter(function (a) { return diasSinEntrar(a) <= 7; }).length;
     var vencen = alumnos.filter(function (a) { var d = diasHastaVencer(a); return d >= 0 && d <= 7; }).length;
     var nunca = alumnos.filter(function (a) { return !a.ultimoIngreso; }).length;
+    var inactivos = alumnos.filter(function (a) { return diasSinEntrar(a) > 7 && a.vencimiento; }).length;
     var items = [
-      ["Alumnos", alumnos.length],
-      ["Entraron en 7 días", activos],
-      ["Vencen en 7 días", vencen],
-      ["Por activar", alumnos.filter(function (a) { return !a.vencimiento; }).length],
-      ["Nunca entraron", nunca]
+      ["Alumnos", alumnos.length, ""],
+      ["Entraron en 7 días", activos, ""],
+      ["Vencen en 7 días", vencen, "vencen"],
+      ["Sin entrar hace +7 días", inactivos, "inactivos"],
+      ["Por activar", alumnos.filter(function (a) { return !a.vencimiento; }).length, "pendientes"],
+      ["Nunca entraron", nunca, ""]
     ];
     $("[data-admin-stats]").innerHTML = items.map(function (it) {
-      return '<div class="admin-stat"><b>' + it[1] + '</b><span>' + it[0] + '</span></div>';
+      var alerta = it[2] && it[1] > 0 ? " is-alerta" : "";
+      return it[2]
+        ? '<button type="button" class="admin-stat admin-stat--btn' + alerta + '" data-stat-filtro="' + it[2] + '"><b>' + it[1] + '</b><span>' + it[0] + '</span></button>'
+        : '<div class="admin-stat"><b>' + it[1] + '</b><span>' + it[0] + '</span></div>';
     }).join("");
   }
 
@@ -176,7 +181,7 @@
       : '<li class="admin-muted">Todavía no marcó ningún día como hecho.</li>';
     var perfil = a.perfil || {};
     var datos = [
-      ["Mail", a.email], ["Apto físico", perfil.fotoAptoUrl ? "✓ Subido" : "✗ Todavía no lo subió"], ["Plan que le interesa", perfil.planInteres], ["Fecha de nacimiento", fechaLarga(perfil.cumple)], ["Se registró el", perfil.registrado ? fmtDia(perfil.registrado) : ""], ["Ciudad", perfil.ciudad], ["WhatsApp", perfil.whatsapp], ["Objetivos", perfil.objetivos], ["Lesiones", perfil.historialLesiones], ["Patologías", perfil.patologias], ["Instagram", perfil.instagram], ["Pagó el", fmtDia(a.fechaPago)]
+      ["Mail", a.email], ["Apto físico", perfil.fotoAptoUrl ? "✓ Subido" : "✗ Todavía no lo subió"], ["Aceptó la privacidad", perfil.consentimiento ? fmtDia(perfil.consentimiento) : "Todavía no"], ["Plan que le interesa", perfil.planInteres], ["Fecha de nacimiento", fechaLarga(perfil.cumple)], ["Se registró el", perfil.registrado ? fmtDia(perfil.registrado) : ""], ["Ciudad", perfil.ciudad], ["WhatsApp", perfil.whatsapp], ["Objetivos", perfil.objetivos], ["Lesiones", perfil.historialLesiones], ["Patologías", perfil.patologias], ["Instagram", perfil.instagram], ["Pagó el", fmtDia(a.fechaPago)]
     ].filter(function (d) { return d[1]; }).map(function (d) { return '<li><b>' + esc(d[0]) + ':</b> ' + esc(d[1]) + '</li>'; }).join("");
     var fotos = [];
     if (perfil.fotoPerfilUrl) fotos.push('<a href="' + esc(perfil.fotoPerfilUrl) + '" target="_blank" rel="noopener">Foto de perfil</a>');
@@ -199,6 +204,7 @@
       : '<p class="admin-muted">Todavía no hay meses anteriores guardados.</p>';
 
     return '<div class="admin-detail">' +
+      '<div class="admin-detail-wide">' + btnWhatsapp(a) + '</div>' +
       '<div><p class="admin-sub">Días hechos (mes en curso)</p><ul>' + hechos + '</ul></div>' +
       '<div><p class="admin-sub">Datos</p><ul>' + datos + '</ul>' + (fotos.length ? '<p>' + fotos.join(" · ") + '</p>' : '') + '</div>' +
       '<div class="admin-detail-wide"><p class="admin-sub">Objetivos del alumno</p>' + metasHtml + '</div>' +
@@ -206,6 +212,33 @@
       '<div class="admin-detail-wide"><p class="admin-sub">Historial de meses anteriores</p>' + historial + '</div>' +
       '<div class="admin-detail-wide admin-danger"><p class="admin-muted">Los registros se guardan hasta que los borres vos.</p>' +
         btnBorrar(a.email, "todo", "Borrar TODOS los registros de este alumno") + '</div></div>';
+  }
+
+  // número de WhatsApp para wa.me (si no trae código de país se asume Argentina: 54 9)
+  function numeroWA(n) {
+    var d = String(n || "").replace(/\D/g, "").replace(/^0+/, "");
+    if (!d) return "";
+    if (!/^54/.test(d)) d = "549" + d.replace(/^(\d{2,4})15/, "$1");
+    return d;
+  }
+
+  // mensaje según la situación: sin activar, vencido, por vencer, inactivo o seguimiento
+  function mensajeAlumno(a) {
+    var nom = String(a.nombre || (a.perfil && a.perfil.nombre) || "").split(" ")[0] || "";
+    var hola = "Hola" + (nom ? " " + nom : "") + ", soy Gaby de Elite Preparation. ";
+    var d = diasHastaVencer(a);
+    if (!a.vencimiento) return hola + "Vi que te registraste. Para darte el alta necesito el comprobante de pago. ¿Me lo enviás?";
+    if (d < 0) return hola + "Tu plan venció el " + fmtDia(a.vencimiento) + ". ¿Querés renovarlo para seguir entrenando?";
+    if (d <= 7) return hola + "Te recuerdo que tu plan vence el " + fmtDia(a.vencimiento) + ". ¿Lo renovamos?";
+    if (diasSinEntrar(a) > 7) return hola + "Hace " + (isFinite(diasSinEntrar(a)) ? Math.floor(diasSinEntrar(a)) + " días" : "un tiempo") + " que no entrás a tu planificación. ¿Cómo venís? Si necesitás ajustar algo, avisame.";
+    return hola + "¿Cómo venís con el entrenamiento?";
+  }
+
+  function btnWhatsapp(a) {
+    var num = numeroWA(a.perfil && a.perfil.whatsapp);
+    if (!num) return '<p class="admin-muted">Este alumno no cargó su WhatsApp.</p>';
+    return '<a class="btn btn-accent admin-wa" href="https://wa.me/' + num + '?text=' + encodeURIComponent(mensajeAlumno(a)) + '" target="_blank" rel="noopener">Escribirle por WhatsApp</a>' +
+      '<p class="admin-muted admin-wa-msg">' + esc(mensajeAlumno(a)) + '</p>';
   }
 
   function filaHTML(a) {
@@ -226,6 +259,14 @@
         '<span class="admin-cell"><em>Plan</em><b class="admin-venc ' + v.cls + '">' + esc(v.txt) + '</b></span>' +
       '</button>' + (abre ? detalleHTML(a) : '') + '</article>';
   }
+
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-stat-filtro]");
+    if (!b) return;
+    var sel = $("[data-admin-filter]");
+    sel.value = sel.value === b.dataset.statFiltro ? "todos" : b.dataset.statFiltro;
+    render();
+  });
 
   function render() {
     renderStats();
