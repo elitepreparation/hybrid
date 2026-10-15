@@ -1113,3 +1113,8 @@ ul { list-style: none; }
 /* el asterisco de obligatorio queda en la misma línea que la pregunta */
 .lbl-t { display: block; }
 .lbl-t .req { display: inline; margin: 0; }
+
+/* consentimiento: la casilla va a la izquierda y el texto al lado, en la misma fila */
+.profile-form label.pf-consent { flex-direction: row; align-items: flex-start; gap: .75rem; font-weight: 500; }
+.profile-form label.pf-consent input[type="checkbox"] { flex: none; width: 1.15rem; height: 1.15rem; margin: .1rem 0 0; padding: 0; }
+.profile-form label.pf-consent > span { flex: 1; }
