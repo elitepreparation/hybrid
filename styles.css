@@ -1109,3 +1109,7 @@ ul { list-style: none; }
 .toast-record small { color: #8fb4ff; }
 .toast-record.is-fuera { opacity: 0; transform: translate(-50%, -12px); }
 @media (max-width: 640px) { .hist-records-l li { grid-template-columns: minmax(0, 1fr) auto; } .hist-records-l em { grid-column: 1 / -1; } }
+
+/* el asterisco de obligatorio queda en la misma línea que la pregunta */
+.lbl-t { display: block; }
+.lbl-t .req { display: inline; margin: 0; }

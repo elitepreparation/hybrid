@@ -145,7 +145,13 @@
       marca.className = "req";
       marca.setAttribute("aria-hidden", "true");
       marca.textContent = " *";
-      label.insertBefore(marca, campo);
+      // el texto de la pregunta y el asterisco van juntos en una sola línea (la etiqueta es una columna)
+      var titulo = document.createElement("span");
+      titulo.className = "lbl-t";
+      var nodo = label.firstChild;
+      while (nodo && nodo !== campo) { var sig = nodo.nextSibling; titulo.appendChild(nodo); nodo = sig; }
+      titulo.appendChild(marca);
+      label.insertBefore(titulo, campo);
     });
   }
 
