@@ -15,7 +15,6 @@ function doGet(e) {
       var nivelPedido = String(e.parameter.nivel || "OPEN").toUpperCase();
       out = (nivelPedido === "PERSONALIZADO") ? getPlanPersonalizado(e.parameter.nombre) : getPlan(nivelPedido);
     }
-    else if (action === "login") out = getAlumnoLogin(e.parameter.email, e.parameter.clave);
     else if (action === "stats") out = getStatsPublicas();
     else if (action === "evento") out = registrarEvento(e.parameter.e);
     else out = { ok: false, error: "accion desconocida" };
