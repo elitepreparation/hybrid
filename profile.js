@@ -155,6 +155,17 @@
     });
   }
 
+  // dentro de la app, "Volver al inicio" y la marca de arriba llevan a la planificación (no a la página de presentación)
+  function initVolverInicio() {
+    $$(".nav-home, .nav-brand").forEach(function (a) {
+      a.addEventListener("click", function (e) {
+        if (!getJSON(KEYS.profile) || !vigente()) return; // sin sesión: sigue el link normal al inicio
+        e.preventDefault();
+        irA("plan");
+      });
+    });
+  }
+
   function initRegistro() {
     $$("[data-ir-registro]").forEach(function (b) { b.addEventListener("click", function () { try { new Image().src = API_URL + "?action=evento&e=unirme&_=" + Date.now(); } catch (err) {} showView("view-registro"); window.scrollTo(0, 0); }); });
     $$("[data-ir-login]").forEach(function (b) { b.addEventListener("click", function () { showView("view-clave"); window.scrollTo(0, 0); }); });
@@ -1590,6 +1601,7 @@
     initQuickVideos();
     initAvatar();
     initRegistro();
+    initVolverInicio();
     initOffline();
     sincronizarPendiente();
     marcarObligatorios();
