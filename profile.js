@@ -589,11 +589,6 @@
     document.addEventListener("click", function (e) { if (!e.target.closest("[data-planilla]")) cerrarMenuPlanilla(); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") cerrarMenuPlanilla(); });
 
-    $("[data-toggle-monthly]").addEventListener("click", function (e) {
-      var box = $("[data-monthly-view]");
-      box.hidden = !box.hidden;
-      e.target.textContent = box.hidden ? "Ver planificación mensual" : "Ocultar planificación mensual";
-    });
     $("[data-logout]").addEventListener("click", cerrarSesion);
     $$("[data-volver]").forEach(function (b) { b.addEventListener("click", function () { irA("plan"); }); });
     window.addEventListener("popstate", function () {
@@ -666,12 +661,9 @@
       var hechos = dias.length - dias.filter(function (d) { return !diaHecho(log, hoy, d.dia); }).length;
       $("[data-hoy-titulo]").textContent = pendiente.dia + (pendiente.foco ? " · " + pendiente.foco : "");
       $("[data-hoy-meta]").textContent = pendiente.ejercicios.length + (pendiente.ejercicios.length === 1 ? " ejercicio" : " ejercicios") + " · " + hechos + " de " + dias.length + " días hechos esta semana";
-      $("[data-hoy-ir]").hidden = false;
-      $("[data-hoy-ir]").dataset.dia = pendiente.dia;
     } else {
       $("[data-hoy-titulo]").textContent = "¡Semana completa!";
       $("[data-hoy-meta]").textContent = "Hiciste los " + dias.length + " días de esta semana. Descansá y a seguir con la próxima.";
-      $("[data-hoy-ir]").hidden = true;
     }
   }
 
@@ -828,15 +820,6 @@
 
   function initPlanNav() {
     var panel = $("[data-week-panel]");
-    var hoyBtn = $("[data-hoy-ir]");
-    if (hoyBtn) hoyBtn.addEventListener("click", function () {
-      var nv = getJSON(KEYS.nivel) || "OPEN";
-      vista.semana = semanaActual();
-      vista.dia = hoyBtn.dataset.dia;
-      renderWeekly(nv);
-      var det = $("[data-week-dias]");
-      if (det) det.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
     // "Lo que hice" y tilde por ejercicio: se guardan en el mismo registro del alumno
     function guardarEjercicio(k, campos) {
       var log = getJSON(KEYS.log) || {};
@@ -1452,8 +1435,6 @@
     renderObjetivos();
     renderWeekly(nivel);
     renderMonthly(nivel);
-    $("[data-monthly-view]").hidden = true;
-    $("[data-toggle-monthly]").textContent = "Ver planificación mensual";
     fetchPlan(nivel);
   }
 
