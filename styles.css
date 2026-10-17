@@ -1123,3 +1123,10 @@ ul { list-style: none; }
 .monthly-head { margin-top: 2.5rem; padding-top: 1.25rem; border-top: 2px solid var(--ink); }
 .monthly-head strong { font-family: var(--display); text-transform: uppercase; font-size: 1.3rem; letter-spacing: .03em; }
 .monthly-head p { color: var(--mute); font-size: .85rem; margin-top: .25rem; }
+
+/* series: una sola fila si todas fueron iguales; el mínimo de cuadros y de texto */
+.set-row--unica { grid-template-columns: minmax(0, 1fr) .9rem minmax(0, 1fr); }
+.set-igual { display: inline-flex; align-items: center; gap: .4rem; font-family: var(--mono); font-size: .7rem; color: var(--ink-soft); cursor: pointer; width: fit-content; }
+.set-igual input { width: 1rem; height: 1rem; accent-color: var(--accent); margin: 0; }
+.ex-sets-box .set-add { padding: .3rem .5rem; font-size: .68rem; }
+.set-prev { display: none; }

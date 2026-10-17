@@ -676,13 +676,13 @@
   }
 
   // ---- "Lo que hice": un cuadrito para repeticiones y otro para kilos por cada serie, con botón para sumar series ----
-  function setRowHTML(n, s, quitable, prev) {
+  function setRowHTML(n, s, quitable, prev, unica) {
     s = s || {};
     prev = prev || {};
-    return '<div class="set-row" data-set-row><span class="set-n">S' + n + '</span>' +
-      '<input type="text" inputmode="decimal" maxlength="5" class="set-in" data-set-r placeholder="' + attr(prev.r || "reps") + '" aria-label="Repeticiones de la serie ' + n + '" value="' + attr(s.r || "") + '">' +
+    return '<div class="set-row' + (unica ? ' set-row--unica' : '') + '" data-set-row>' + (unica ? '' : '<span class="set-n">' + n + '</span>') +
+      '<input type="text" inputmode="decimal" maxlength="5" class="set-in" data-set-r placeholder="' + attr(prev.r || "reps") + '" aria-label="Repeticiones' + (unica ? '' : ' de la serie ' + n) + '" value="' + attr(s.r || "") + '">' +
       '<span class="set-x" aria-hidden="true">-</span>' +
-      '<input type="text" inputmode="decimal" maxlength="5" class="set-in" data-set-k placeholder="' + attr(prev.k || "kg") + '" aria-label="Kilos de la serie ' + n + '" value="' + attr(s.k || "") + '">' +
+      '<input type="text" inputmode="decimal" maxlength="5" class="set-in" data-set-k placeholder="' + attr(prev.k || "kg") + '" aria-label="Kilos' + (unica ? '' : ' de la serie ' + n) + '" value="' + attr(s.k || "") + '">' +
       (quitable ? '<button type="button" class="set-del" data-set-del aria-label="Quitar la serie ' + n + '">&times;</button>' : '') + '</div>';
   }
 
@@ -714,17 +714,27 @@
     return p.hechoTxt || "";
   }
 
+  // Si todas las series fueron iguales se carga una sola fila (reps y kilos); si no, una fila por serie.
+  function setsInterior(iguales, sets, plan, n, psets) {
+    var html = "";
+    if (iguales) {
+      html += setRowHTML(1, sets && sets[0], false, psets[0], true);
+    } else {
+      for (var i = 0; i < n; i++) html += setRowHTML(i + 1, sets ? sets[i] : null, i >= plan, psets[i], false);
+      html += '<button type="button" class="set-add" data-set-add>+ serie</button>';
+    }
+    if (n > 1) html += '<label class="set-igual"><input type="checkbox" data-set-igual' + (iguales ? ' checked' : '') + '><span>Todas iguales</span></label>';
+    return html;
+  }
+
   function setsHTML(key, ej, saved, previo) {
     var guardadas = Array.isArray(saved.sets) && saved.sets.length ? saved.sets : null;
     var plan = Math.max(1, Math.min(10, Number(ej.series) || 1));
     var n = guardadas ? guardadas.length : plan;
-    var filas = "";
-    var psets = previo && Array.isArray(previo.sets) ? previo.sets : [];
-    for (var i = 0; i < n; i++) filas += setRowHTML(i + 1, guardadas ? guardadas[i] : null, i >= plan, psets[i]);
-    var ult = resumenPrevio(previo);
-    var capt = ult ? '<p class="set-prev">Última vez: ' + escHtml(ult) + '</p>' : '';
-    return '<div class="ex-sets-box" data-sets data-k="' + attr(key) + '" data-plan="' + plan + '">' + capt + filas +
-      '<button type="button" class="set-add" data-set-add>+ Agregar serie</button></div>';
+    var iguales = n > 1 && (!guardadas || guardadas.every(function (s) { return s.r === guardadas[0].r && s.k === guardadas[0].k; }));
+    var psets = previo && Array.isArray(previo.sets) ? previo.sets.slice(0, 10) : [];
+    return '<div class="ex-sets-box" data-sets data-k="' + attr(key) + '" data-plan="' + plan + '" data-n="' + n + '" data-prev="' + attr(JSON.stringify(psets)) + '">' +
+      setsInterior(iguales, guardadas, plan, n, psets) + '</div>';
   }
 
   function diaDetalleHTML(semana, dia, log) {
@@ -828,15 +838,43 @@
       setJSON(KEYS.log, log);
       guardarRegistrosServidor(log);
     }
-    function guardarSets(box) {
-      var sets = $$("[data-set-row]", box).map(function (row) {
+    function esIgual(box) { var c = box.querySelector("[data-set-igual]"); return !!(c && c.checked); }
+    function leerFilas(box) {
+      return $$("[data-set-row]", box).map(function (row) {
         return { r: (row.querySelector("[data-set-r]").value || "").trim(), k: (row.querySelector("[data-set-k]").value || "").trim() };
       });
+    }
+    function guardarSets(box) {
+      var filas = leerFilas(box), sets;
+      if (esIgual(box)) {
+        var n = Number(box.dataset.n) || 1;
+        sets = [];
+        for (var i = 0; i < n; i++) sets.push({ r: filas[0].r, k: filas[0].k });
+      } else {
+        sets = filas;
+        box.dataset.n = String(sets.length);
+      }
       var resumen = sets.map(function (s, i) {
         if (!s.r && !s.k) return "";
         return "S" + (i + 1) + " " + (s.r || "?") + (s.k ? " x " + s.k + "kg" : "");
       }).filter(Boolean).join(" · ");
       guardarEjercicio(box.dataset.k, { sets: sets, hechoTxt: resumen });
+    }
+    // cambia entre "todas iguales" (una fila) y "una fila por serie"
+    function cambiarModo(box, iguales) {
+      var filas = leerFilas(box);
+      var plan = Number(box.dataset.plan) || 1, n = Number(box.dataset.n) || filas.length;
+      var psets = []; try { psets = JSON.parse(box.dataset.prev || "[]"); } catch (err) {}
+      if (iguales) {
+        var difieren = filas.some(function (s) { return s.r !== filas[0].r || s.k !== filas[0].k; });
+        if (difieren && !confirm("Se va a copiar la serie 1 a todas las demás. ¿Seguir?")) { box.querySelector("[data-set-igual]").checked = false; return; }
+        n = filas.length;
+      }
+      var sets = [];
+      for (var i = 0; i < n; i++) sets.push({ r: filas[0].r, k: filas[0].k });
+      box.dataset.n = String(n);
+      box.innerHTML = setsInterior(iguales, sets, plan, n, psets);
+      guardarSets(box);
     }
     panel.addEventListener("input", function (e) {
       var inp = e.target.closest(".set-in");
@@ -846,6 +884,8 @@
       guardarSets(inp.closest("[data-sets]"));
     });
     panel.addEventListener("change", function (e) {
+      var ig = e.target.closest("[data-set-igual]");
+      if (ig) { cambiarModo(ig.closest("[data-sets]"), ig.checked); return; }
       var inp = e.target.closest(".set-in");
       if (!inp) return;
       var caja = inp.closest("[data-sets]");
@@ -856,7 +896,8 @@
       if (add) {
         var box = add.closest("[data-sets]");
         var n = $$("[data-set-row]", box).length;
-        add.insertAdjacentHTML("beforebegin", setRowHTML(n + 1, null, true));
+        var psets = []; try { psets = JSON.parse(box.dataset.prev || "[]"); } catch (err) {}
+        add.insertAdjacentHTML("beforebegin", setRowHTML(n + 1, null, true, psets[n], false));
         var ult = $$("[data-set-r]", box).pop();
         if (ult) ult.focus();
         guardarSets(box);
@@ -866,7 +907,7 @@
       if (del) {
         var caja = del.closest("[data-sets]");
         del.closest("[data-set-row]").remove();
-        $$("[data-set-row]", caja).forEach(function (row, i) { var nn = row.querySelector(".set-n"); if (nn) nn.textContent = "S" + (i + 1); });
+        $$("[data-set-row]", caja).forEach(function (row, i) { var nn = row.querySelector(".set-n"); if (nn) nn.textContent = String(i + 1); });
         guardarSets(caja);
       }
     });
