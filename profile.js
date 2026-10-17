@@ -750,7 +750,7 @@
         '<span class="ex-name">' + ej.nombre +
           (id ? ' <button type="button" class="ex-video" data-play-id="' + id + '" data-play-nombre="' + attr(ej.nombre) + '">▶ Técnica</button>' : '') +
         '</span>' +
-        '<span class="ex-plan" data-label="Realizar"><span class="ex-sr"><span><b>' + ej.series + '</b> series</span><span><b>' + ej.reps + '</b> reps</span></span>' + (ej.carga ? '<span class="ex-carga"><b>' + ej.carga + '</b></span>' : '') + '</span>' +
+        '<span class="ex-plan" data-label="Realizar"><span class="ex-sr"><span><b>' + ej.series + '</b> series</span><span><b>' + ej.reps + '</b> reps</span></span>' + (ej.carga ? '<span class="ex-carga"><b>' + ej.carga + '</b></span>' : '') + (ej.descanso ? '<span class="ex-desc">Descanso ' + escHtml(ej.descanso) + '</span>' : '') + '</span>' +
         setsHTML(key, ej, saved, previoEjercicio(semana, dia.dia, ej.nombre, log)) +
         '</li>';
     }

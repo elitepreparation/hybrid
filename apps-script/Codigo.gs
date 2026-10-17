@@ -154,13 +154,14 @@ function parsePlanificacion(hoja) {
   var values = hoja.getDataRange().getValues();
   var semanas = [], porSemana = {};
   // columnas opcionales a partir de la G, según el título de la fila 1: "Bloque" y "Cargas"/"Peso"
-  var colBloque = -1, colCarga = -1;
+  var colBloque = -1, colCarga = -1, colDesc = -1;
   (values[0] || []).forEach(function (t, c) {
     var n = String(t || "").trim().toLowerCase();
     if (c >= 6 && n === "bloque") colBloque = c;
     else if (c >= 6 && /^(carga|cargas|peso|pesos|kg)$/.test(n)) colCarga = c;
+    else if (c >= 6 && /^(descanso|descansos|pausa|pausas|rest)$/.test(n)) colDesc = c;
   });
-  if (colBloque < 0 && colCarga < 0) colBloque = 6; // sin títulos reconocidos: la G es el bloque, como antes
+  if (colBloque < 0 && colCarga < 0 && colDesc < 0) colBloque = 6; // sin títulos reconocidos: la G es el bloque, como antes
   var ultSem = 0, ultDia = "";
   for (var i = 1; i < values.length; i++) {
     var r = values[i];
@@ -184,6 +185,8 @@ function parsePlanificacion(hoja) {
     if (bloque) ult.bloque = bloque;
     var carga = colCarga >= 0 ? String(r[colCarga] || "").trim() : ""; // opcional: "Cargas" (ej. 80kg)
     if (carga) ult.carga = carga;
+    var desc = colDesc >= 0 ? String(r[colDesc] || "").trim() : ""; // opcional: "Descanso" estimado (ej. 90s, 2 min)
+    if (desc) ult.descanso = /^\d+$/.test(desc) ? desc + " s" : desc;
   }
   semanas.forEach(function (s) { delete s.porDia; });
   return semanas;
