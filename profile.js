@@ -731,7 +731,8 @@
     var guardadas = Array.isArray(saved.sets) && saved.sets.length ? saved.sets : null;
     var plan = Math.max(1, Math.min(10, Number(ej.series) || 1));
     var n = guardadas ? guardadas.length : plan;
-    var iguales = n > 1 && (!guardadas || guardadas.every(function (s) { return s.r === guardadas[0].r && s.k === guardadas[0].k; }));
+    // "Todas iguales" nunca viene tildada de entrada: solo queda así si el alumno la eligió (y sigue siendo cierto)
+    var iguales = n > 1 && !!saved.igual && !!guardadas && guardadas.every(function (s) { return s.r === guardadas[0].r && s.k === guardadas[0].k; });
     var psets = previo && Array.isArray(previo.sets) ? previo.sets.slice(0, 10) : [];
     return '<div class="ex-sets-box" data-sets data-k="' + attr(key) + '" data-plan="' + plan + '" data-n="' + n + '" data-prev="' + attr(JSON.stringify(psets)) + '">' +
       setsInterior(iguales, guardadas, plan, n, psets) + '</div>';
@@ -858,7 +859,7 @@
         if (!s.r && !s.k) return "";
         return "S" + (i + 1) + " " + (s.r || "?") + (s.k ? " x " + s.k + "kg" : "");
       }).filter(Boolean).join(" · ");
-      guardarEjercicio(box.dataset.k, { sets: sets, hechoTxt: resumen });
+      guardarEjercicio(box.dataset.k, { sets: sets, hechoTxt: resumen, igual: esIgual(box) });
     }
     // cambia entre "todas iguales" (una fila) y "una fila por serie"
     function cambiarModo(box, iguales) {
