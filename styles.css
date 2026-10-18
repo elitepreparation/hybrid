@@ -229,7 +229,7 @@ ul { list-style: none; }
 .galeria { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; margin-top: 2.5rem; }
 .galeria img { width: 100%; aspect-ratio: 3/4; object-fit: cover; filter: saturate(1.05); transition: transform .4s var(--ease-out); }
 .galeria a:hover img { transform: scale(1.04); }
-@media (min-width: 720px) { .galeria { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 960px) { .galeria { grid-template-columns: repeat(4, 1fr); } }
 
 /* Tarjetas de plan: el precio aparece al elegir la tarjeta */
 .nivel-card--pick { cursor: pointer; }
