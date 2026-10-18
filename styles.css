@@ -1140,3 +1140,11 @@ ul { list-style: none; }
 .nav--sitio .nav-links a { padding-bottom: 0; }
 .nav--sitio .nav-links a::after { bottom: -6px; }
 .nav--sitio .nav-actions .btn { padding: .85rem 1.6rem; font-size: .9rem; line-height: 1; }
+
+/* interlineado más abierto en los títulos en mayúscula: las tildes (Í, Ó, É...) no pisan el renglón de arriba */
+h1, h2, h3, h4 { line-height: 1.22; }
+.hero-title { line-height: 1.1; }
+.hoy-titulo { line-height: 1.2; }
+.day-chip b { line-height: 1.2; }
+.folder-card strong { line-height: 1.25; }
+.blk-title, .plan-aside-title, .hist-records-t { line-height: 1.25; }
