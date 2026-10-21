@@ -713,9 +713,18 @@
     return p.hechoTxt || "";
   }
 
+  // serie de aproximación (opcional, solo si la planilla la indica): una fila "A" arriba de las series
+  function aprRowHTML(a) {
+    a = a || {};
+    return '<div class="set-row set-row--apr" data-apr-row><span class="set-n set-n--apr" title="Serie de aproximación">A</span>' +
+      '<input type="text" inputmode="decimal" maxlength="5" class="set-in" data-apr-r placeholder="reps" aria-label="Repeticiones de la serie de aproximación" value="' + attr(a.r || "") + '">' +
+      '<span class="set-x" aria-hidden="true">-</span>' +
+      '<input type="text" inputmode="decimal" maxlength="5" class="set-in" data-apr-k placeholder="kg" aria-label="Kilos de la serie de aproximación" value="' + attr(a.k || "") + '"></div>';
+  }
+
   // Si todas las series fueron iguales se carga una sola fila (reps y kilos); si no, una fila por serie.
-  function setsInterior(iguales, sets, plan, n, psets) {
-    var html = "";
+  function setsInterior(iguales, sets, plan, n, psets, apr) {
+    var html = apr ? aprRowHTML(apr) : "";
     if (iguales) {
       html += setRowHTML(1, sets && sets[0], false, psets[0], true);
     } else {
@@ -733,8 +742,9 @@
     // "Todas iguales" nunca viene tildada de entrada: solo queda así si el alumno la eligió (y sigue siendo cierto)
     var iguales = n > 1 && !!saved.igual && !!guardadas && guardadas.every(function (s) { return s.r === guardadas[0].r && s.k === guardadas[0].k; });
     var psets = previo && Array.isArray(previo.sets) ? previo.sets.slice(0, 10) : [];
-    return '<div class="ex-sets-box" data-sets data-k="' + attr(key) + '" data-plan="' + plan + '" data-n="' + n + '" data-prev="' + attr(JSON.stringify(psets)) + '">' +
-      setsInterior(iguales, guardadas, plan, n, psets) + '</div>';
+    var tieneApr = !!ej.aprox;
+    return '<div class="ex-sets-box" data-sets data-k="' + attr(key) + '" data-plan="' + plan + '" data-n="' + n + '" data-prev="' + attr(JSON.stringify(psets)) + '"' + (tieneApr ? ' data-apr="1"' : '') + '>' +
+      setsInterior(iguales, guardadas, plan, n, psets, tieneApr ? (saved.apr || {}) : null) + '</div>';
   }
 
   function diaDetalleHTML(semana, dia, log) {
@@ -750,7 +760,7 @@
         '<span class="ex-name">' + ej.nombre +
           (id ? ' <button type="button" class="ex-video" data-play-id="' + id + '" data-play-nombre="' + attr(ej.nombre) + '">▶ Técnica</button>' : '') +
         '</span>' +
-        '<span class="ex-plan" data-label="Realizar"><span class="ex-sr"><span><b>' + ej.series + '</b> series</span><span><b>' + ej.reps + '</b> reps</span></span>' + (ej.carga ? '<span class="ex-carga"><b>' + ej.carga + '</b></span>' : '') + (ej.descanso ? '<span class="ex-desc">Descanso ' + escHtml(ej.descanso) + '</span>' : '') + '</span>' +
+        '<span class="ex-plan" data-label="Realizar"><span class="ex-sr"><span><b>' + ej.series + '</b> series</span><span><b>' + ej.reps + '</b> reps</span></span>' + (ej.carga ? '<span class="ex-carga"><b>' + ej.carga + '</b></span>' : '') + (ej.aprox ? '<span class="ex-desc">Aproximación ' + escHtml(ej.aprox) + '</span>' : '') + (ej.descanso ? '<span class="ex-desc">Descanso ' + escHtml(ej.descanso) + '</span>' : '') + '</span>' +
         setsHTML(key, ej, saved, previoEjercicio(semana, dia.dia, ej.nombre, log)) +
         '</li>';
     }
@@ -762,9 +772,9 @@
       var v = videoDe(ej.nombre);
       var id = v && (v.id || driveId(v.url));
       var dosis = [ej.series && ej.reps ? ej.series + " x " + ej.reps : "", ej.carga || "", ej.descanso ? "descanso " + ej.descanso : ""].filter(Boolean).join(" · ");
-      return '<li class="ex-row ex-row--mov"><span class="ex-name">' + ej.nombre +
-        (id ? ' <button type="button" class="ex-video" data-play-id="' + id + '" data-play-nombre="' + attr(ej.nombre) + '">▶ Técnica</button>' : '') + '</span>' +
-        (dosis ? '<span class="ex-dosis">' + escHtml(dosis) + '</span>' : '') + '</li>';
+      return '<li class="ex-row ex-row--mov"><span class="ex-mov-txt"><span class="ex-name">' + ej.nombre + '</span>' +
+        (dosis ? '<span class="ex-dosis">' + escHtml(dosis) + '</span>' : '') + '</span>' +
+        (id ? '<button type="button" class="ex-video" data-play-id="' + id + '" data-play-nombre="' + attr(ej.nombre) + '">▶ Técnica</button>' : '') + '</li>';
     }
     var movHtml = movs.length ? '<section class="blk blk--mov"><p class="blk-title">Movilidad</p><ul class="ex-list">' + movs.map(filaMov).join("") + '</ul></section>' : "";
     // bloques (ej. "Potencia") arriba de sus ejercicios; si la planilla no trae columna "Bloque", se usa el foco del día
@@ -851,6 +861,11 @@
         return { r: (row.querySelector("[data-set-r]").value || "").trim(), k: (row.querySelector("[data-set-k]").value || "").trim() };
       });
     }
+    function leerApr(box) {
+      var f = box.querySelector("[data-apr-row]");
+      if (!f) return null;
+      return { r: (f.querySelector("[data-apr-r]").value || "").trim(), k: (f.querySelector("[data-apr-k]").value || "").trim() };
+    }
     function guardarSets(box) {
       var filas = leerFilas(box), sets;
       if (esIgual(box)) {
@@ -865,11 +880,16 @@
         if (!s.r && !s.k) return "";
         return "S" + (i + 1) + " " + (s.r || "?") + (s.k ? " x " + s.k + "kg" : "");
       }).filter(Boolean).join(" · ");
-      guardarEjercicio(box.dataset.k, { sets: sets, hechoTxt: resumen, igual: esIgual(box) });
+      var apr = leerApr(box);
+      if (apr && (apr.r || apr.k)) resumen = "Aprox " + (apr.r || "?") + (apr.k ? " x " + apr.k + "kg" : "") + (resumen ? " · " + resumen : "");
+      var datos = { sets: sets, hechoTxt: resumen, igual: esIgual(box) };
+      if (apr) datos.apr = apr;
+      guardarEjercicio(box.dataset.k, datos);
     }
     // cambia entre "todas iguales" (una fila) y "una fila por serie"
     function cambiarModo(box, iguales) {
       var filas = leerFilas(box);
+      var apr = box.dataset.apr === "1" ? leerApr(box) : null;
       var plan = Number(box.dataset.plan) || 1, n = Number(box.dataset.n) || filas.length;
       var psets = []; try { psets = JSON.parse(box.dataset.prev || "[]"); } catch (err) {}
       if (iguales) {
@@ -880,7 +900,7 @@
       var sets = [];
       for (var i = 0; i < n; i++) sets.push({ r: filas[0].r, k: filas[0].k });
       box.dataset.n = String(n);
-      box.innerHTML = setsInterior(iguales, sets, plan, n, psets);
+      box.innerHTML = setsInterior(iguales, sets, plan, n, psets, apr);
       guardarSets(box);
     }
     panel.addEventListener("input", function (e) {
@@ -896,7 +916,8 @@
       var inp = e.target.closest(".set-in");
       if (!inp) return;
       var caja = inp.closest("[data-sets]");
-      avisarRecord(caja.dataset.k, inp.closest("[data-set-row]"));
+      var filaSerie = inp.closest("[data-set-row]");
+      if (filaSerie) avisarRecord(caja.dataset.k, filaSerie);
     });
     panel.addEventListener("click", function (e) {
       var add = e.target.closest("[data-set-add]");

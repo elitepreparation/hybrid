@@ -244,3 +244,4 @@ En `perfil.html`, la pantalla de ingreso tiene dos pestañas: **"Ya tengo clave"
 - **Cargas** (o Peso): carga sugerida, ej. `80kg`. Se ve al costado de series y reps.
 - **Descanso**: descanso estimado, ej. `90s` o `2 min` (un número solo se muestra como segundos).
 - **Bloque**: agrupa ejercicios bajo un título (ej. Potencia). Las filas con Bloque `Movilidad` salen en un bloque propio **al principio del día**, sin cuadros para anotar; ahí se usan Series x Reps, Cargas (ej. `30 s por lado`) y Descanso como texto.
+- **Aproximación** (o Aprox, Calentamiento): serie de aproximación del ejercicio, ej. `1 x 8 - 40kg`. En la web se ve debajo de las series ("Aproximación ...") y el alumno tiene una fila **A** para anotar reps y kilos; no cuenta para los récords.
