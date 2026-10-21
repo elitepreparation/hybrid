@@ -292,9 +292,9 @@
     var orden = $("[data-admin-sort]").value;
     var lista = alumnos.filter(function (a) {
       if (q && (a.nombre + " " + a.email).toLowerCase().indexOf(q) === -1) return false;
-      if (filtro === "inactivos") return diasSinEntrar(a) > 7;
+      if (filtro === "inactivos") return !!a.vencimiento && diasSinEntrar(a) > 7;
       if (filtro === "vencen") { var d = diasHastaVencer(a); return d >= 0 && d <= 7; }
-      if (filtro === "vencidos") return diasHastaVencer(a) < 0;
+      if (filtro === "vencidos") return !!a.vencimiento && diasHastaVencer(a) < 0;
       if (filtro === "pendientes") return !a.vencimiento;
       return true;
     });
