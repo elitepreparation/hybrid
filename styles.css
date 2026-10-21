@@ -1158,3 +1158,8 @@ h1, h2, h3, h4 { line-height: 1.22; }
 .ex-row.ex-row--mov { grid-template-columns: minmax(0, 1fr) auto; }
 .ex-dosis { font-family: var(--mono); font-size: .75rem; color: var(--ink-soft); text-align: right; }
 @media (max-width: 640px) { .ex-row.ex-row--mov { grid-template-columns: minmax(0, 1fr); } .ex-dosis { text-align: left; } }
+
+/* resumen del día: solo el día y el foco (los ejercicios se ven abajo), así los cuadros quedan chicos */
+.day-chip { min-height: 0; padding: .85rem 1rem; gap: .35rem; }
+.day-foco { padding-bottom: 0; border-bottom: 0; }
+@media (max-width: 640px) { .day-chip { min-height: 0; padding: .7rem .8rem; } }

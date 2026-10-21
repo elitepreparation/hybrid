@@ -825,14 +825,10 @@
     $("[data-day-nav]").style.setProperty("--cols", dias.length <= 5 ? dias.length : Math.ceil(dias.length / 2));
     $("[data-day-nav]").innerHTML = dias.map(function (d) {
       var on = d.dia === vista.dia, ok = diaHecho(log, vista.semana, d.dia);
-      var MAX = 4;
-      var resumen = d.ejercicios.slice(0, MAX).map(function (e) { return '<li>' + e.nombre + '</li>'; }).join("") +
-        (d.ejercicios.length > MAX ? '<li class="day-more">+ ' + (d.ejercicios.length - MAX) + ' más</li>' : '');
       return '<button type="button" role="tab" aria-selected="' + on + '" class="day-chip' + (on ? ' is-active' : '') + (ok ? ' is-done' : '') + '" data-dia-chip="' + d.dia + '">' +
         '<span class="day-chip-head"><b>' + d.dia + '</b>' + (ok ? '<i class="day-check" aria-label="Día hecho">✓</i>' : '') + '</span>' +
         '<small class="day-foco">' + d.foco + '</small>' +
-        '<ul class="day-sum">' + resumen + '</ul>' +
-        '<span class="day-count">' + d.ejercicios.length + (d.ejercicios.length === 1 ? ' ejercicio' : ' ejercicios') + '</span></button>';
+        '</button>';
     }).join("");
 
     var dia = dias.filter(function (d) { return d.dia === vista.dia; })[0];
