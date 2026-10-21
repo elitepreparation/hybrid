@@ -138,7 +138,8 @@
 
   // Estadísticas anónimas: solo suma un contador por día en el servidor (sin datos personales)
   function evento(nombre) {
-    try { new Image().src = API_URL + "?action=evento&e=" + encodeURIComponent(nombre) + "&_=" + Date.now(); } catch (e) {}
+    // envío silencioso (no-cors): suma el contador y no muestra errores en la consola
+    try { fetch(API_URL + "?action=evento&e=" + encodeURIComponent(nombre), { mode: "no-cors", keepalive: true }).catch(function () {}); } catch (e) {}
   }
 
   function initEventos() {

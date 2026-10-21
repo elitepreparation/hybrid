@@ -167,7 +167,7 @@
   }
 
   function initRegistro() {
-    $$("[data-ir-registro]").forEach(function (b) { b.addEventListener("click", function () { try { new Image().src = API_URL + "?action=evento&e=unirme&_=" + Date.now(); } catch (err) {} showView("view-registro"); window.scrollTo(0, 0); }); });
+    $$("[data-ir-registro]").forEach(function (b) { b.addEventListener("click", function () { try { fetch(API_URL + "?action=evento&e=unirme", { mode: "no-cors", keepalive: true }).catch(function () {}); } catch (err) {} showView("view-registro"); window.scrollTo(0, 0); }); });
     $$("[data-ir-login]").forEach(function (b) { b.addEventListener("click", function () { showView("view-clave"); window.scrollTo(0, 0); }); });
     var form = $("[data-registro-form]");
     if (!form) return;
