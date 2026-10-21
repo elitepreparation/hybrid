@@ -1182,3 +1182,6 @@ h1, h2, h3, h4 { line-height: 1.22; }
 /* focos del día en 'Hoy te toca': una línea chica debajo del título */
 .hoy-focos { margin-top: .35rem; font-family: var(--mono); font-size: .7rem; line-height: 1.4; letter-spacing: .04em; text-transform: uppercase; color: rgba(255,255,255,.78); }
 .hoy-focos:empty { display: none; }
+
+/* todos los bloques de la rutina (Movilidad, Fuerza, Aeróbico, ...) con el mismo título azul que el de Movilidad, para que resalten */
+.blk-title { background: var(--accent); color: #fff; border-left-color: var(--ink); }
