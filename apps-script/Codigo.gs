@@ -182,6 +182,8 @@ function parsePlanificacion(hoja) {
     if (!s.porDia[dia]) { s.porDia[dia] = { dia: dia, foco: String(r[2] || "").trim(), ejercicios: [] }; s.dias.push(s.porDia[dia]); }
     s.porDia[dia].ejercicios.push({ nombre: nombreEj, series: Number(r[4]) || 0, reps: Number(r[5]) || 0 });
     var ult = s.porDia[dia].ejercicios[s.porDia[dia].ejercicios.length - 1];
+    var repsRaw = String(r[5] == null ? "" : r[5]).trim(); // repeticiones con texto ("10 o 12", "10 c/u", "8 min"): se envían tal cual
+    if (repsRaw && !/^\d+([.,]\d+)?$/.test(repsRaw)) ult.repsTxt = repsRaw;
     var bloque = colBloque >= 0 ? String(r[colBloque] || "").trim() : ""; // opcional: "Bloque" (ej. Potencia)
     if (bloque) ult.bloque = bloque;
     var carga = colCarga >= 0 ? String(r[colCarga] || "").trim() : ""; // opcional: "Cargas" (ej. 80kg)
