@@ -4,6 +4,16 @@
 // - El servidor (Apps Script) y Drive nunca se guardan acá: los datos del alumno los maneja la propia web.
 const CACHE = "elite-v1";
 
+// al guardar una copia nueva de un archivo, se borran las copias viejas del mismo archivo (otra versión ?v=...)
+function limpiarViejas(cache, req) {
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
+  cache.keys().then((claves) => claves.forEach((k) => {
+    const u = new URL(k.url);
+    if (u.origin === url.origin && u.pathname === url.pathname && u.search !== url.search) cache.delete(k);
+  }));
+}
+
 self.addEventListener("install", () => self.skipWaiting());
 
 self.addEventListener("activate", (e) => {
@@ -26,7 +36,7 @@ self.addEventListener("fetch", (e) => {
     e.respondWith(
       fetch(req)
         .then((res) => {
-          if (res && res.ok) { const copia = res.clone(); caches.open(CACHE).then((c) => c.put(req, copia)); }
+          if (res && res.ok) { const copia = res.clone(); caches.open(CACHE).then((c) => c.put(req, copia).then(() => limpiarViejas(c, req))); }
           return res;
         })
         .catch(() => caches.match(req, { ignoreSearch: true }).then((hit) => hit || caches.match("perfil.html", { ignoreSearch: true })))
@@ -43,7 +53,7 @@ self.addEventListener("fetch", (e) => {
       cache.match(req).then((hit) => {
         const red = fetch(req)
           .then((res) => {
-            if (res && (res.ok || res.type === "opaque")) cache.put(req, res.clone());
+            if (res && (res.ok || res.type === "opaque")) cache.put(req, res.clone()).then(() => limpiarViejas(cache, req));
             return res;
           })
           .catch(() => hit);
