@@ -666,7 +666,7 @@
     if (pendiente) {
       $("[data-hoy-titulo]").textContent = pendiente.dia;
       $("[data-hoy-focos]").textContent = focosDe(pendiente).join(" · ");
-      $("[data-hoy-meta]").textContent = pendiente.ejercicios.length + (pendiente.ejercicios.length === 1 ? " ejercicio" : " ejercicios");
+      $("[data-hoy-meta]").textContent = "";
     } else {
       $("[data-hoy-titulo]").textContent = "¡Semana completa!";
       $("[data-hoy-focos]").textContent = "";
