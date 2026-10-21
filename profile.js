@@ -755,9 +755,22 @@
         setsHTML(key, ej, saved, previoEjercicio(semana, dia.dia, ej.nombre, log)) +
         '</li>';
     }
+    // Movilidad: las filas de la planilla con Bloque "Movilidad" van en un bloque propio, al principio del día
+    function esMov(ej) { return /^movilidad/i.test(String(ej.bloque || "").trim()); }
+    var movs = dia.ejercicios.filter(esMov);
+    var resto = dia.ejercicios.filter(function (ej) { return !esMov(ej); });
+    function filaMov(ej) {
+      var v = videoDe(ej.nombre);
+      var id = v && (v.id || driveId(v.url));
+      var dosis = [ej.series && ej.reps ? ej.series + " x " + ej.reps : "", ej.carga || "", ej.descanso ? "descanso " + ej.descanso : ""].filter(Boolean).join(" · ");
+      return '<li class="ex-row ex-row--mov"><span class="ex-name">' + ej.nombre +
+        (id ? ' <button type="button" class="ex-video" data-play-id="' + id + '" data-play-nombre="' + attr(ej.nombre) + '">▶ Técnica</button>' : '') + '</span>' +
+        (dosis ? '<span class="ex-dosis">' + escHtml(dosis) + '</span>' : '') + '</li>';
+    }
+    var movHtml = movs.length ? '<section class="blk blk--mov"><p class="blk-title">Movilidad</p><ul class="ex-list">' + movs.map(filaMov).join("") + '</ul></section>' : "";
     // bloques (ej. "Potencia") arriba de sus ejercicios; si la planilla no trae columna "Bloque", se usa el foco del día
     var grupos = [];
-    dia.ejercicios.forEach(function (ej) {
+    resto.forEach(function (ej) {
       var nombre = ej.bloque || dia.foco || "";
       var ultimo = grupos[grupos.length - 1];
       if (ultimo && ultimo.nombre === nombre) ultimo.items.push(ej);
@@ -776,7 +789,8 @@
     var hecho = diaHecho(log, semana, dia.dia);
     return '<div class="log-day day-card' + (hecho ? ' is-done' : '') + '">' +
       '<div class="log-day-head"><h3>' + dia.dia + '</h3></div>' +
-      '<div class="ex-head" aria-hidden="true"><span>Ejercicio</span><span>Realizar</span><span>Lo que hice</span></div>' +
+      movHtml +
+      (resto.length ? '<div class="ex-head" aria-hidden="true"><span>Ejercicio</span><span>Realizar</span><span>Lo que hice</span></div>' : '') +
       bloques + rpeHtml +
       '<div class="day-acciones">' +
       '<button type="button" class="btn ' + (hecho ? 'btn-ghost' : 'btn-primary') + ' day-done" data-toggle-hecho data-semana="' + semana + '" data-dia="' + dia.dia + '">' +

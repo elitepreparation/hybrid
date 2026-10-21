@@ -1152,3 +1152,9 @@ h1, h2, h3, h4 { line-height: 1.22; }
 /* planes: las flechas arrancan en el borde izquierdo del texto (sin sangría), así las líneas rinden más */
 .nivel-items { list-style: none; padding-left: 0; margin-left: 0; }
 .nivel-items li { padding-left: 1.15rem; }
+
+/* Movilidad: bloque al principio de cada día, sin cuadros para anotar */
+.blk--mov .blk-title { background: var(--accent); color: #fff; border-left-color: var(--ink); }
+.ex-row.ex-row--mov { grid-template-columns: minmax(0, 1fr) auto; }
+.ex-dosis { font-family: var(--mono); font-size: .75rem; color: var(--ink-soft); text-align: right; }
+@media (max-width: 640px) { .ex-row.ex-row--mov { grid-template-columns: minmax(0, 1fr); } .ex-dosis { text-align: left; } }
