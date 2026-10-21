@@ -844,7 +844,7 @@
     $("[data-day-nav]").innerHTML = dias.map(function (d) {
       var on = d.dia === vista.dia, ok = diaHecho(log, vista.semana, d.dia);
       return '<button type="button" role="tab" aria-selected="' + on + '" class="day-chip' + (on ? ' is-active' : '') + (ok ? ' is-done' : '') + '" data-dia-chip="' + d.dia + '">' +
-        '<span class="day-chip-head"><b>' + d.dia + '</b>' + (ok ? '<i class="day-check" aria-label="Día hecho">✓</i>' : '') + '</span>' +
+        '<span class="day-chip-head"><b>' + d.dia + '</b>' + (ok ? '<i class="day-check" aria-label="Día hecho">✓</i>' : '') + '</span>' +
         '</button>';
     }).join("");
 
@@ -990,6 +990,7 @@
   function renderMonthly(nivel) {
     var log = getJSON(KEYS.log) || {};
     var host = $("[data-monthly-view]");
+    if (!host) return; // sin resumen mensual en pantalla
     host.innerHTML = semanasFor(nivel).map(function (s) {
       return '<div class="week-group"><p>Semana ' + s.semana + '</p>' +
         s.dias.map(function (d) { return diaCardReadOnly(s.semana, d, log); }).join("") + '</div>';
