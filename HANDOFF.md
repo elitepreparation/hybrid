@@ -239,3 +239,8 @@ En `perfil.html`, la pantalla de ingreso tiene dos pestañas: **"Ya tengo clave"
 - Límite contra spam: hasta 40 registros por hora; no se aceptan links de archivos ni objetivos desde afuera.
 - En el registro no se pide foto ni apto físico (se suben después, ya como alumno).
 - Backend desplegado: versión 22.
+
+## Columnas opcionales de la planilla (desde la G, se reconocen por el título de la fila 1)
+- **Cargas** (o Peso): carga sugerida, ej. `80kg`. Se ve al costado de series y reps.
+- **Descanso**: descanso estimado, ej. `90s` o `2 min` (un número solo se muestra como segundos).
+- **Bloque**: agrupa ejercicios bajo un título (ej. Potencia). Las filas con Bloque `Movilidad` salen en un bloque propio **al principio del día**, sin cuadros para anotar; ahí se usan Series x Reps, Cargas (ej. `30 s por lado`) y Descanso como texto.
