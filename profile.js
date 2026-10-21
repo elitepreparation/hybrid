@@ -664,10 +664,12 @@
     card.classList.toggle("is-completa", !pendiente);
     $("[data-hoy-kicker]").textContent = pendiente ? "Hoy te toca" : "Semana " + hoy;
     if (pendiente) {
-      $("[data-hoy-titulo]").textContent = pendiente.dia + (focosDe(pendiente).length ? " · " + focosDe(pendiente).join(" + ") : "");
+      $("[data-hoy-titulo]").textContent = pendiente.dia;
+      $("[data-hoy-focos]").textContent = focosDe(pendiente).join(" · ");
       $("[data-hoy-meta]").textContent = pendiente.ejercicios.length + (pendiente.ejercicios.length === 1 ? " ejercicio" : " ejercicios");
     } else {
       $("[data-hoy-titulo]").textContent = "¡Semana completa!";
+      $("[data-hoy-focos]").textContent = "";
       $("[data-hoy-meta]").textContent = "Hiciste los " + dias.length + " días de esta semana. Descansá y a seguir con la próxima.";
     }
   }
@@ -842,8 +844,7 @@
     $("[data-day-nav]").innerHTML = dias.map(function (d) {
       var on = d.dia === vista.dia, ok = diaHecho(log, vista.semana, d.dia);
       return '<button type="button" role="tab" aria-selected="' + on + '" class="day-chip' + (on ? ' is-active' : '') + (ok ? ' is-done' : '') + '" data-dia-chip="' + d.dia + '">' +
-        '<span class="day-chip-head"><b>' + d.dia + '</b>' + (ok ? '<i class="day-check" aria-label="Día hecho">✓</i>' : '') + '</span>' +
-        '<small class="day-foco">' + focosDe(d).map(function (f) { return '<span>' + escHtml(f) + '</span>'; }).join("") + '</small>' +
+        '<span class="day-chip-head"><b>' + d.dia + '</b>' + (ok ? '<i class="day-check" aria-label="Día hecho">✓</i>' : '') + '</span>' +
         '</button>';
     }).join("");
 
