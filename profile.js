@@ -658,9 +658,8 @@
     card.classList.toggle("is-completa", !pendiente);
     $("[data-hoy-kicker]").textContent = pendiente ? "Hoy te toca" : "Semana " + hoy;
     if (pendiente) {
-      var hechos = dias.length - dias.filter(function (d) { return !diaHecho(log, hoy, d.dia); }).length;
       $("[data-hoy-titulo]").textContent = pendiente.dia + (pendiente.foco ? " · " + pendiente.foco : "");
-      $("[data-hoy-meta]").textContent = pendiente.ejercicios.length + (pendiente.ejercicios.length === 1 ? " ejercicio" : " ejercicios") + " · " + hechos + " de " + dias.length + " días hechos esta semana";
+      $("[data-hoy-meta]").textContent = pendiente.ejercicios.length + (pendiente.ejercicios.length === 1 ? " ejercicio" : " ejercicios");
     } else {
       $("[data-hoy-titulo]").textContent = "¡Semana completa!";
       $("[data-hoy-meta]").textContent = "Hiciste los " + dias.length + " días de esta semana. Descansá y a seguir con la próxima.";
@@ -821,9 +820,6 @@
         'Semana ' + s.semana + (s.semana === hoy ? '<small>actual</small>' : '') + '</button>';
     }).join("");
 
-    var hechos = dias.filter(function (d) { return diaHecho(log, vista.semana, d.dia); }).length;
-    $("[data-week-progress]").innerHTML = '<div class="week-progress-text"><strong>' + hechos + ' de ' + dias.length + '</strong> días hechos esta semana</div>' +
-      '<div class="week-progress-bar"><span style="width:' + Math.round(hechos / dias.length * 100) + '%"></span></div>';
 
     // 3 a 5 días: todos en una fila; más de 5: se reparten en dos filas parejas
     $("[data-day-nav]").style.setProperty("--cols", dias.length <= 5 ? dias.length : Math.ceil(dias.length / 2));
