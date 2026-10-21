@@ -179,9 +179,18 @@ function parsePlanificacion(hoja) {
     var dia = /^\d+$/.test(diaRaw) ? "Día " + diaRaw : diaRaw;
     if (!porSemana[sem]) { porSemana[sem] = { semana: sem, dias: [], porDia: {} }; semanas.push(porSemana[sem]); }
     var s = porSemana[sem];
-    if (!s.porDia[dia]) { s.porDia[dia] = { dia: dia, foco: String(r[2] || "").trim(), ejercicios: [] }; s.dias.push(s.porDia[dia]); }
+    if (!s.porDia[dia]) { s.porDia[dia] = { dia: dia, foco: "", focos: [], ejercicios: [] }; s.dias.push(s.porDia[dia]); }
     s.porDia[dia].ejercicios.push({ nombre: nombreEj, series: Number(r[4]) || 0, reps: Number(r[5]) || 0 });
     var ult = s.porDia[dia].ejercicios[s.porDia[dia].ejercicios.length - 1];
+    // focos del día: todos los que aparecen en la columna Foco (cada fila vacía sigue el foco de la de arriba)
+    var focoFila = String(r[2] || "").trim();
+    var dd = s.porDia[dia];
+    if (focoFila) {
+      dd.focoActual = focoFila;
+      if (!dd.foco) dd.foco = focoFila;
+      if (dd.focos.indexOf(focoFila) < 0) dd.focos.push(focoFila);
+    }
+    if (dd.focoActual) ult.foco = dd.focoActual;
     var repsRaw = String(r[5] == null ? "" : r[5]).trim(); // repeticiones con texto ("10 o 12", "10 c/u", "8 min"): se envían tal cual
     if (repsRaw && !/^\d+([.,]\d+)?$/.test(repsRaw)) ult.repsTxt = repsRaw;
     var bloque = colBloque >= 0 ? String(r[colBloque] || "").trim() : ""; // opcional: "Bloque" (ej. Potencia)
@@ -193,7 +202,7 @@ function parsePlanificacion(hoja) {
     var aprox = colAprox >= 0 ? String(r[colAprox] || "").trim() : ""; // opcional: serie de aproximación (ej. 1 x 8 - 40kg)
     if (aprox) ult.aprox = aprox;
   }
-  semanas.forEach(function (s) { delete s.porDia; });
+  semanas.forEach(function (s) { s.dias.forEach(function (d) { delete d.focoActual; }); delete s.porDia; });
   return semanas;
 }
 

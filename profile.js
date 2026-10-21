@@ -621,7 +621,7 @@
       var reps = saved.reps != null ? saved.reps : ej.reps;
       return ej.nombre + " — " + series + "x" + reps + peso;
     }).join(" · ");
-    return '<div class="log-day' + (diaHecho(log, semana, dia.dia) ? ' is-done' : '') + '"><div class="log-day-head"><h3>' + dia.dia + (diaHecho(log, semana, dia.dia) ? ' ✓' : '') + '</h3><span>' + dia.foco + '</span></div>' +
+    return '<div class="log-day' + (diaHecho(log, semana, dia.dia) ? ' is-done' : '') + '"><div class="log-day-head"><h3>' + dia.dia + (diaHecho(log, semana, dia.dia) ? ' ✓' : '') + '</h3><span>' + focosDe(dia).join(" + ") + '</span></div>' +
       '<p class="log-readonly">' + items + '</p></div>';
   }
 
@@ -645,6 +645,12 @@
   function exKey(semana, dia, ejercicio) { return semana + "|" + dia + "|" + ejercicio; }
   function attr(v) { return String(v).replace(/&/g, "&amp;").replace(/"/g, "&quot;"); }
 
+  // focos que se trabajan en el día: todos los de la planilla; con un servidor viejo, el foco único
+  function focosDe(dia) {
+    if (dia && Array.isArray(dia.focos) && dia.focos.length) return dia.focos;
+    return dia && dia.foco ? [dia.foco] : [];
+  }
+
   // ---- "Hoy te toca": el próximo día pendiente de esta semana, a un toque ----
   function renderHoy(nivel) {
     var card = $("[data-hoy-card]");
@@ -658,7 +664,7 @@
     card.classList.toggle("is-completa", !pendiente);
     $("[data-hoy-kicker]").textContent = pendiente ? "Hoy te toca" : "Semana " + hoy;
     if (pendiente) {
-      $("[data-hoy-titulo]").textContent = pendiente.dia + (pendiente.foco ? " · " + pendiente.foco : "");
+      $("[data-hoy-titulo]").textContent = pendiente.dia + (focosDe(pendiente).length ? " · " + focosDe(pendiente).join(" + ") : "");
       $("[data-hoy-meta]").textContent = pendiente.ejercicios.length + (pendiente.ejercicios.length === 1 ? " ejercicio" : " ejercicios");
     } else {
       $("[data-hoy-titulo]").textContent = "¡Semana completa!";
@@ -670,7 +676,7 @@
   function waConsultaDia(semana, dia) {
     var brand = window.__BRAND__ || {};
     var p = getJSON(KEYS.profile) || {};
-    var txt = "Hola Gaby, soy " + (nombreVisible(p) || "alumno") + ". Tengo una consulta sobre el " + dia.dia + (dia.foco ? " (" + dia.foco + ")" : "") + " de la semana " + semana + ".";
+    var txt = "Hola Gaby, soy " + (nombreVisible(p) || "alumno") + ". Tengo una consulta sobre el " + dia.dia + (focosDe(dia).length ? " (" + focosDe(dia).join(" + ") + ")" : "") + " de la semana " + semana + ".";
     return "https://wa.me/" + (brand.whatsapp || "") + "?text=" + encodeURIComponent(txt);
   }
 
@@ -780,7 +786,7 @@
     // bloques (ej. "Potencia") arriba de sus ejercicios; si la planilla no trae columna "Bloque", se usa el foco del día
     var grupos = [];
     resto.forEach(function (ej) {
-      var nombre = ej.bloque || dia.foco || "";
+      var nombre = ej.bloque || ej.foco || dia.foco || "";
       var ultimo = grupos[grupos.length - 1];
       if (ultimo && ultimo.nombre === nombre) ultimo.items.push(ej);
       else grupos.push({ nombre: nombre, items: [ej] });
@@ -837,7 +843,7 @@
       var on = d.dia === vista.dia, ok = diaHecho(log, vista.semana, d.dia);
       return '<button type="button" role="tab" aria-selected="' + on + '" class="day-chip' + (on ? ' is-active' : '') + (ok ? ' is-done' : '') + '" data-dia-chip="' + d.dia + '">' +
         '<span class="day-chip-head"><b>' + d.dia + '</b>' + (ok ? '<i class="day-check" aria-label="Día hecho">✓</i>' : '') + '</span>' +
-        '<small class="day-foco">' + d.foco + '</small>' +
+        '<small class="day-foco">' + focosDe(d).map(function (f) { return '<span>' + escHtml(f) + '</span>'; }).join("") + '</small>' +
         '</button>';
     }).join("");
 

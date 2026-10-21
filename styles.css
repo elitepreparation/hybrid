@@ -1174,3 +1174,7 @@ h1, h2, h3, h4 { line-height: 1.22; }
 /* serie de aproximación */
 .set-row--apr { grid-template-columns: 1.8rem minmax(0, 1fr) .9rem minmax(0, 1fr); }
 .set-n--apr { color: var(--accent); }
+
+/* focos del día: uno debajo del otro */
+.day-foco span { display: block; }
+.day-foco span + span { margin-top: .15rem; }
