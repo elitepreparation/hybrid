@@ -373,7 +373,10 @@ function copiarRegistrosEnHoja(nombre, registrosJson) {
   if (!archivo) return;
   var hoja = buscarHojaPorNombre(SpreadsheetApp.open(archivo), nombre);
   if (!hoja) return;
+  volcarRegistrosEnHoja(hoja, log);
+}
 
+function volcarRegistrosEnHoja(hoja, log) {
   var values = hoja.getDataRange().getValues();
   if (values.length < 2) return;
   var encabezado = values[0];
@@ -986,4 +989,32 @@ function instalarCopiaSemanal() {
   ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === "copiaDeSeguridad") ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger("copiaDeSeguridad").timeBased().onWeekDay(ScriptApp.WeekDay.SUNDAY).atHour(3).create();
   Logger.log("Copia semanal instalada: domingos a las 3 de la madrugada.");
+}
+
+// prueba sin tocar datos reales: copia la hoja de un alumno a un archivo temporal, vuelca registros de mentira y lo borra
+function pruebaCopiaRegistros() {
+  var plan = subFolder(rootFolder(), "Planificaciones");
+  var carpeta = subFolder(plan, "PERSONALIZADO");
+  var archivo = carpeta.getFilesByName("Planificacion Personalizada");
+  archivo = archivo.hasNext() ? archivo.next() : carpeta.getFilesByType(MimeType.GOOGLE_SHEETS).next();
+  var origen = buscarHojaPorNombre(SpreadsheetApp.open(archivo), "NADIA");
+  var temp = SpreadsheetApp.create("TEMP prueba registros");
+  try {
+    var copia = origen.copyTo(temp);
+    var v = copia.getDataRange().getValues();
+    var ej = String(v[1][3]);
+    var log = {};
+    log["hecho|" + (parseInt(String(v[1][0]).replace(/\D/g, ""), 10) || 1) + "|" + (/^\d+$/.test(String(v[1][1])) ? "Día " + v[1][1] : v[1][1])] = { hecho: "1", f: "2026-10-22", rpe: 7 };
+    log[(parseInt(String(v[1][0]).replace(/\D/g, ""), 10) || 1) + "|" + (/^\d+$/.test(String(v[1][1])) ? "Día " + v[1][1] : v[1][1]) + "|" + ej] = { sets: [{ r: "10", k: "20" }, { r: "10", k: "22" }], hechoTxt: "S1 10 x 20kg · S2 10 x 22kg", ok: true };
+    volcarRegistrosEnHoja(copia, log);
+    volcarRegistrosEnHoja(copia, log); // segunda vez: no debe duplicar ni crear columnas nuevas
+    var r = copia.getDataRange().getValues();
+    Logger.log("columnas antes: " + v[0].length + " / después: " + r[0].length);
+    Logger.log("encabezados nuevos: " + JSON.stringify(r[0].slice(v[0].length)));
+    Logger.log("fila 2 nuevas: " + JSON.stringify(r[1].slice(v[0].length)));
+    var p = parsePlanificacion(copia), q = parsePlanificacion(origen);
+    Logger.log("la web ve lo mismo: " + (JSON.stringify(p) === JSON.stringify(q)));
+  } finally {
+    DriveApp.getFileById(temp.getId()).setTrashed(true);
+  }
 }
