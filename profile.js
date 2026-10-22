@@ -686,7 +686,7 @@
   function setRowHTML(n, s, quitable, prev, unica) {
     s = s || {};
     prev = prev || {};
-    return '<div class="set-row' + (unica ? ' set-row--unica' : '') + '" data-set-row>' + (unica ? '' : '<span class="set-n">' + n + '</span>') +
+    return '<div class="set-row' + (unica ? ' set-row--unica' : '') + '" data-set-row>' + '<span class="set-n">' + (unica ? "" : n) + '</span>' +
       '<input type="text" inputmode="decimal" maxlength="5" class="set-in" data-set-r placeholder="' + attr(prev.r || "reps") + '" aria-label="Repeticiones' + (unica ? '' : ' de la serie ' + n) + '" value="' + attr(s.r || "") + '">' +
       '<span class="set-x" aria-hidden="true">-</span>' +
       '<input type="text" inputmode="decimal" maxlength="5" class="set-in" data-set-k placeholder="' + attr(prev.k || "kg") + '" aria-label="Kilos' + (unica ? '' : ' de la serie ' + n) + '" value="' + attr(s.k || "") + '">' +

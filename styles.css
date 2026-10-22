@@ -1187,3 +1187,16 @@ h1, h2, h3, h4 { line-height: 1.22; }
 .blk-title { background: var(--accent); color: #fff; border-left-color: var(--ink); }
 
 .hoy-meta:empty { display: none; }
+
+/* "Realizar": series y repeticiones una al lado de la otra, a la izquierda; debajo la carga; debajo la aproximación (y el descanso) */
+.ex-head, .ex-row { grid-template-columns: minmax(0, 1fr) 170px 210px; }
+.ex-row .ex-plan { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; flex-wrap: nowrap; gap: .3rem; text-align: left; }
+.ex-row .ex-plan .ex-sr { display: flex; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: .15rem .9rem; }
+.ex-row .ex-plan .ex-carga { padding-left: 0; border-left: 0; }
+.ex-row .ex-plan .ex-desc { flex: none; text-align: left; font-size: .7rem; line-height: 1.3; white-space: normal; }
+.ex-head span:nth-child(2) { text-align: left; }
+@media (max-width: 640px) { .ex-row { grid-template-columns: 150px minmax(0, 1fr); } }
+
+/* cada fila de series (también las que se agregan) usa las mismas columnas, así quedan alineadas entre sí */
+.set-row, .set-row--apr, .set-row--unica { grid-template-columns: 1.8rem minmax(0, 1fr) .9rem minmax(0, 1fr) 1.6rem; }
+.set-row .set-del { justify-self: end; }
