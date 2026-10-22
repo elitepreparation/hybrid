@@ -346,8 +346,74 @@ function guardarDatosAlumno(email, clave, perfilJson, registrosJson) {
   var res = buscarFilaAlumno(email, clave);
   if (!res.ok) return res;
   if (perfilJson != null) res.hoja.getRange(res.fila, 6).setValue(perfilJson);
-  if (registrosJson != null) res.hoja.getRange(res.fila, 7).setValue(registrosJson);
+  if (registrosJson != null) {
+    res.hoja.getRange(res.fila, 7).setValue(registrosJson);
+    // Plan Personalizado: lo que el alumno marca también queda en su hoja, en columnas aparte
+    if (String(res.r[3] || "").trim().toUpperCase() === "PERSONALIZADO") {
+      try { copiarRegistrosEnHoja(String(res.r[0] || "").trim(), registrosJson); } catch (err) {}
+    }
+  }
   return { ok: true };
+}
+
+var COLS_ALUMNO = ["Alumno · Día hecho", "Alumno · Ejercicio hecho", "Alumno · Series (reps x kg)"];
+
+// Copia lo que el alumno va marcando en la hoja de su plan, en 3 columnas al final con título
+// "Alumno · ...". Son columnas que parsePlanificacion no lee, así que no cambian nada en la web.
+// Solo escribe las celdas que tienen registro: no borra lo anterior.
+function copiarRegistrosEnHoja(nombre, registrosJson) {
+  var log = JSON.parse(registrosJson || "{}");
+  var plan = subFolder(rootFolder(), "Planificaciones");
+  var carpeta = plan ? subFolder(plan, "PERSONALIZADO") : null;
+  if (!carpeta) return;
+  var archivo = null;
+  var exactos = carpeta.getFilesByName("Planificacion Personalizada");
+  if (exactos.hasNext()) archivo = exactos.next();
+  else { var todos = carpeta.getFilesByType(MimeType.GOOGLE_SHEETS); if (todos.hasNext()) archivo = todos.next(); }
+  if (!archivo) return;
+  var hoja = buscarHojaPorNombre(SpreadsheetApp.open(archivo), nombre);
+  if (!hoja) return;
+
+  var values = hoja.getDataRange().getValues();
+  if (values.length < 2) return;
+  var encabezado = values[0];
+  var col0 = -1;
+  for (var c = 0; c < encabezado.length; c++) { if (String(encabezado[c]).trim() === COLS_ALUMNO[0]) { col0 = c; break; } }
+  if (col0 < 0) { // primera vez: se dejan dos columnas libres después de la última usada
+    col0 = Math.max(encabezado.length + 1, 9);
+    hoja.getRange(1, col0 + 1, 1, 3).setValues([COLS_ALUMNO]).setFontWeight("bold");
+  }
+  var actual = hoja.getRange(2, col0 + 1, values.length - 1, 3).getValues();
+  var cambios = false, ultSem = 0, ultDia = "";
+  for (var i = 1; i < values.length; i++) {
+    var r = values[i];
+    var mSem = /\d+/.exec(String(r[0] == null ? "" : r[0]));
+    var sem = mSem ? parseInt(mSem[0], 10) : ultSem;
+    var ej = String(r[3] || "").trim();
+    if (!sem || !ej) continue;
+    var diaRaw = String(r[1] || "").trim();
+    if (sem !== ultSem) ultDia = "";
+    if (!diaRaw) diaRaw = ultDia;
+    if (!diaRaw) continue;
+    ultSem = sem; ultDia = diaRaw;
+    var dia = /^\d+$/.test(diaRaw) ? "Día " + diaRaw : diaRaw;
+    var fila = actual[i - 1];
+    var d = log["hecho|" + sem + "|" + dia];
+    var e = log[sem + "|" + dia + "|" + ej];
+    if (d && String(d.hecho) === "1") {
+      var txtDia = "✓" + (d.f ? " " + d.f : "") + (d.rpe ? " · RPE " + d.rpe : "");
+      if (fila[0] !== txtDia) { fila[0] = txtDia; cambios = true; }
+    }
+    if (e) {
+      var series = (e.sets || []).filter(function (s) { return s && (s.r || s.k); })
+        .map(function (s) { return (s.r || "?") + (s.k ? " x " + s.k + "kg" : ""); }).join(" · ");
+      if (e.hechoTxt) series = e.hechoTxt; // ya viene como "S1 10 x 20kg · S2 ..."
+      var hecho = e.ok || series ? "✓" : "";
+      if (hecho && fila[1] !== hecho) { fila[1] = hecho; cambios = true; }
+      if (series && fila[2] !== series) { fila[2] = series; cambios = true; }
+    }
+  }
+  if (cambios) hoja.getRange(2, col0 + 1, actual.length, 3).setValues(actual);
 }
 
 var CAMPOS_ARCHIVO = { fotoPerfil: "Foto de perfil", fotoApto: "Apto fisico" };
