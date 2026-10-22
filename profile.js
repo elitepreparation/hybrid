@@ -750,7 +750,7 @@
     // "Todas iguales" nunca viene tildada de entrada: solo queda así si el alumno la eligió (y sigue siendo cierto)
     var iguales = n > 1 && !!saved.igual && !!guardadas && guardadas.every(function (s) { return s.r === guardadas[0].r && s.k === guardadas[0].k; });
     var psets = previo && Array.isArray(previo.sets) ? previo.sets.slice(0, 10) : [];
-    var tieneApr = !!ej.aprox;
+    var tieneApr = false; // la aproximación solo se indica como texto, no se completa
     return '<div class="ex-sets-box" data-sets data-k="' + attr(key) + '" data-plan="' + plan + '" data-n="' + n + '" data-prev="' + attr(JSON.stringify(psets)) + '"' + (tieneApr ? ' data-apr="1"' : '') + '>' +
       setsInterior(iguales, guardadas, plan, n, psets, tieneApr ? (saved.apr || {}) : null) + '</div>';
   }
