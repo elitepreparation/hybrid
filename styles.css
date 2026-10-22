@@ -1203,7 +1203,7 @@ h1, h2, h3, h4 { line-height: 1.22; }
 
 /* celular: series y reps caben en una sola línea */
 @media (max-width:640px) {
-  .ex-row { grid-template-columns: 180px minmax(0,1fr); }
-  .ex-row .ex-plan .ex-sr { flex-wrap: nowrap; gap: 0 .6rem; white-space: nowrap; }
-  .ex-row .ex-plan .ex-sr b { font-size: 1.05rem; }
+  .ex-row { grid-template-columns: 150px minmax(0,1fr); }
+  .ex-row .ex-plan .ex-sr { flex-wrap: nowrap; gap: 0 .45rem; white-space: nowrap; font-size: .62rem; }
+  .ex-row .ex-plan .ex-sr b { font-size: .95rem; }
 }
