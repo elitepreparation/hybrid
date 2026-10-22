@@ -812,11 +812,11 @@
       '<div class="day-acciones">' +
       '<button type="button" class="btn ' + (hecho ? 'btn-ghost' : 'btn-primary') + ' day-done" data-toggle-hecho data-semana="' + semana + '" data-dia="' + dia.dia + '">' +
       (hecho ? 'âœ“ DÃ­a hecho â€” deshacer' : 'Marcar dÃ­a como hecho') + '</button>' +
-      '<a class="btn btn-ghost day-consulta" href="' + waConsultaDia(semana, dia) + '" target="_blank" rel="noopener">Consultar este dÃ­a</a></div></div>';
+      '<a class="btn btn-ghost day-consulta" href="' + waConsultaDia(semana, dia) + '" target="_blank" rel="noopener">Consultar este dÃƒÂ­a</a></div></div>';
   }
 
-  // ---- Descargar la planificación (PDF desde "Imprimir / Guardar como PDF"): la semana o un solo día ----
-  // se arma una hoja aparte (#plan-print) que solo se ve al imprimir; sirve para llevarla en el celular sin señal
+  // ---- Descargar la planificaciÃ³n (PDF desde "Imprimir / Guardar como PDF"): la semana o un solo dÃ­a ----
+  // se arma una hoja aparte (#plan-print) que solo se ve al imprimir; sirve para llevarla en el celular sin seÃ±al
   function hojaPlanHTML(nivel, semana, soloDia) {
     var p = getJSON(KEYS.profile) || {};
     var dias = diasDeSemana(nivel, semana).filter(function (d) { return !soloDia || d.dia === soloDia; });
@@ -825,9 +825,9 @@
     function esMov(ej) { return /^movilidad/i.test(String(ej.bloque || "").trim()); }
     function linea(ej) {
       var sr = ej.series && (ej.repsTxt || ej.reps)
-        ? '<b>' + ej.series + '</b> series · ' + (ej.repsTxt ? '<b>' + escHtml(ej.repsTxt) + '</b>' : '<b>' + ej.reps + '</b> reps')
+        ? '<b>' + ej.series + '</b> series Â· ' + (ej.repsTxt ? '<b>' + escHtml(ej.repsTxt) + '</b>' : '<b>' + ej.reps + '</b> reps')
         : (ej.repsTxt ? '<b>' + escHtml(ej.repsTxt) + '</b>' : "");
-      var extra = [ej.carga, ej.aprox ? "Aproximación " + ej.aprox : "", ej.descanso ? "Descanso " + ej.descanso : ""].filter(Boolean).join(" · ");
+      var extra = [ej.carga, ej.aprox ? "AproximaciÃ³n " + ej.aprox : "", ej.descanso ? "Descanso " + ej.descanso : ""].filter(Boolean).join(" Â· ");
       return '<tr><td class="pp-n">' + escHtml(ej.nombre) + '</td><td class="pp-r">' + sr + (extra ? '<small>' + escHtml(extra) + '</small>' : '') + '</td></tr>';
     }
     function bloque(nombre, items) {
@@ -843,11 +843,11 @@
         if (ult && ult.nombre === nombre) ult.items.push(ej); else grupos.push({ nombre: nombre, items: [ej] });
       });
       html += grupos.map(function (g) { return bloque(g.nombre || "Entrenamiento", g.items); }).join("");
-      return '<div class="pp-dia"><div class="pp-dia-h"><h2>' + escHtml(d.dia) + '</h2><span>' + escHtml(focosDe(d).join(" · ")) + '</span></div>' + html + '</div>';
+      return '<div class="pp-dia"><div class="pp-dia-h"><h2>' + escHtml(d.dia) + '</h2><span>' + escHtml(focosDe(d).join(" Â· ")) + '</span></div>' + html + '</div>';
     }).join("");
     return '<div class="pp-hoja"><div class="pp-cab"><img src="assets/img/logo-transparent.png" alt="Elite Preparation">' +
       '<div class="pp-alumno"><b>' + escHtml(nombreVisible(p) || "Alumno") + '</b><span>' + escHtml(NIVEL_LABEL[nivel] || nivel) + '</span></div></div>' +
-      '<div class="pp-cuerpo"><div class="pp-titulo"><h1>Semana ' + semana + (soloDia ? ' · ' + escHtml(soloDia) : '') + '</h1></div>' + diasHtml + '</div>' +
+      '<div class="pp-cuerpo"><div class="pp-titulo"><h1>Semana ' + semana + (soloDia ? ' Â· ' + escHtml(soloDia) : '') + '</h1></div>' + diasHtml + '</div>' +
       '<div class="pp-pie"><span>Elite Preparation</span><span>Descargado el ' + hoyTxt + '</span></div></div>';
   }
 
@@ -881,9 +881,14 @@
       var b = e.target.closest && e.target.closest("[data-descargar]");
       if (!b) return;
       if (b.dataset.descargar === "dia") descargarPlan(Number(b.dataset.semana), b.dataset.dia);
-      else descargarPlan(vista.semana, null);
+      else {
+        // la semana que se estÃƒÂ¡ mirando; si la actual no existe en la planilla, se muestra la primera
+        var ss = semanasFor(getJSON(KEYS.nivel));
+        var hay = ss.some(function (s) { return s.semana === vista.semana; });
+        descargarPlan(hay ? vista.semana : (ss[0] ? ss[0].semana : vista.semana), null);
+      }
     });
-    // el logo se baja una vez con señal para que la descarga también salga sin internet
+    // el logo se baja una vez con seÃ±al para que la descarga tambiÃ©n salga sin internet
     try { new Image().src = "assets/img/logo-transparent.png"; } catch (err) {}
   }
 
