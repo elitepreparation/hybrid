@@ -1216,3 +1216,7 @@ h1, h2, h3, h4 { line-height: 1.22; }
   .ex-row .ex-plan .ex-carga { font-size: .95rem; }
   .ex-row .ex-plan .ex-desc { font-size: .6rem; }
 }
+@media (max-width:640px) {
+  .set-row, .set-row--unica { grid-template-columns: 1rem minmax(0,1fr) .5rem minmax(0,1fr) 1.4rem; gap: .25rem; }
+  .set-row .set-in { padding-left: .15rem; padding-right: .15rem; min-width: 0; width: 100%; }
+}
