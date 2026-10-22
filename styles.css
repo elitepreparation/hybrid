@@ -1200,3 +1200,10 @@ h1, h2, h3, h4 { line-height: 1.22; }
 /* cada fila de series (también las que se agregan) usa las mismas columnas, así quedan alineadas entre sí */
 .set-row, .set-row--apr, .set-row--unica { grid-template-columns: 1.8rem minmax(0, 1fr) .9rem minmax(0, 1fr) 1.6rem; }
 .set-row .set-del { justify-self: end; }
+
+/* celular: series y reps caben en una sola línea */
+@media (max-width:640px) {
+  .ex-row { grid-template-columns: 180px minmax(0,1fr); }
+  .ex-row .ex-plan .ex-sr { flex-wrap: nowrap; gap: 0 .6rem; white-space: nowrap; }
+  .ex-row .ex-plan .ex-sr b { font-size: 1.05rem; }
+}
