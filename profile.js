@@ -815,6 +815,78 @@
       '<a class="btn btn-ghost day-consulta" href="' + waConsultaDia(semana, dia) + '" target="_blank" rel="noopener">Consultar este dÃ­a</a></div></div>';
   }
 
+  // ---- Descargar la planificación (PDF desde "Imprimir / Guardar como PDF"): la semana o un solo día ----
+  // se arma una hoja aparte (#plan-print) que solo se ve al imprimir; sirve para llevarla en el celular sin señal
+  function hojaPlanHTML(nivel, semana, soloDia) {
+    var p = getJSON(KEYS.profile) || {};
+    var dias = diasDeSemana(nivel, semana).filter(function (d) { return !soloDia || d.dia === soloDia; });
+    var f = new Date();
+    var hoyTxt = String(f.getDate()).padStart(2, "0") + "/" + String(f.getMonth() + 1).padStart(2, "0") + "/" + f.getFullYear();
+    function esMov(ej) { return /^movilidad/i.test(String(ej.bloque || "").trim()); }
+    function linea(ej) {
+      var sr = ej.series && (ej.repsTxt || ej.reps)
+        ? '<b>' + ej.series + '</b> series · ' + (ej.repsTxt ? '<b>' + escHtml(ej.repsTxt) + '</b>' : '<b>' + ej.reps + '</b> reps')
+        : (ej.repsTxt ? '<b>' + escHtml(ej.repsTxt) + '</b>' : "");
+      var extra = [ej.carga, ej.aprox ? "Aproximación " + ej.aprox : "", ej.descanso ? "Descanso " + ej.descanso : ""].filter(Boolean).join(" · ");
+      return '<tr><td class="pp-n">' + escHtml(ej.nombre) + '</td><td class="pp-r">' + sr + (extra ? '<small>' + escHtml(extra) + '</small>' : '') + '</td></tr>';
+    }
+    function bloque(nombre, items) {
+      return '<div class="pp-blk">' + escHtml(nombre) + '</div><table>' + items.map(linea).join("") + '</table>';
+    }
+    var diasHtml = dias.map(function (d) {
+      var movs = d.ejercicios.filter(esMov), resto = d.ejercicios.filter(function (e) { return !esMov(e); });
+      var html = movs.length ? bloque("Movilidad", movs) : "";
+      var grupos = [];
+      resto.forEach(function (ej) {
+        var nombre = ej.bloque || ej.foco || d.foco || "";
+        var ult = grupos[grupos.length - 1];
+        if (ult && ult.nombre === nombre) ult.items.push(ej); else grupos.push({ nombre: nombre, items: [ej] });
+      });
+      html += grupos.map(function (g) { return bloque(g.nombre || "Entrenamiento", g.items); }).join("");
+      return '<div class="pp-dia"><div class="pp-dia-h"><h2>' + escHtml(d.dia) + '</h2><span>' + escHtml(focosDe(d).join(" · ")) + '</span></div>' + html + '</div>';
+    }).join("");
+    return '<div class="pp-hoja"><div class="pp-cab"><img src="assets/img/logo-transparent.png" alt="Elite Preparation">' +
+      '<div class="pp-alumno"><b>' + escHtml(nombreVisible(p) || "Alumno") + '</b><span>' + escHtml(NIVEL_LABEL[nivel] || nivel) + '</span></div></div>' +
+      '<div class="pp-cuerpo"><div class="pp-titulo"><h1>Semana ' + semana + (soloDia ? ' · ' + escHtml(soloDia) : '') + '</h1></div>' + diasHtml + '</div>' +
+      '<div class="pp-pie"><span>Elite Preparation</span><span>Descargado el ' + hoyTxt + '</span></div></div>';
+  }
+
+  function descargarPlan(semana, soloDia) {
+    var nivel = getJSON(KEYS.nivel);
+    if (!nivel) return;
+    var viejo = document.getElementById("plan-print");
+    if (viejo) viejo.remove();
+    var cont = document.createElement("div");
+    cont.id = "plan-print";
+    cont.innerHTML = hojaPlanHTML(nivel, semana, soloDia);
+    document.body.appendChild(cont);
+    var titulo = document.title;
+    document.title = "Planificacion Semana " + semana + (soloDia ? " " + soloDia : "") + " - Elite Preparation";
+    document.body.classList.add("imprimiendo");
+    function limpiar() {
+      document.body.classList.remove("imprimiendo");
+      document.title = titulo;
+      cont.remove();
+      window.removeEventListener("afterprint", limpiar);
+    }
+    window.addEventListener("afterprint", limpiar);
+    // espera a que cargue el logo para que salga en el PDF
+    var img = cont.querySelector("img");
+    function imprimir() { setTimeout(function () { window.print(); }, 50); }
+    if (img && !img.complete) { img.onload = imprimir; img.onerror = imprimir; } else imprimir();
+  }
+
+  function initDescargas() {
+    document.addEventListener("click", function (e) {
+      var b = e.target.closest && e.target.closest("[data-descargar]");
+      if (!b) return;
+      if (b.dataset.descargar === "dia") descargarPlan(Number(b.dataset.semana), b.dataset.dia);
+      else descargarPlan(vista.semana, null);
+    });
+    // el logo se baja una vez con señal para que la descarga también salga sin internet
+    try { new Image().src = "assets/img/logo-transparent.png"; } catch (err) {}
+  }
+
   function renderWeekly(nivel) {
     var log = getJSON(KEYS.log) || {};
     renderMes(nivel);
@@ -1660,6 +1732,7 @@
     initAvatar();
     initRegistro();
     initVolverInicio();
+    initDescargas();
     initOffline();
     sincronizarPendiente();
     marcarObligatorios();
