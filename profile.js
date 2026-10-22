@@ -64,6 +64,7 @@
     plan: "complex180_plan", // última planificación recibida de cada nivel (para entrenar sin señal)
     videos: "complex180_videos", // última lista de videos recibida
     pend: "complex180_pend", // hay registros sin subir al servidor (se reintenta al volver la señal)
+    inicio: "complex180_inicio", // fecha (aaaa-mm-dd) en que empieza su Semana 1, la carga Gaby en "Alumnos - claves"
     hist: "complex180_hist", // meses anteriores guardados (copia del servidor)
     reinicio: "complex180_reinicio", // marca que cambia cuando Gaby borra registros desde su panel
     nombreCuenta: "complex180_nombre_cuenta" // el "Nombre" que Lucas cargó en Alumnos - claves,
@@ -82,8 +83,18 @@
     return m ? m[1] : null;
   }
 
-  // semana 1-4 del mes según el día de hoy (día 1-7 = semana 1, 8-14 = semana 2, …)
+  // semana actual: si Gaby cargó el inicio del plan del alumno, se cuenta desde ahí (7 días por semana);
+  // si no, semana 1-4 del mes según el día de hoy (día 1-7 = semana 1, 8-14 = semana 2, …)
   function semanaActual() {
+    var ini = /^(\d{4})-(\d{2})-(\d{2})$/.exec(localStorage.getItem(KEYS.inicio) || "");
+    if (ini) {
+      var h = new Date();
+      var dias = Math.floor((Date.UTC(h.getFullYear(), h.getMonth(), h.getDate()) - Date.UTC(+ini[1], +ini[2] - 1, +ini[3])) / 864e5);
+      var n = Math.max(1, Math.floor(dias / 7) + 1);
+      var ss = semanasFor(getJSON(KEYS.nivel));
+      var ultima = ss.length ? ss[ss.length - 1].semana : n;
+      return Math.min(n, ultima);
+    }
     return Math.min(4, Math.ceil(new Date().getDate() / 7));
   }
 
@@ -300,6 +311,7 @@
             localStorage.setItem(KEYS.clave, clave);
             if (data.nivel === "OPEN" || data.nivel === "PRO" || data.nivel === "PERSONALIZADO") setJSON(KEYS.nivel, data.nivel);
             if (data.nombre) localStorage.setItem(KEYS.nombreCuenta, data.nombre);
+            if (data.inicio) localStorage.setItem(KEYS.inicio, data.inicio); else localStorage.removeItem(KEYS.inicio);
             // el servidor manda el perfil/registros guardados la última vez (en cualquier dispositivo)
             if (data.perfil) setJSON(KEYS.profile, data.perfil);
             if (data.registros) setJSON(KEYS.log, data.registros);
@@ -1659,6 +1671,7 @@
   function sincronizarRegistros(data) {
     if (data && data.ok) {
       var local = localStorage.getItem(KEYS.reinicio) || "";
+      if (data.inicio) localStorage.setItem(KEYS.inicio, data.inicio); else localStorage.removeItem(KEYS.inicio);
       if (data.historial) setJSON(KEYS.hist, data.historial);
       if (data.reinicio && data.reinicio !== local) {
         setJSON(KEYS.log, data.registros || {});

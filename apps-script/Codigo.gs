@@ -308,6 +308,7 @@ function getAlumnoLogin(email, clave) {
     perfil: parseJSONSeguro(r[5]),
     registros: parseJSONSeguro(r[6]),
     historial: parseJSONSeguro(r[13]), // COL_HISTORIAL: meses anteriores
+    inicio: inicioDe(r),
     reinicio: String(r[12] || "") // COL_REINICIO (se define más abajo en el archivo)
   };
 }
@@ -656,10 +657,17 @@ function reorganizarPlanificaciones() {
 //     del alumno se entera y no vuelve a subir lo borrado) | N Historial de meses anteriores (JSON)
 var COL_ULTIMO = 9, COL_TIEMPO = 10, COL_INGRESOS = 11, COL_ULTSESION = 12;
 var COL_REINICIO = 13, COL_HISTORIAL = 14;
+var COL_INICIO = 15; // O: "Inicio del plan" - fecha en que arranca su Semana 1 (si esta vacia, se usa la semana del mes)
 var MAX_CELDA = 45000; // una celda de Sheets admite 50.000 caracteres
 
+// fecha de inicio del plan del alumno (columna O) como aaaa-mm-dd, o "" si no la cargaron
+function inicioDe(fila) {
+  var f = parseFecha(fila[COL_INICIO - 1]);
+  return f ? Utilities.formatDate(f, Session.getScriptTimeZone(), "yyyy-MM-dd") : "";
+}
+
 function asegurarEncabezadosAdmin(hoja) {
-  var enc = ["Último ingreso", "Tiempo total (seg)", "Ingresos", "Última sesión (seg)", "Reinicio de registros", "Historial (JSON)"];
+  var enc = ["Último ingreso", "Tiempo total (seg)", "Ingresos", "Última sesión (seg)", "Reinicio de registros", "Historial (JSON)", "Inicio del plan (Semana 1)"];
   var actual = hoja.getRange(1, COL_ULTIMO, 1, enc.length).getValues()[0];
   for (var i = 0; i < enc.length; i++) {
     if (!actual[i]) hoja.getRange(1, COL_ULTIMO + i).setValue(enc[i]).setFontWeight("bold");
@@ -681,7 +689,7 @@ function registrarSesion(email, clave) {
   } finally { lock.releaseLock(); }
   // devuelve los registros guardados y la marca de reinicio: si Gaby borró algo desde el panel,
   // el celular del alumno adopta esta copia en vez de volver a subir lo viejo
-  return { ok: true, reinicio: String(res.r[COL_REINICIO - 1] || ""), registros: parseJSONSeguro(res.r[6]), historial: parseJSONSeguro(res.r[COL_HISTORIAL - 1]) };
+  return { ok: true, inicio: inicioDe(res.r), reinicio: String(res.r[COL_REINICIO - 1] || ""), registros: parseJSONSeguro(res.r[6]), historial: parseJSONSeguro(res.r[COL_HISTORIAL - 1]) };
 }
 
 // "latido": el perfil abierto avisa cada tanto cuántos segundos pasaron desde el aviso anterior
