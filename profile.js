@@ -866,6 +866,11 @@
   function descargarPlan(semana, soloDia) {
     var nivel = getJSON(KEYS.nivel);
     if (!nivel) return;
+    // solo se descarga la planificación real del alumno (la misma que ve en la web), nunca la de muestra
+    if (!(planCache[nivel] && planCache[nivel].length)) {
+      alert("Todavía no se cargó tu planificación. Esperá unos segundos y probá de nuevo.");
+      return;
+    }
     var viejo = document.getElementById("plan-print");
     if (viejo) viejo.remove();
     var cont = document.createElement("div");
