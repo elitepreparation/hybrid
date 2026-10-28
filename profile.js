@@ -1071,9 +1071,21 @@
         log[key] = nuevoDia;
         setJSON(KEYS.log, log);
         guardarRegistrosServidor(log);
+        // al terminar un día, queda abierto el siguiente que le falta (primero los que siguen, después los anteriores)
+        if (marcar) {
+          var diasSem = diasDeSemana(nivel, Number(toggle.dataset.semana));
+          var pos = diasSem.map(function (d) { return d.dia; }).indexOf(toggle.dataset.dia);
+          var faltan = diasSem.filter(function (d) { return !diaHecho(log, toggle.dataset.semana, d.dia); });
+          var sig = faltan.filter(function (d) { return diasSem.indexOf(d) > pos; })[0] || faltan[0];
+          if (sig) vista.dia = sig.dia;
+        }
         renderWeekly(nivel);
         renderMonthly(nivel);
-        if (marcar) festejar();
+        if (marcar) {
+          festejar();
+          var tope = $("[data-day-nav]");
+          if (tope && tope.scrollIntoView) tope.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
         return;
       }
       var play = e.target.closest("[data-play-id]");
