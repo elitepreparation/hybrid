@@ -64,6 +64,7 @@
     plan: "complex180_plan", // última planificación recibida de cada nivel (para entrenar sin señal)
     videos: "complex180_videos", // última lista de videos recibida
     pend: "complex180_pend", // hay registros sin subir al servidor (se reintenta al volver la señal)
+    vista: "complex180_vista", // semana y día que estaba mirando, para seguir ahí si recarga la página
     inicio: "complex180_inicio", // fecha (aaaa-mm-dd) en que empieza su Semana 1, la carga Gaby en "Alumnos - claves"
     hist: "complex180_hist", // meses anteriores guardados (copia del servidor)
     reinicio: "complex180_reinicio", // marca que cambia cuando Gaby borra registros desde su panel
@@ -909,13 +910,31 @@
     try { new Image().src = "assets/img/logo-transparent.png"; } catch (err) {}
   }
 
+  // al recargar la página, vuelve a la altura donde estaba (una sola vez, cuando ya se dibujó el día)
+  var scrollRestaurado = false;
+  function restaurarScroll() {
+    if (scrollRestaurado) return;
+    scrollRestaurado = true;
+    var y = 0; try { y = Number(sessionStorage.getItem("complex180_scroll")) || 0; } catch (err) {}
+    if (y > 0) setTimeout(function () { window.scrollTo(0, y); }, 150);
+  }
+  var tScroll;
+  window.addEventListener("scroll", function () {
+    clearTimeout(tScroll);
+    tScroll = setTimeout(function () { if (scrollRestaurado) { try { sessionStorage.setItem("complex180_scroll", String(Math.round(window.scrollY))); } catch (err) {} } }, 200);
+  });
+
   function renderWeekly(nivel) {
     var log = getJSON(KEYS.log) || {};
     renderMes(nivel);
     renderHoy(nivel);
     var semanas = semanasFor(nivel);
     var hoy = semanaActual();
-    if (vista.nivel !== nivel) { vista.nivel = nivel; vista.semana = hoy; vista.dia = null; }
+    if (vista.nivel !== nivel) {
+      vista.nivel = nivel; vista.semana = hoy; vista.dia = null;
+      var guardada = getJSON(KEYS.vista); // si recarga la página, vuelve a donde estaba
+      if (guardada && guardada.nivel === nivel && semanas.some(function (s) { return s.semana === guardada.semana; })) { vista.semana = guardada.semana; vista.dia = guardada.dia; }
+    }
     var dias = diasDeSemana(nivel, vista.semana);
     var panel = $("[data-week-panel]");
     if (!dias.length) { panel.hidden = true; return; }
@@ -944,6 +963,8 @@
 
     var dia = dias.filter(function (d) { return d.dia === vista.dia; })[0];
     $("[data-week-dias]").innerHTML = diaDetalleHTML(vista.semana, dia, log);
+    try { setJSON(KEYS.vista, { nivel: nivel, semana: vista.semana, dia: vista.dia }); } catch (err) {}
+    restaurarScroll();
   }
 
   function initPlanNav() {
