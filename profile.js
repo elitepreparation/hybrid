@@ -322,8 +322,13 @@
             else { showView("view-form"); }
           } else if (data.error === "vencido") {
             msg.textContent = "Tu acceso venció. Pagá de nuevo y Gaby te lo renueva.";
+          } else if (data.error === "sin fecha de pago registrada") {
+            msg.textContent = "Tu cuenta todavía no tiene el pago registrado. Avisale a Gaby.";
+          } else if (data.error === "mail no encontrado" || data.error === "clave incorrecta" || data.error === "faltan datos") {
+            // no se distingue cuál de los dos falló, para no revelar qué mails existen
+            msg.textContent = "Mail o clave incorrectos. Revisá que estén bien escritos, sin espacios de más.";
           } else {
-            msg.textContent = "Mail o clave incorrectos. Fijate con Gaby.";
+            msg.textContent = "No pudimos verificar tu cuenta. Probá de nuevo en un rato o avisale a Gaby.";
           }
         })
         .catch(function () {
