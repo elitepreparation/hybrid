@@ -1289,8 +1289,12 @@
         renderQuickVideos();
       }
     }
+    // se muestra enseguida la última lista guardada y se actualiza cuando llega la del servidor
+    var videosIniciales = getJSON(KEYS.videos);
+    if (videosIniciales && videosIniciales.ok) usarVideos(videosIniciales);
     fetch(API_URL + "?action=videos").then(function (r) { return r.json(); }).then(function (data) {
       if (data && data.ok) { try { setJSON(KEYS.videos, data); } catch (err) {} }
+      if (videosIniciales && videosIniciales.ok && data && data.ok && JSON.stringify(videosIniciales) === JSON.stringify(data)) return;
       usarVideos(data);
     }).catch(function () { usarVideos(getJSON(KEYS.videos)); /* sin conexión: última lista guardada, o la de muestra */ });
   }
@@ -1371,12 +1375,17 @@
         if (monthly) monthly.hidden = true;
       }
     }
+    // se muestra enseguida la última planificación guardada y se actualiza cuando llega la del servidor
+    var inicial = (getJSON(KEYS.plan) || {})[nivel];
+    if (inicial) aplicar(inicial);
     fetch(url).then(function (r) { return r.json(); }).then(function (data) {
       if (!data || !data.ok) throw new Error("plan");
       // se guarda la última planificación recibida para poder entrenar sin señal
       var guardados = getJSON(KEYS.plan) || {};
       guardados[nivel] = data;
       try { setJSON(KEYS.plan, guardados); } catch (err) {}
+      // si no cambió nada, no se vuelve a dibujar (así no se pierde lo que el alumno está escribiendo)
+      if (inicial && JSON.stringify(inicial.semanas) === JSON.stringify(data.semanas) && JSON.stringify(inicial.archivos) === JSON.stringify(data.archivos)) return;
       aplicar(data);
     }).catch(function () {
       var copia = (getJSON(KEYS.plan) || {})[nivel];

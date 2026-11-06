@@ -10,12 +10,20 @@ function doGet(e) {
   var action = (e && e.parameter && e.parameter.action) || "";
   var out;
   try {
-    if (action === "videos") out = getVideos();
+    // videos, planes y estadísticas se guardan 5 minutos: leer Drive y Hojas tarda varios segundos.
+    // Para ver un cambio al instante (probar una planilla recién editada) se agrega &fresh=1 a la dirección.
+    var fresco = e.parameter.fresh === "1";
+    if (action === "videos") out = cacheado("videos", 300, getVideos, fresco);
     else if (action === "plan") {
       var nivelPedido = String(e.parameter.nivel || "OPEN").toUpperCase();
-      out = (nivelPedido === "PERSONALIZADO") ? getPlanPersonalizado(e.parameter.nombre) : getPlan(nivelPedido);
+      if (nivelPedido === "PERSONALIZADO") {
+        var nombrePedido = String(e.parameter.nombre || "");
+        out = cacheado("plan|P|" + nombrePedido.trim().toLowerCase().slice(0, 120), 300, function () { return getPlanPersonalizado(nombrePedido); }, fresco);
+      } else {
+        out = cacheado("plan|" + nivelPedido, 300, function () { return getPlan(nivelPedido); }, fresco);
+      }
     }
-    else if (action === "stats") out = getStatsPublicas();
+    else if (action === "stats") out = cacheado("stats", 600, getStatsPublicas, fresco);
     else if (action === "evento") out = registrarEvento(e.parameter.e);
     else out = { ok: false, error: "accion desconocida" };
   } catch (err) {
@@ -44,6 +52,22 @@ function doPost(e) {
     out = { ok: false, error: String(err) };
   }
   return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);
+}
+
+// guarda la respuesta de fn() en la memoria del servidor por "segundos"; si ya está guardada, la devuelve al instante.
+// Solo se guardan respuestas correctas. saltar = true ignora lo guardado y lo vuelve a calcular.
+function cacheado(clave, segundos, fn, saltar) {
+  var cache = CacheService.getScriptCache();
+  if (!saltar) {
+    var hit = cache.get(clave);
+    if (hit) { try { return JSON.parse(hit); } catch (err) {} }
+  }
+  var out = fn();
+  try {
+    var s = JSON.stringify(out);
+    if (out && out.ok && s.length < 90000) cache.put(clave, s, segundos);
+  } catch (err) {}
+  return out;
 }
 
 function rootFolder() {
