@@ -286,22 +286,39 @@ var UN_MES_MS = 30 * 24 * 60 * 60 * 1000; // 30 días ≈ 1 mes de validez — s
 // por mail+clave — lo usan getAlumnoLogin, guardarDatosAlumno y guardarArchivoAlumno, antes
 // era la misma búsqueda copiada 2 veces.
 // Devuelve { ok:true, hoja, fila (1-based), r (valores de la fila) } o { ok:false, error }.
-function buscarFilaAlumno(email, clave) {
+// La planilla "Alumnos - claves" se abre por su id, que se guarda 6 horas en la memoria del servidor:
+// buscarla por carpetas de Drive en cada pedido tardaba 1 o 2 segundos (ingreso, guardados, latidos).
+function planillaAlumnos() {
+  var cache = CacheService.getScriptCache();
+  var id = cache.get("id_alumnos");
+  if (id) { try { return SpreadsheetApp.openById(id); } catch (err) {} } // si el archivo cambió, se busca de nuevo
   var alumnosFolder = subFolder(rootFolder(), "Alumnos");
   var archivos = alumnosFolder ? alumnosFolder.getFilesByName("Alumnos - claves") : null;
-  if (!archivos || !archivos.hasNext()) return { ok: false, error: "no configurado" };
+  if (!archivos || !archivos.hasNext()) return null;
+  var archivo = archivos.next();
+  try { cache.put("id_alumnos", archivo.getId(), 21600); } catch (err) {}
+  return SpreadsheetApp.open(archivo);
+}
+
+function buscarFilaAlumno(email, clave) {
+  var libro = planillaAlumnos();
+  if (!libro) return { ok: false, error: "no configurado" };
 
   var emailNorm = String(email || "").trim().toLowerCase();
   var claveNorm = String(clave || "").trim();
   if (!emailNorm || !claveNorm) return { ok: false, error: "faltan datos" };
 
-  var hoja = SpreadsheetApp.open(archivos.next()).getSheets()[0];
-  var values = hoja.getDataRange().getValues();
-  for (var i = 1; i < values.length; i++) {
-    var r = values[i];
-    if (String(r[1] || "").trim().toLowerCase() !== emailNorm) continue;
+  // se lee primero solo la columna de mails y después únicamente la fila del alumno (no toda la planilla)
+  var hoja = libro.getSheets()[0];
+  var ultFila = hoja.getLastRow();
+  if (ultFila < 2) return { ok: false, error: "mail no encontrado" };
+  var mails = hoja.getRange(2, 2, ultFila - 1, 1).getValues();
+  for (var i = 0; i < mails.length; i++) {
+    if (String(mails[i][0] || "").trim().toLowerCase() !== emailNorm) continue;
+    var fila = i + 2;
+    var r = hoja.getRange(fila, 1, 1, hoja.getLastColumn()).getValues()[0];
     if (String(r[2] || "").trim() !== claveNorm) return { ok: false, error: "clave incorrecta" };
-    return { ok: true, hoja: hoja, fila: i + 1, r: r };
+    return { ok: true, hoja: hoja, fila: fila, r: r };
   }
   return { ok: false, error: "mail no encontrado" };
 }
@@ -409,20 +426,31 @@ function bloquesAlumno(hoja) {
   return out;
 }
 
+// planilla del Plan Personalizado (una pestaña por alumno); igual que arriba, el id se guarda 6 horas
+function planillaPersonalizada() {
+  var cache = CacheService.getScriptCache();
+  var id = cache.get("id_personalizada");
+  if (id) { try { return SpreadsheetApp.openById(id); } catch (err) {} }
+  var plan = subFolder(rootFolder(), "Planificaciones");
+  var carpeta = plan ? subFolder(plan, "PERSONALIZADO") : null;
+  if (!carpeta) return null;
+  var archivo = null;
+  var exactos = carpeta.getFilesByName("Planificacion Personalizada");
+  if (exactos.hasNext()) archivo = exactos.next();
+  else { var todos = carpeta.getFilesByType(MimeType.GOOGLE_SHEETS); if (todos.hasNext()) archivo = todos.next(); }
+  if (!archivo) return null;
+  try { cache.put("id_personalizada", archivo.getId(), 21600); } catch (err) {}
+  return SpreadsheetApp.open(archivo);
+}
+
 // Copia lo que el alumno va marcando en la hoja de su plan: un bloque de 3 columnas POR MES, con el mes en
 // curso a la izquierda y los anteriores hacia la derecha. Son columnas con título "Alumno · ..." que
 // parsePlanificacion no lee, así que no cambian nada en la web.
 function copiarRegistrosEnHoja(nombre, registrosJson, historial) {
   var log = JSON.parse(registrosJson || "{}");
-  var plan = subFolder(rootFolder(), "Planificaciones");
-  var carpeta = plan ? subFolder(plan, "PERSONALIZADO") : null;
-  if (!carpeta) return;
-  var archivo = null;
-  var exactos = carpeta.getFilesByName("Planificacion Personalizada");
-  if (exactos.hasNext()) archivo = exactos.next();
-  else { var todos = carpeta.getFilesByType(MimeType.GOOGLE_SHEETS); if (todos.hasNext()) archivo = todos.next(); }
-  if (!archivo) return;
-  var hoja = buscarHojaPorNombre(SpreadsheetApp.open(archivo), nombre);
+  var libro = planillaPersonalizada();
+  if (!libro) return;
+  var hoja = buscarHojaPorNombre(libro, nombre);
   if (!hoja) return;
   volcarRegistrosEnHoja(hoja, log, historial);
 }
