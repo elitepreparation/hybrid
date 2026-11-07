@@ -188,6 +188,48 @@
       }).join("") + '</tbody></table>';
   }
 
+  // todos los entrenamientos del alumno juntos (mes en curso + meses anteriores), del más nuevo al más viejo.
+  // La web guarda los registros por mes, así que una misma semana del plan puede quedar partida entre dos meses.
+  function entrenamientosHTML(a) {
+    var fuentes = [{ mes: "Mes en curso", reg: a.registros }];
+    var hist = a.historial || {};
+    Object.keys(hist).forEach(function (m) { fuentes.push({ mes: m, reg: hist[m] }); });
+    var dias = [];
+    fuentes.forEach(function (f) {
+      var reg = f.reg || {};
+      var porDia = {};
+      Object.keys(reg).forEach(function (k) {
+        if (k.charAt(0) === "_") return;
+        var v = reg[k] || {};
+        var p = k.split("|");
+        if (k.indexOf("hecho|") === 0) {
+          var id = p[1] + "|" + p[2];
+          porDia[id] = porDia[id] || { semana: p[1], dia: p[2], ejercicios: [] };
+          if (v.hecho === "1") { porDia[id].hecho = true; porDia[id].f = v.f || ""; porDia[id].rpe = v.rpe || ""; }
+        } else if (v.ok === "1" || v.hechoTxt) {
+          var id2 = p[0] + "|" + p[1];
+          porDia[id2] = porDia[id2] || { semana: p[0], dia: p[1], ejercicios: [] };
+          porDia[id2].ejercicios.push({ nombre: p.slice(2).join("|"), txt: v.hechoTxt || "", ok: v.ok === "1" });
+        }
+      });
+      Object.keys(porDia).forEach(function (id) { porDia[id].mes = f.mes; dias.push(porDia[id]); });
+    });
+    dias = dias.filter(function (d) { return d.hecho || d.ejercicios.length; });
+    if (!dias.length) return '<p class="admin-muted">Todavía no registró entrenamientos.</p>';
+    dias.sort(function (x, y) {
+      return String(y.f || "").localeCompare(String(x.f || "")) || Number(y.semana) - Number(x.semana) || String(y.dia).localeCompare(String(x.dia));
+    });
+    return dias.map(function (d) {
+      var titulo = (d.f ? esc(fechaCorta(d.f)) + ' · ' : '') + '<b>' + esc(d.dia) + '</b> · Semana ' + esc(d.semana) + ' <span class="admin-muted">(' + esc(d.mes) + ')</span>' +
+        (d.hecho ? ' · ✓ hecho' : ' · sin marcar como hecho') + (d.rpe ? ' · esfuerzo ' + esc(d.rpe) : '') + ' · ' + d.ejercicios.length + ' ejercicios';
+      var filas = d.ejercicios.length
+        ? '<table class="log-table"><thead><tr><th>Ejercicio</th><th>Lo que hizo</th></tr></thead><tbody>' +
+          d.ejercicios.map(function (e) { return '<tr><td>' + esc(e.nombre) + '</td><td>' + esc(e.txt || (e.ok ? "✓" : "—")) + '</td></tr>'; }).join("") + '</tbody></table>'
+        : '<p class="admin-muted">Sin ejercicios cargados.</p>';
+      return '<details class="admin-hist"><summary>' + titulo + '</summary>' + filas + '</details>';
+    }).join("");
+  }
+
   function detalleHTML(a) {
     var av = avance(a);
     var semanas = Object.keys(av.hechosPorSemana).sort();
@@ -225,6 +267,7 @@
       '<div><p class="admin-sub">Días hechos (mes en curso)</p><ul>' + hechos + '</ul></div>' +
       '<div><p class="admin-sub">Datos</p><ul>' + datos + '</ul>' + (fotos.length ? '<p>' + fotos.join(" · ") + '</p>' : '') + '</div>' +
       '<div class="admin-detail-wide"><p class="admin-sub">Objetivos del alumno</p>' + metasHtml + '</div>' +
+      '<div class="admin-detail-wide"><p class="admin-sub">Todos los entrenamientos (del más reciente al más viejo)</p>' + entrenamientosHTML(a) + '</div>' +
       '<div class="admin-detail-wide"><p class="admin-sub">Ejercicios registrados (mes en curso)</p>' + tablaEntradas(av.entradas) + '</div>' +
       '<div class="admin-detail-wide"><p class="admin-sub">Historial de meses anteriores</p>' + historial + '</div>' +
       '<div class="admin-detail-wide admin-danger"><p class="admin-muted">Los registros se guardan hasta que los borres vos.</p>' +
