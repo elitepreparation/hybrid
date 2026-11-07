@@ -473,6 +473,7 @@ function volcarRegistrosEnHoja(hoja, log, historial) {
 
   Object.keys(meses).sort().forEach(function (m) { // del más viejo al más nuevo: cada uno nuevo se coloca a la izquierda
     var etq = etiquetaMes(m);
+    SpreadsheetApp.flush(); // que se vean las columnas recién creadas antes de buscar los bloques
     var bloques = bloquesAlumno(hoja);
     var existente = bloques.filter(function (b) { return b.mes === etq; })[0];
     var col, nuevo = !existente;
@@ -485,6 +486,7 @@ function volcarRegistrosEnHoja(hoja, log, historial) {
       if (col + 2 > hoja.getMaxColumns()) hoja.insertColumnsAfter(hoja.getMaxColumns(), col + 2 - hoja.getMaxColumns());
       hoja.getRange(1, col, 1, 3).setValues([SUBCOLS_ALUMNO.map(function (s) { return "Alumno · " + etq + " · " + s; })]).setFontWeight("bold");
     }
+    SpreadsheetApp.flush();
     // el mes en curso se recalcula siempre; los meses anteriores se escriben una sola vez, al crearse
     if (nuevo || m === mesActual) {
       var filas = filasDeRegistros(values, meses[m]);
