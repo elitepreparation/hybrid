@@ -375,18 +375,44 @@ function guardarDatosAlumno(email, clave, perfilJson, registrosJson) {
     res.hoja.getRange(res.fila, 7).setValue(registrosJson);
     // Plan Personalizado: lo que el alumno marca también queda en su hoja, en columnas aparte
     if (String(res.r[3] || "").trim().toUpperCase() === "PERSONALIZADO") {
-      try { copiarRegistrosEnHoja(String(res.r[0] || "").trim(), registrosJson); } catch (err) {}
+      try { copiarRegistrosEnHoja(String(res.r[0] || "").trim(), registrosJson, parseJSONSeguro(res.r[COL_HISTORIAL - 1]) || {}); } catch (err) {}
     }
   }
   return { ok: true };
 }
 
-var COLS_ALUMNO = ["Alumno · Día hecho", "Alumno · Ejercicio hecho", "Alumno · Series (reps x kg)"];
+var MESES_CORTOS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+var SUBCOLS_ALUMNO = ["Día hecho", "Ejercicio hecho", "Series (reps x kg)"];
 
-// Copia lo que el alumno va marcando en la hoja de su plan, en 3 columnas al final con título
-// "Alumno · ...". Son columnas que parsePlanificacion no lee, así que no cambian nada en la web.
-// Solo escribe las celdas que tienen registro: no borra lo anterior.
-function copiarRegistrosEnHoja(nombre, registrosJson) {
+// "2026-11" -> "Nov 2026"
+function etiquetaMes(m) {
+  var p = /^(\d{4})-(\d{2})$/.exec(String(m));
+  return p ? MESES_CORTOS[Number(p[2]) - 1] + " " + p[1] : String(m);
+}
+// "Nov 2026" -> "2026-11" (para poder ordenar los meses)
+function claveMes(etq) {
+  var p = /^(\S{3}) (\d{4})$/.exec(String(etq));
+  var i = p ? MESES_CORTOS.indexOf(p[1]) : -1;
+  return i < 0 ? "" : p[2] + "-" + ("0" + (i + 1)).slice(-2);
+}
+
+// bloques de columnas del alumno que ya hay en la hoja: "Alumno · Nov 2026 · Día hecho" abre cada bloque de 3
+function bloquesAlumno(hoja) {
+  var ult = hoja.getLastColumn();
+  if (!ult) return [];
+  var fila = hoja.getRange(1, 1, 1, ult).getValues()[0];
+  var out = [];
+  for (var c = 0; c < fila.length; c++) {
+    var m = /^Alumno · (\S{3} \d{4}) · Día hecho$/.exec(String(fila[c]).trim());
+    if (m) out.push({ col: c + 1, mes: m[1], clave: claveMes(m[1]) });
+  }
+  return out;
+}
+
+// Copia lo que el alumno va marcando en la hoja de su plan: un bloque de 3 columnas POR MES, con el mes en
+// curso a la izquierda y los anteriores hacia la derecha. Son columnas con título "Alumno · ..." que
+// parsePlanificacion no lee, así que no cambian nada en la web.
+function copiarRegistrosEnHoja(nombre, registrosJson, historial) {
   var log = JSON.parse(registrosJson || "{}");
   var plan = subFolder(rootFolder(), "Planificaciones");
   var carpeta = plan ? subFolder(plan, "PERSONALIZADO") : null;
@@ -398,22 +424,15 @@ function copiarRegistrosEnHoja(nombre, registrosJson) {
   if (!archivo) return;
   var hoja = buscarHojaPorNombre(SpreadsheetApp.open(archivo), nombre);
   if (!hoja) return;
-  volcarRegistrosEnHoja(hoja, log);
+  volcarRegistrosEnHoja(hoja, log, historial);
 }
 
-function volcarRegistrosEnHoja(hoja, log) {
-  var values = hoja.getDataRange().getValues();
-  if (values.length < 2) return;
-  var encabezado = values[0];
-  var col0 = -1;
-  for (var c = 0; c < encabezado.length; c++) { if (String(encabezado[c]).trim() === COLS_ALUMNO[0]) { col0 = c; break; } }
-  if (col0 < 0) { // primera vez: se dejan dos columnas libres después de la última usada
-    col0 = Math.max(encabezado.length + 1, 9);
-    hoja.getRange(1, col0 + 1, 1, 3).setValues([COLS_ALUMNO]).setFontWeight("bold");
-  }
-  var actual = hoja.getRange(2, col0 + 1, values.length - 1, 3).getValues();
-  var cambios = false, ultSem = 0, ultDia = "";
+// lo que corresponde escribir en cada fila de la hoja para un mes (reg = registros de ese mes)
+function filasDeRegistros(values, reg) {
+  var filas = [], ultSem = 0, ultDia = "";
   for (var i = 1; i < values.length; i++) {
+    var fila = ["", "", ""];
+    filas.push(fila);
     var r = values[i];
     var mSem = /\d+/.exec(String(r[0] == null ? "" : r[0]));
     var sem = mSem ? parseInt(mSem[0], 10) : ultSem;
@@ -425,23 +444,53 @@ function volcarRegistrosEnHoja(hoja, log) {
     if (!diaRaw) continue;
     ultSem = sem; ultDia = diaRaw;
     var dia = /^\d+$/.test(diaRaw) ? "Día " + diaRaw : diaRaw;
-    var fila = actual[i - 1];
-    var d = log["hecho|" + sem + "|" + dia];
-    var e = log[sem + "|" + dia + "|" + ej];
-    if (d && String(d.hecho) === "1") {
-      var txtDia = "✓" + (d.f ? " " + d.f : "") + (d.rpe ? " · RPE " + d.rpe : "");
-      if (fila[0] !== txtDia) { fila[0] = txtDia; cambios = true; }
-    }
+    var d = reg["hecho|" + sem + "|" + dia];
+    var e = reg[sem + "|" + dia + "|" + ej];
+    if (d && String(d.hecho) === "1") fila[0] = "✓" + (d.f ? " " + d.f : "") + (d.rpe ? " · RPE " + d.rpe : "");
     if (e) {
       var series = (e.sets || []).filter(function (s) { return s && (s.r || s.k); })
         .map(function (s) { return (s.r || "?") + (s.k ? " x " + s.k + "kg" : ""); }).join(" · ");
       if (e.hechoTxt) series = e.hechoTxt; // ya viene como "S1 10 x 20kg · S2 ..."
-      var hecho = e.ok || series ? "✓" : "";
-      if (hecho && fila[1] !== hecho) { fila[1] = hecho; cambios = true; }
-      if (series && fila[2] !== series) { fila[2] = series; cambios = true; }
+      if (e.ok || series) fila[1] = "✓";
+      fila[2] = series;
     }
   }
-  if (cambios) hoja.getRange(2, col0 + 1, actual.length, 3).setValues(actual);
+  return filas;
+}
+
+function volcarRegistrosEnHoja(hoja, log, historial) {
+  var values = hoja.getDataRange().getValues();
+  if (values.length < 2) return;
+  // formato anterior (un solo bloque sin mes): se borra y se rearma desde los registros guardados
+  for (var c = 0; c < values[0].length; c++) {
+    if (String(values[0][c]).trim() === "Alumno · Día hecho") { hoja.deleteColumns(c + 1, 3); break; }
+  }
+  log = log || {};
+  var mesActual = /^\d{4}-\d{2}$/.test(String(log._mes || "")) ? String(log._mes) : Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM");
+  var meses = {};
+  Object.keys(historial || {}).forEach(function (m) { if (/^\d{4}-\d{2}$/.test(m)) meses[m] = historial[m] || {}; });
+  meses[mesActual] = log;
+
+  Object.keys(meses).sort().forEach(function (m) { // del más viejo al más nuevo: cada uno nuevo se coloca a la izquierda
+    var etq = etiquetaMes(m);
+    var bloques = bloquesAlumno(hoja);
+    var existente = bloques.filter(function (b) { return b.mes === etq; })[0];
+    var col, nuevo = !existente;
+    if (existente) col = existente.col;
+    else {
+      var masViejo = bloques.filter(function (b) { return b.clave < m; })[0]; // los bloques van de izquierda a derecha, del más nuevo al más viejo
+      if (masViejo) { col = masViejo.col; hoja.insertColumnsBefore(col, 3); }
+      else if (bloques.length) col = bloques[bloques.length - 1].col + 3;
+      else col = Math.max(hoja.getLastColumn() + 2, 10); // primera vez: una columna libre después de la última usada
+      if (col + 2 > hoja.getMaxColumns()) hoja.insertColumnsAfter(hoja.getMaxColumns(), col + 2 - hoja.getMaxColumns());
+      hoja.getRange(1, col, 1, 3).setValues([SUBCOLS_ALUMNO.map(function (s) { return "Alumno · " + etq + " · " + s; })]).setFontWeight("bold");
+    }
+    // el mes en curso se recalcula siempre; los meses anteriores se escriben una sola vez, al crearse
+    if (nuevo || m === mesActual) {
+      var filas = filasDeRegistros(values, meses[m]);
+      if (filas.length) hoja.getRange(2, col, filas.length, 3).setValues(filas);
+    }
+  });
 }
 
 var CAMPOS_ARCHIVO = { fotoPerfil: "Foto de perfil", fotoApto: "Apto fisico" };
@@ -1023,7 +1072,7 @@ function instalarCopiaSemanal() {
   Logger.log("Copia semanal instalada: domingos a las 3 de la madrugada.");
 }
 
-// prueba sin tocar datos reales: copia la hoja de un alumno a un archivo temporal, vuelca registros de mentira y lo borra
+// prueba sin tocar datos reales: copia la hoja de un alumno a un archivo temporal, vuelca registros de mentira de dos meses y lo borra
 function pruebaCopiaRegistros() {
   var plan = subFolder(rootFolder(), "Planificaciones");
   var carpeta = subFolder(plan, "PERSONALIZADO");
@@ -1034,18 +1083,30 @@ function pruebaCopiaRegistros() {
   try {
     var copia = origen.copyTo(temp);
     var v = copia.getDataRange().getValues();
+    var sem = parseInt(String(v[1][0]).replace(/\D/g, ""), 10) || 1;
+    var dia = /^\d+$/.test(String(v[1][1])) ? "Día " + v[1][1] : String(v[1][1]);
     var ej = String(v[1][3]);
-    var log = {};
-    log["hecho|" + (parseInt(String(v[1][0]).replace(/\D/g, ""), 10) || 1) + "|" + (/^\d+$/.test(String(v[1][1])) ? "Día " + v[1][1] : v[1][1])] = { hecho: "1", f: "2026-10-22", rpe: 7 };
-    log[(parseInt(String(v[1][0]).replace(/\D/g, ""), 10) || 1) + "|" + (/^\d+$/.test(String(v[1][1])) ? "Día " + v[1][1] : v[1][1]) + "|" + ej] = { sets: [{ r: "10", k: "20" }, { r: "10", k: "22" }], hechoTxt: "S1 10 x 20kg · S2 10 x 22kg", ok: true };
-    volcarRegistrosEnHoja(copia, log);
-    volcarRegistrosEnHoja(copia, log); // segunda vez: no debe duplicar ni crear columnas nuevas
+    var logNov = { _mes: "2026-11" };
+    logNov["hecho|" + sem + "|" + dia] = { hecho: "1", f: "2026-11-02", rpe: 7 };
+    logNov[sem + "|" + dia + "|" + ej] = { sets: [{ r: "10", k: "30" }], hechoTxt: "S1 10 x 30kg", ok: true };
+    var hist = { "2026-10": {} };
+    hist["2026-10"]["hecho|" + sem + "|" + dia] = { hecho: "1", f: "2026-10-27" };
+    hist["2026-10"][sem + "|" + dia + "|" + ej] = { sets: [{ r: "10", k: "20" }], hechoTxt: "S1 10 x 20kg", ok: true };
+    volcarRegistrosEnHoja(copia, logNov, hist);
+    volcarRegistrosEnHoja(copia, logNov, hist); // segunda vez: no debe duplicar columnas
     var r = copia.getDataRange().getValues();
-    Logger.log("columnas antes: " + v[0].length + " / después: " + r[0].length);
+    Logger.log("columnas antes: " + v[0].length + " / despues: " + r[0].length);
     Logger.log("encabezados nuevos: " + JSON.stringify(r[0].slice(v[0].length)));
     Logger.log("fila 2 nuevas: " + JSON.stringify(r[1].slice(v[0].length)));
-    var p = parsePlanificacion(copia), q = parsePlanificacion(origen);
-    Logger.log("la web ve lo mismo: " + (JSON.stringify(p) === JSON.stringify(q)));
+    // mes siguiente: aparece un bloque nuevo a la IZQUIERDA y lo anterior no se toca
+    var logDic = { _mes: "2026-12" };
+    logDic["hecho|" + sem + "|" + dia] = { hecho: "1", f: "2026-12-03" };
+    var hist2 = JSON.parse(JSON.stringify(hist)); hist2["2026-11"] = logNov;
+    volcarRegistrosEnHoja(copia, logDic, hist2);
+    var r2 = copia.getDataRange().getValues();
+    Logger.log("con diciembre, encabezados: " + JSON.stringify(r2[0].slice(v[0].length).filter(function (h) { return /Día hecho/.test(h); })));
+    Logger.log("fila 2 (dic | nov | oct): " + JSON.stringify(r2[1].slice(v[0].length)));
+    Logger.log("la web ve lo mismo: " + (JSON.stringify(parsePlanificacion(copia)) === JSON.stringify(parsePlanificacion(origen))));
   } finally {
     DriveApp.getFileById(temp.getId()).setTrashed(true);
   }
