@@ -1276,14 +1276,19 @@ function pruebaPorcentajes() {
     Logger.log("activado: " + JSON.stringify(r));
     var libro = copia.getParent();
     var marcas = libro.getSheetByName("Marcas");
-    var primera = String(marcas.getRange(2, 2).getValue());
-    marcas.getRange(2, 3, 1, 2).setValues([[5, 80]]); // 5 reps x 80 kg
-    SpreadsheetApp.flush();
-    Logger.log("1RM estimado de '" + primera + "': " + marcas.getRange(2, 5).getValue());
     var datos = copia.getDataRange().getValues();
     var colPct = datos[0].indexOf("% 1RM") + 1;
-    var fila = 0;
-    for (var i = 1; i < datos.length; i++) if (String(datos[i][3]).trim() === primera) { fila = i + 1; break; }
+    // un ejercicio cuya carga estaba vacía (ahí se puso la fórmula)
+    var fila = 0, primera = "";
+    for (var i = 1; i < datos.length; i++) {
+      if (String(datos[i][3]).trim() && copia.getRange(i + 1, r.colCarga).getFormula()) { fila = i + 1; primera = String(datos[i][3]).trim(); break; }
+    }
+    var filaMarca = 0, mv = marcas.getRange(2, 2, marcas.getLastRow() - 1, 1).getValues();
+    for (var q = 0; q < mv.length; q++) if (String(mv[q][0]).trim() === primera) { filaMarca = q + 2; break; }
+    marcas.getRange(filaMarca, 3, 1, 2).setValues([[5, 80]]); // 5 reps x 80 kg
+    SpreadsheetApp.flush();
+    Logger.log("1RM estimado de '" + primera + "': " + marcas.getRange(filaMarca, 5).getValue());
+    Logger.log("fórmulas puestas en Cargas (filas con carga vacía): " + datos.filter(function (d, ix) { return ix > 0 && String(d[3]).trim() && copia.getRange(ix + 1, r.colCarga).getFormula(); }).length);
     copia.getRange(fila, colPct).setValue(75);
     SpreadsheetApp.flush();
     var despues = parsePlanificacion(copia);
