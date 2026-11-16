@@ -1091,7 +1091,7 @@ function copiaDeSeguridad() {
     var copias = [], it2 = carpeta.getFiles();
     while (it2.hasNext()) { var c2 = it2.next(); if (c2.getName().indexOf(base + " - copia ") === 0) copias.push(c2); }
     copias.sort(function (a, b) { return b.getDateCreated() - a.getDateCreated(); });
-    copias.slice(8).forEach(function (c3) { c3.setTrashed(true); });
+    copias.slice(4).forEach(function (c3) { c3.setTrashed(true); });
   });
   Logger.log("Copias de seguridad hechas: " + archivos.length);
 }
