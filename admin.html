@@ -50,6 +50,7 @@
         <select data-admin-filter aria-label="Filtro">
           <option value="todos">Todos</option>
           <option value="inactivos">Sin entrar hace más de 7 días</option>
+          <option value="sinEntrenar">Sin entrenar en los últimos 7 días</option>
           <option value="vencen">Vencen en 7 días o menos</option>
           <option value="vencidos">Vencidos</option>
           <option value="pendientes">Por activar (pendientes)</option>
@@ -57,6 +58,7 @@
         <select data-admin-sort aria-label="Orden">
           <option value="ingreso">Último ingreso (más reciente)</option>
           <option value="inactividad">Más tiempo sin entrar</option>
+          <option value="cumplimiento">Menor cumplimiento primero</option>
           <option value="tiempo">Más tiempo total</option>
           <option value="nombre">Nombre</option>
         </select>
@@ -69,6 +71,6 @@
 </main>
 
 <script defer src="lib/manifest.js?v=20261009a"></script>
-<script defer src="admin.js?v=20261107a"></script>
+<script defer src="admin.js?v=20261116a"></script>
 </body>
 </html>

@@ -95,13 +95,44 @@
     return { hechosPorSemana: hechosPorSemana, entradas: entradas, total: total };
   }
 
+  // días entrenados (con fecha) de todos los meses: [{ f: Date, rpe }]. La web guarda los registros por mes,
+  // así que se juntan el mes en curso y el historial para poder medir por fechas reales.
+  function diasEntrenados(a) {
+    var fuentes = [a.registros || {}];
+    var hist = a.historial || {};
+    Object.keys(hist).forEach(function (m) { fuentes.push(hist[m] || {}); });
+    var out = [];
+    fuentes.forEach(function (reg) {
+      Object.keys(reg).forEach(function (k) {
+        if (k.indexOf("hecho|") !== 0) return;
+        var v = reg[k] || {};
+        var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v.f || "");
+        if (v.hecho === "1" && m) out.push({ f: new Date(+m[1], +m[2] - 1, +m[3]), rpe: Number(v.rpe) || 0 });
+      });
+    });
+    return out.sort(function (x, y) { return y.f - x.f; });
+  }
+
   function avance(a) {
     var r = resumen(a.registros);
-    var esperados = DIAS_POR_NIVEL[a.nivel] || 0;
+    // días por semana que tiene planificados: el del plan (lo manda el servidor) o, si no se pudo saber, un valor por nivel
+    var esperados = a.diasSemana || DIAS_POR_NIVEL[a.nivel] || 0;
     var sem = semanaActual();
     r.esperados = esperados;
     r.semana = sem;
     r.hechosSemana = (r.hechosPorSemana[String(sem)] || []).length;
+    // cumplimiento por fechas: últimos 7 y últimos 28 días
+    var hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+    var dias = diasEntrenados(a);
+    var desde7 = new Date(hoy.getTime() - 6 * DIA_MS), desde28 = new Date(hoy.getTime() - 27 * DIA_MS);
+    var en7 = dias.filter(function (d) { return d.f >= desde7; });
+    var en28 = dias.filter(function (d) { return d.f >= desde28; });
+    var rpes = en28.filter(function (d) { return d.rpe; });
+    r.ult7 = en7.length;
+    r.ult28 = en28.length;
+    r.rpeProm = rpes.length ? rpes.reduce(function (t, d) { return t + d.rpe; }, 0) / rpes.length : 0;
+    r.diasDesdeUltimo = dias.length ? Math.max(0, Math.round((hoy - dias[0].f) / DIA_MS)) : null;
+    r.pct28 = esperados ? Math.min(100, Math.round(r.ult28 / (esperados * 4) * 100)) : null;
     return r;
   }
 
@@ -304,18 +335,23 @@
   function filaHTML(a) {
     var av = avance(a);
     var v = estadoVenc(a);
-    var pct = av.esperados ? Math.min(100, Math.round(av.hechosSemana / av.esperados * 100)) : 0;
+    var pct = av.esperados ? Math.min(100, Math.round(av.ult7 / av.esperados * 100)) : 0;
     var inactivo = diasSinEntrar(a) > 7;
     var prog = av.esperados
-      ? av.hechosSemana + ' de ' + av.esperados + ' días <small>(sem. ' + av.semana + ')</small>'
-      : av.total + ' días hechos';
+      ? av.ult7 + ' de ' + av.esperados + ' días <small>(últimos 7 días)</small>'
+      : av.ult7 + ' días <small>(últimos 7 días)</small>';
+    var detalleAv = [
+      av.pct28 !== null ? '4 sem: ' + av.pct28 + '%' : av.ult28 + ' en 4 sem',
+      av.diasDesdeUltimo === null ? 'todavía no entrenó' : (av.diasDesdeUltimo === 0 ? 'entrenó hoy' : 'último hace ' + av.diasDesdeUltimo + ' d'),
+      av.rpeProm ? 'esfuerzo ' + (Math.round(av.rpeProm * 10) / 10).toString().replace(".", ",") : ""
+    ].filter(Boolean).join(" · ");
     var abre = abierto === a.email;
     return '<article class="admin-row' + (abre ? ' is-open' : '') + '">' +
       '<button type="button" class="admin-row-main" data-toggle="' + esc(a.email) + '" aria-expanded="' + abre + '">' +
         '<span class="admin-cell admin-name"><strong>' + esc(a.nombre || a.email) + '</strong><small>' + esc(a.nivel || "sin nivel") + '</small>' + etiquetaCumple(a) + etiquetaApto(a) + '</span>' +
         '<span class="admin-cell"><em>Último ingreso</em><b class="' + (inactivo ? 'is-bad-txt' : '') + '">' + esc(haceCuanto(a.ultimoIngreso)) + '</b><small>' + esc(fmtFecha(a.ultimoIngreso)) + '</small></span>' +
         '<span class="admin-cell"><em>Tiempo</em><b>' + esc(fmtTiempo(a.ultimaSesionSeg)) + '</b><small>total ' + esc(fmtTiempo(a.tiempoTotalSeg)) + ' · ' + a.ingresos + (a.ingresos === 1 ? ' ingreso' : ' ingresos') + '</small></span>' +
-        '<span class="admin-cell"><em>Avance</em><b>' + prog + '</b>' + (av.esperados ? '<span class="week-progress-bar"><span style="width:' + pct + '%"></span></span>' : '') + '</span>' +
+        '<span class="admin-cell"><em>Avance</em><b>' + prog + '</b>' + (av.esperados ? '<span class="week-progress-bar"><span style="width:' + pct + '%"></span></span>' : '') + '<small>' + esc(detalleAv) + '</small></span>' +
         '<span class="admin-cell"><em>Plan</em><b class="admin-venc ' + v.cls + '">' + esc(v.txt) + '</b></span>' +
       '</button>' + (abre ? detalleHTML(a) : '') + '</article>';
   }
@@ -336,6 +372,7 @@
     var lista = alumnos.filter(function (a) {
       if (q && (a.nombre + " " + a.email).toLowerCase().indexOf(q) === -1) return false;
       if (filtro === "inactivos") return !!a.vencimiento && diasSinEntrar(a) > 7;
+      if (filtro === "sinEntrenar") { var avf = avance(a); return !!a.vencimiento && avf.ult7 === 0; }
       if (filtro === "vencen") { var d = diasHastaVencer(a); return d >= 0 && d <= 7; }
       if (filtro === "vencidos") return !!a.vencimiento && diasHastaVencer(a) < 0;
       if (filtro === "pendientes") return !a.vencimiento;
@@ -345,6 +382,10 @@
       if (orden === "nombre") return String(x.nombre).localeCompare(String(y.nombre));
       if (orden === "tiempo") return y.tiempoTotalSeg - x.tiempoTotalSeg;
       if (orden === "inactividad") return diasSinEntrar(y) - diasSinEntrar(x);
+      if (orden === "cumplimiento") { // menos cumplimiento primero (quien necesita que le escribas); sin dato, al final
+        var px = avance(x).pct28, py = avance(y).pct28;
+        return (px === null ? 999 : px) - (py === null ? 999 : py);
+      }
       return diasSinEntrar(x) - diasSinEntrar(y);
     });
     $("[data-admin-list]").innerHTML = lista.length ? lista.map(filaHTML).join("") : '<p class="admin-muted">No hay alumnos para mostrar.</p>';

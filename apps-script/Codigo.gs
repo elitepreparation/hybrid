@@ -837,6 +837,7 @@ function getAdminAlumnos(claveAdmin) {
 
   function iso(v) { var d = parseFecha(v); return d ? d.toISOString() : null; }
   var alumnos = [];
+  var memo = { inicio: Date.now() }; // planes ya leídos en este pedido (y cuándo empezó, para no pasarse de tiempo)
   for (var i = 1; i < values.length; i++) {
     var r = values[i];
     if (!String(r[1] || "").trim()) continue;
@@ -854,10 +855,32 @@ function getAdminAlumnos(claveAdmin) {
       ultimaSesionSeg: Number(r[COL_ULTSESION - 1]) || 0,
       perfil: parseJSONSeguro(r[5]),
       registros: parseJSONSeguro(r[6]),
-      historial: parseJSONSeguro(r[COL_HISTORIAL - 1])
+      historial: parseJSONSeguro(r[COL_HISTORIAL - 1]),
+      diasSemana: diasPlanificados(nivel, String(r[0] || "").trim(), memo)
     });
   }
   return { ok: true, ahora: new Date().toISOString(), alumnos: alumnos, eventos: parseJSONSeguro(PropertiesService.getScriptProperties().getProperty("EVENTOS")) || {} };
+}
+
+// cuántos días por semana tiene planificados un alumno (para calcular su cumplimiento en el panel).
+// Open/Pro: el plan del mes, igual para todos. Personalizado: la pestaña de ese alumno. 0 = no se pudo saber.
+function diasPlanificados(nivel, nombre, memo) {
+  try {
+    var semanas;
+    if (nivel === "PERSONALIZADO") {
+      if (Date.now() - memo.inicio > 40000) return 0; // si hay muchísimos alumnos, no se alarga el pedido
+      var libro = planillaPersonalizada();
+      var hoja = libro ? buscarHojaPorNombre(libro, nombre) : null;
+      semanas = hoja ? parsePlanificacion(hoja) : [];
+    } else if (nivel === "OPEN" || nivel === "PRO") {
+      if (!memo[nivel]) memo[nivel] = { semanas: cacheado("plan|" + nivel, 300, function () { return getPlan(nivel); }).semanas || [] };
+      semanas = memo[nivel].semanas;
+    } else return 0;
+    if (!semanas.length) return 0;
+    var cuentas = {}, mejor = 0, veces = 0;
+    semanas.forEach(function (s) { var n = s.dias.length; cuentas[n] = (cuentas[n] || 0) + 1; if (cuentas[n] > veces || (cuentas[n] === veces && n > mejor)) { veces = cuentas[n]; mejor = n; } });
+    return mejor; // la cantidad de días más común entre las semanas del plan
+  } catch (err) { return 0; }
 }
 
 // el perfil del alumno, al cambiar de mes, manda acá el mes que cierra para no mezclarlo con el nuevo.
