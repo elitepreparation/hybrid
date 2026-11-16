@@ -1231,6 +1231,7 @@ function activarPorcentajes(hoja, nombre) {
     if (!ej) continue;
     var bloque = colBloque > 0 ? String(datos[i][colBloque - 1] || "").trim() : "";
     if (!/^movilidad/i.test(bloque) && !ejercicios[ej]) { ejercicios[ej] = true; orden.push(ej); }
+    if (/^movilidad/i.test(bloque)) continue; // la movilidad no lleva porcentajes
     var celda = hoja.getRange(i + 1, colCarga);
     if (String(celda.getValue()) === "" && !celda.getFormula()) {
       var marca = 'MAXIFS(Marcas!$E:$E,Marcas!$A:$A,"' + alumnoTxt + '",Marcas!$B:$B,$D' + (i + 1) + ')';
@@ -1288,7 +1289,6 @@ function pruebaPorcentajes() {
     marcas.getRange(filaMarca, 3, 1, 2).setValues([[5, 80]]); // 5 reps x 80 kg
     SpreadsheetApp.flush();
     Logger.log("1RM estimado de '" + primera + "': " + marcas.getRange(filaMarca, 5).getValue());
-    Logger.log("fórmulas puestas en Cargas (filas con carga vacía): " + datos.filter(function (d, ix) { return ix > 0 && String(d[3]).trim() && copia.getRange(ix + 1, r.colCarga).getFormula(); }).length);
     copia.getRange(fila, colPct).setValue(75);
     SpreadsheetApp.flush();
     var despues = parsePlanificacion(copia);
