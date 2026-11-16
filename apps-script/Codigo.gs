@@ -1164,3 +1164,138 @@ function pruebaCopiaRegistros() {
     DriveApp.getFileById(temp.getId()).setTrashed(true);
   }
 }
+
+// =============================================================
+// Porcentajes de carga: "Marcas" por alumno y ejercicio -> columna "Cargas" calculada
+// =============================================================
+// % del 1RM que corresponde a una marca hecha a N repeticiones (tabla habitual; se puede editar en la pestaña "Tabla %")
+var TABLA_PCT = [[1, 1], [2, 0.95], [3, 0.93], [4, 0.9], [5, 0.87], [6, 0.85], [7, 0.83], [8, 0.8], [9, 0.77], [10, 0.75], [12, 0.67]];
+
+function colLetra(n) {
+  var s = "";
+  while (n > 0) { var m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); }
+  return s;
+}
+
+// crea (si faltan) las pestañas "Tabla %" y "Marcas" en la planilla del Plan Personalizado
+function prepararMarcas(libro) {
+  var tabla = libro.getSheetByName("Tabla %");
+  if (!tabla) {
+    tabla = libro.insertSheet("Tabla %");
+    tabla.getRange(1, 1, 1, 2).setValues([["Repeticiones de la marca", "% de tu 1RM"]]).setFontWeight("bold");
+    tabla.getRange(2, 1, TABLA_PCT.length, 2).setValues(TABLA_PCT);
+    tabla.getRange(2, 2, TABLA_PCT.length, 1).setNumberFormat("0%");
+    tabla.getRange(1, 4, 2, 1).setValues([["Redondear cargas a (kg)"], [2.5]]);
+    tabla.getRange(1, 4).setFontWeight("bold");
+    tabla.setColumnWidth(1, 190); tabla.setColumnWidth(2, 110); tabla.setColumnWidth(4, 190);
+  }
+  var marcas = libro.getSheetByName("Marcas");
+  if (!marcas) {
+    marcas = libro.insertSheet("Marcas");
+    marcas.getRange(1, 1, 1, 5).setValues([["Alumno", "Ejercicio", "Reps de la marca (3 o 5)", "Kg levantados", "1RM estimado (kg)"]]).setFontWeight("bold");
+    var f = [];
+    for (var i = 2; i <= 1000; i++) f.push(['=IF(OR(C' + i + '="",D' + i + '=""),"",IFERROR(ROUND(D' + i + "/VLOOKUP(C" + i + ",'Tabla %'!$A:$B,2,FALSE),1),\"revisá las reps\"))"]);
+    marcas.getRange(2, 5, f.length, 1).setFormulas(f);
+    marcas.setFrozenRows(1);
+    marcas.setColumnWidth(1, 130); marcas.setColumnWidth(2, 260); marcas.setColumnWidth(3, 170); marcas.setColumnWidth(4, 120); marcas.setColumnWidth(5, 140);
+  }
+}
+
+// En la pestaña de un alumno: agrega la columna "% 1RM" y deja en "Cargas" la fórmula que calcula los kilos,
+// solo en las celdas de Cargas que están vacías (lo que ya escribiste a mano no se toca). También carga en "Marcas"
+// los ejercicios de ese alumno para que solo complete reps y kilos. Se puede correr las veces que haga falta.
+function activarPorcentajes(hoja, nombre) {
+  nombre = nombre || hoja.getName();
+  var libro = hoja.getParent();
+  prepararMarcas(libro);
+  var ult = hoja.getLastColumn();
+  var enc = hoja.getRange(1, 1, 1, ult).getValues()[0].map(function (h) { return String(h).trim(); });
+  var ultPlan = 0;
+  enc.forEach(function (h, i) { if (h && h.indexOf("Alumno · ") !== 0) ultPlan = i + 1; });
+  var colCarga = -1, colPct = -1, colBloque = -1;
+  enc.forEach(function (h, i) {
+    if (i >= 6 && /^(carga|cargas|peso|pesos|kg)$/i.test(h)) colCarga = i + 1;
+    if (i >= 6 && /^bloque$/i.test(h)) colBloque = i + 1;
+    if (h === "% 1RM") colPct = i + 1;
+  });
+  if (colCarga < 0) { hoja.insertColumnAfter(ultPlan); ultPlan++; colCarga = ultPlan; hoja.getRange(1, colCarga).setValue("Cargas").setFontWeight("bold"); }
+  if (colPct < 0) { hoja.insertColumnAfter(ultPlan); ultPlan++; colPct = ultPlan; hoja.getRange(1, colPct).setValue("% 1RM").setFontWeight("bold"); }
+  SpreadsheetApp.flush();
+
+  var datos = hoja.getDataRange().getValues();
+  var P = colLetra(colPct);
+  var alumnoTxt = String(nombre).replace(/"/g, '""');
+  var ejercicios = {}, orden = [];
+  for (var i = 1; i < datos.length; i++) {
+    var ej = String(datos[i][3] || "").trim();
+    if (!ej) continue;
+    var bloque = colBloque > 0 ? String(datos[i][colBloque - 1] || "").trim() : "";
+    if (!/^movilidad/i.test(bloque) && !ejercicios[ej]) { ejercicios[ej] = true; orden.push(ej); }
+    var celda = hoja.getRange(i + 1, colCarga);
+    if (String(celda.getValue()) === "" && !celda.getFormula()) {
+      var marca = 'MAXIFS(Marcas!$E:$E,Marcas!$A:$A,"' + alumnoTxt + '",Marcas!$B:$B,$D' + (i + 1) + ')';
+      var pct = 'IF(' + P + (i + 1) + '<=1,' + P + (i + 1) + ',' + P + (i + 1) + '/100)';
+      celda.setFormula('=IF(' + P + (i + 1) + '="","",IF(' + marca + "=0,\"sin marca\",ROUND(" + marca + "*" + pct + "/'Tabla %'!$D$2,0)*'Tabla %'!$D$2&\"kg\"))");
+    }
+  }
+  // ejercicios de este alumno que todavía no están en "Marcas"
+  var marcas = libro.getSheetByName("Marcas");
+  var ultM = Math.max(marcas.getLastRow(), 1);
+  var existentes = {};
+  if (ultM > 1) marcas.getRange(2, 1, ultM - 1, 2).getValues().forEach(function (r) { existentes[String(r[0]).trim().toLowerCase() + "|" + String(r[1]).trim().toLowerCase()] = true; });
+  var nuevas = orden.filter(function (e) { return !existentes[String(nombre).trim().toLowerCase() + "|" + e.toLowerCase()]; }).map(function (e) { return [nombre, e]; });
+  var filaNueva = 2;
+  var colA = ultM > 1 ? marcas.getRange(2, 1, ultM - 1, 1).getValues() : [];
+  for (var k = 0; k < colA.length; k++) if (String(colA[k][0]) !== "") filaNueva = k + 3; // primera fila libre después de la última con alumno
+  if (nuevas.length) marcas.getRange(filaNueva, 1, nuevas.length, 2).setValues(nuevas);
+  return { colPct: colPct, colCarga: colCarga, ejercicios: orden.length, nuevas: nuevas.length };
+}
+
+// activa los porcentajes en todas las pestañas de alumnos (las que empiezan con "Semana"); se puede repetir sin problema
+function activarPorcentajesTodos() {
+  var libro = planillaPersonalizada();
+  var hechas = [];
+  libro.getSheets().forEach(function (h) {
+    var n = h.getName();
+    if (n === "Marcas" || n === "Tabla %") return;
+    if (!/^semana/i.test(String(h.getRange(1, 1).getValue()).trim())) return;
+    activarPorcentajes(h, n);
+    hechas.push(n);
+  });
+  Logger.log("Porcentajes activados en: " + hechas.join(", "));
+}
+
+// prueba sin tocar datos reales: copia la pestaña de un alumno a un archivo temporal, carga una marca y comprueba las cargas
+function pruebaPorcentajes() {
+  var origen = buscarHojaPorNombre(planillaPersonalizada(), "NADIA");
+  var temp = SpreadsheetApp.create("TEMP prueba porcentajes");
+  try {
+    var copia = origen.copyTo(temp);
+    var antes = parsePlanificacion(copia);
+    var r = activarPorcentajes(copia, "NADIA");
+    Logger.log("activado: " + JSON.stringify(r));
+    var libro = copia.getParent();
+    var marcas = libro.getSheetByName("Marcas");
+    var primera = String(marcas.getRange(2, 2).getValue());
+    marcas.getRange(2, 3, 1, 2).setValues([[5, 80]]); // 5 reps x 80 kg
+    SpreadsheetApp.flush();
+    Logger.log("1RM estimado de '" + primera + "': " + marcas.getRange(2, 5).getValue());
+    var datos = copia.getDataRange().getValues();
+    var colPct = datos[0].indexOf("% 1RM") + 1;
+    var fila = 0;
+    for (var i = 1; i < datos.length; i++) if (String(datos[i][3]).trim() === primera) { fila = i + 1; break; }
+    copia.getRange(fila, colPct).setValue(75);
+    SpreadsheetApp.flush();
+    var despues = parsePlanificacion(copia);
+    var ej = null;
+    despues.forEach(function (s) { s.dias.forEach(function (d) { d.ejercicios.forEach(function (e) { if (e.nombre === primera && !ej) ej = e; }); }); });
+    Logger.log("carga calculada de '" + primera + "' con 75%: " + (ej ? ej.carga : "(no encontrada)"));
+    var conCarga = antes.map(function (s) { return s.dias.map(function (d) { return d.ejercicios.filter(function (e) { return e.carga; }).length; }); });
+    var conCargaDesp = despues.map(function (s) { return s.dias.map(function (d) { return d.ejercicios.filter(function (e) { return e.carga && e.carga !== "sin marca"; }).length; }); });
+    Logger.log("cargas escritas a mano antes: " + JSON.stringify(conCarga));
+    Logger.log("cargas escritas a mano después: " + JSON.stringify(conCargaDesp));
+    Logger.log("pestañas del libro de prueba: " + libro.getSheets().map(function (h) { return h.getName(); }).join(" | "));
+  } finally {
+    DriveApp.getFileById(temp.getId()).setTrashed(true);
+  }
+}
